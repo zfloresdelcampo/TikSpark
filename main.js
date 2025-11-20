@@ -7,7 +7,7 @@ const { execFile } = require('child_process');
 const WinReg = require('winreg');
 const WebSocket = require('ws');
 const { startTikTokDetector } = require('./detector.js');
-const { autoUpdater } = require('electron-updater'); // <-- 1. LÍNEA AÑADIDA
+const { autoUpdater } = require('electron-updater');
 
 // --- DECLARACIÓN DE VARIABLES GLOBALES ---
 let mainWindow = null;
@@ -40,9 +40,13 @@ function startDetector(forceGiftFetch = false) { if (currentDetector) { currentD
 function createWindow() {
     currentUsername = loadConfig().username || '';
     mainWindow = new BrowserWindow({ width: 1200, height: 800, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true } });
+    
+    // === ¡AQUÍ ESTÁ LA LÍNEA AÑADIDA! ===
+    mainWindow.setMenu(null);
+    // === FIN DE LA LÍNEA AÑADIDA ===
+
     mainWindow.loadFile('index.html');
     
-    // === 2. BLOQUE DE CÓDIGO AÑADIDO ===
     // En cuanto la app esté lista, busca una actualización.
     mainWindow.once('ready-to-show', () => {
         autoUpdater.checkForUpdatesAndNotify();
@@ -66,7 +70,6 @@ function createWindow() {
             }
         });
     });
-    // === FIN DEL BLOQUE AÑADIDO ===
 
     // --- MANEJADORES DE IPC ---
     ipcMain.handle('get-username', () => currentUsername);

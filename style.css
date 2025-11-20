@@ -187,7 +187,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .custom-multiselect { position: relative; width: 100%; } .multiselect-display { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 5px 10px; min-height: 28px; border: 1px solid #505050; background-color: #252526; border-radius: 4px; cursor: pointer; } .multiselect-display.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; } .multiselect-display .placeholder { color: #777; font-size: 14px; } .multiselect-tag { display: inline-flex; align-items: center; background-color: #3c3c3c; color: #e0e0e0; padding: 3px 8px; border-radius: 4px; font-size: 13px; } .multiselect-tag .remove-tag { margin-left: 8px; cursor: pointer; font-weight: bold; } .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: #333333; border: 1px solid #505050; border-top: none; z-index: 1002; max-height: 150px; overflow-y: auto; } .multiselect-option { padding: 10px 15px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; } .multiselect-option:hover { background-color: #4a4a4a; } .multiselect-option.selected { background-color: #108038; color: white; } .multiselect-option.selected::after { content: '✔'; }
 .event-modal-footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 15px; padding: 15px 20px; background-color: #252526; border-top: 1px solid #3c3c3c; } .event-modal-footer button { padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #555; background-color: #3c3c3c; color: white; }
 /* TOAST NOTIFICATION */
-#toast-notification { visibility: hidden; min-width: 250px; background-color: #108038; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1001; right: 20px; bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); font-weight: 500; font-size: 15px; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
+#toast-notification { visibility: hidden; min-width: 250px; background-color: #5c1d80; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1001; right: 20px; bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); font-weight: 500; font-size: 15px; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
 #toast-notification.show { visibility: visible; opacity: 1; }
 
 .custom-gift-selector { position: relative; width: 100%; }
@@ -377,7 +377,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     color: white;
 }
 .profile-form-buttons button:first-of-type { /* Botón Aplicar */
-    background-color: #108038;
+    background-color: #5c1d80;
 }
 .profile-form-buttons button:last-of-type { /* Botón Descartar */
     background-color: #a4262c;
@@ -1248,7 +1248,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 }
 
 .toggle-btn.active {
-    background-color: #108038; /* Verde */
+    background-color: #5c1d80; /* Verde */
     color: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
