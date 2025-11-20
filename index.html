@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Detector de Regalos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="sidebar">
+        <div class="nav-item active" data-target="home-section">
+            Inicio
+        </div>
+        <div class="nav-item" data-target="actions-events-section">
+            Acciones y Eventos
+        </div>
+        <div class="nav-item" data-target="overlay-gallery">
+            Galería de Overlays
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="home-section" class="content-section active">
+
+            <div class="connection-header">
+                <div id="connection-mode-toggle">
+                    <button id="toggle-api-server" class="toggle-btn active" data-target="api-server-panel">API Server</button>
+                    <button id="toggle-api-tikfinity" class="toggle-btn" data-target="api-tikfinity-panel">API TikFinity</button>
+                </div>
+            </div>
+            
+            <!-- Panel para Conexión Directa (API Server) -->
+            <div id="api-server-panel" class="connection-panel active">
+                <div class="panel-header">
+                    <h3>TikTok LIVE</h3>
+                    <p>Una vez que estés en directo, conecta la aplicación a tu canal de TikTok.</p>
+                </div>
+                <div class="panel-content">
+                    <label for="username-input-main">Tu usuario de TikTok (<span style="color: #ff4d4d;">Requerido</span>)</label>
+                    <div class="input-group">
+                        <input type="text" id="username-input" placeholder="@usuario">
+                        <button id="connect-button">Conectar</button>
+                        <button id="disconnect-button" disabled>Desconectar</button>
+                        <button id="emotes-button" disabled>Obtener Emotes</button>
+                    </div>
+                    <div id="update-gifts-container">
+                         <button id="update-gifts-button" class="secondary-btn">Actualizar Regalos</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel para Conexión con TikFinity -->
+            <div id="api-tikfinity-panel" class="connection-panel">
+                <div class="panel-header">
+                    <h3>Event API <span class="provider-badge">TikFinity</span></h3>
+                    <p>En caso de que la conexión directa no esté disponible, usa este método. Por favor, inicia la aplicación de escritorio de TikFinity y conéctate a una transmisión en vivo.</p>
+                </div>
+                <div class="panel-content">
+                    <div class="status-group">
+                        <label>Estado:</label>
+                        <span id="tikfinity-status" class="status-indicator disconnected">Disconnected</span>
+                    </div>
+                    <div class="button-group">
+                        <button id="connect-tikfinity-button">Conectar</button>
+                        <button id="disconnect-tikfinity-button" disabled>Desconectar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenedor de Logs (se queda abajo) -->
+            <div class="log-wrapper">
+                <div id="status" class="status-bar">Desconectado.</div>
+                <div id="log-container"></div>
+            </div>
+
+        </div>
+        
+        <div id="actions-events-section" class="content-section">
+            
+            <div class="section-container" id="profiles-section">
+                <h2>Perfiles</h2>
+                <p>Crea acciones y eventos únicos para cada perfil. Cambia entre perfiles, agrega, edita o elimínalos según tus preferencias.</p>
+            
+                <div class="info-box">
+                    <p>Solo debes importar tus perfiles aquí, no lo hagas desde 'Inicio'.</p>
+                </div>
+            
+                <div class="controls-toolbar">
+                    <div class="profile-selector-wrapper">
+                        <select id="profile-selector">
+                            </select>
+                    </div>
+                    <div class="button-group">
+                        <button id="create-profile-btn" class="btn"><i class="fas fa-plus"></i> Crear</button>
+                        <button id="edit-profile-btn" class="btn"><i class="fas fa-edit"></i> Editar</button>
+                        <button id="duplicate-profile-btn" class="btn"><i class="fas fa-copy"></i> Duplicar</button>
+                        <button id="delete-profile-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Eliminar</button>
+                    </div>
+                    <div class="button-group">
+                        <button id="export-profile-btn" class="btn btn-secondary"><i class="fas fa-file-export"></i> Exportar Perfil</button>
+                        <button id="import-profile-btn" class="btn btn-secondary"><i class="fas fa-file-import"></i> Importar Perfil</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-view-container">
+                <h2>Acciones</h2>
+                <p class="help-text">¿Qué es lo que desea que suceda? Aquí puedes crear nuevas acciones y editar las existentes.<br>
+                    Puede vincular estas acciones a los eventos a continuación.</p>
+                
+                <div class="list-view-controls">
+                    <div class="control-group">
+                        <button class="action-button" id="create-action-button">+ Crear nueva acción</button>
+                        <button class="action-button secondary" disabled>Eliminar acciones (0)</button>
+                    </div>
+                    <div class="search-wrapper">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Buscar acciones...">
+                    </div>
+                </div>
+                <div class="list-view-header action-header">
+                    <input type="checkbox" class="header-checkbox">
+                    <div></div>
+                    <div>Nombre ↕</div>
+                    <div>Pantalla ↕</div>
+                    <div>Duración (seg) ↕</div>
+                    <div>Descripción ↕</div>
+                </div>
+                <div id="actions-list-container"></div>
+                <div class="list-view-pagination"></div>
+            </div>
+
+            <div class="list-view-container">
+                <h2>Eventos</h2>
+                <p class="help-text">Aquí puede definir qué desencadenará sus acciones.</p>
+                 <div class="list-view-controls">
+                    <div class="control-group">
+                        <button class="action-button" id="create-event-button">+ Crear nuevo evento</button>
+                        <button class="action-button secondary" disabled>Eliminar eventos (0)</button>
+                    </div>
+                    <div class="search-wrapper">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Buscar eventos...">
+                    </div>
+                </div>
+                <div class="list-view-header event-header">
+                    <input type="checkbox" class="header-checkbox">
+                    <div>All</div>
+                    <div>Activo ↕</div>
+                    <div>Type ↕</div>
+                    <div>Usuario ↕</div>
+                    <div>Trigger ↕</div>
+                    <div>Acciones ↕</div>
+                </div>
+                <div id="events-list-container"></div>
+                <div class="list-view-pagination"></div>
+            </div>
+        </div>
+        
+        <div id="overlay-gallery" class="content-section">
+    
+            <div class="section-container" id="gallery-info-section">
+                
+                <h2>Galería de Overlays</h2>
+                
+                <p>
+                    Aquí puede encontrar los overlays generales para la integración en <strong>(Browser Source)</strong> o <strong>LIVE Studio (Link)</strong>.<br>
+                    Todas las funciones están divididas en widgets individuales para lograr la mayor flexibilidad posible en la alineación.<br>
+                    Para incluir los overlays que se enumeran a continuación en Live Studio, copie la URL y péguela en una nueva fuente de enlace.
+                </p>
+                
+                <div class="info-box">
+                    <p>Para cambiar el color o la fuente de los Ovelays, haga clic en el botón "Personalizar" del overlay respectivo.</p>
+                </div>
+                
+            </div>
+            
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Top Gifters</h3>
+                    </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="interactiveapp.live/#/overlays/game/topgifters" readonly class="url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn">Copiar URL</button>
+                        <button class="action-btn">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        <button class="action-btn">Testear</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overlay-content-layout">
+                    
+                    <div class="overlay-preview">
+                        <p>Previsualización del Ranking va aquí...</p>
+                    </div>
+
+                    <div class="overlay-config">
+                        <div class="config-section">
+                            <h4>Configuración:</h4>
+                            <div class="config-item">
+                                <label for="activate-widget-topgifters">ACTIVAR WIDGET</label>
+                                <input type="checkbox" id="activate-widget-topgifters" checked>
+                            </div>
+                            <div class="config-item">
+                                <label for="rows-count-topgifters">FILAS (OVERLAY)</label>
+                                <input type="number" id="rows-count-topgifters" value="6" min="1">
+                                <small>(Ajusta el ancho del widget desde OBS o Live Studio)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Top Likes</h3>
+                    </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="interactiveapp.live/#/overlays/game/toplikes" readonly class="url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn">Copiar URL</button>
+                        <button class="action-btn">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        <button class="action-btn">Testear</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overlay-content-layout">
+                    
+                    <div class="overlay-preview">
+                        <p>Previsualización del Ranking va aquí...</p>
+                    </div>
+
+                    <div class="overlay-config">
+                        <div class="config-section">
+                            <h4>Configuración:</h4>
+                            <div class="config-item">
+                                <label for="activate-widget-toplikes">ACTIVAR WIDGET</label>
+                                <input type="checkbox" id="activate-widget-toplikes" checked>
+                            </div>
+                            <div class="config-item">
+                                <label for="rows-count-toplikes">FILAS (OVERLAY)</label>
+                                <input type="number" id="rows-count-toplikes" value="6" min="1">
+                                <small>(Ajusta el ancho del widget desde OBS o Live Studio)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title" style="color: #38c172;">Subasta</h3>
+                    <div class="premium-tag">SOLO PREMIUM</div>
+                </div>
+
+                <div class="subasta-controls-panel">
+                    <div class="subasta-control-row">
+                        <div class="subasta-control-group">
+                            <label for="subasta-duration">Duración:</label>
+                            <input type="number" id="subasta-duration" value="300" min="1" class="subasta-input">
+                        </div>
+                        <div class="subasta-control-group">
+                            <label for="subasta-snipe">Snipe:</label>
+                            <input type="number" id="subasta-snipe" value="20" min="0" class="subasta-input">
+                        </div>
+                        <div class="subasta-control-group">
+                            <label for="subasta-base">Base:</label>
+                            <input type="number" id="subasta-base" value="1" min="1" class="subasta-input">
+                        </div>
+                        
+                        <!-- =================== INICIO DEL BLOQUE A AÑADIR =================== -->
+                        <div class="subasta-timer-group">
+                            <label>Tiempo:</label>
+                            <div id="subasta-timer-display">--:--</div>
+                        </div>
+                        <!-- ==================== FIN DEL BLOQUE A AÑADIR ===================== -->
+
+                        <div class="subasta-actions-group">
+                            <label>Iniciar:</label>
+                            <button class="action-btn icon-btn" title="Iniciar Subasta"><i class="fas fa-play"></i></button>
+                        </div>
+                        <div class="subasta-actions-group">
+                            <label>Pausar:</label>
+                            <button class="action-btn icon-btn" title="Pausar Subasta"><i class="fas fa-pause"></i></button>
+                        </div>
+                        <div class="subasta-actions-group">
+                            <label>Reiniciar:</label>
+                            <button class="action-btn icon-btn" title="Reiniciar"><i class="fas fa-redo"></i></button>
+                        </div>
+                        <div class="subasta-actions-group">
+                            <label>Reset Total:</label>
+                            <button class="action-btn icon-btn" title="Resetear Total"><i class="fas fa-stop"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overlay-url-actions subasta-url">
+                    <input type="text" value="http://127.0.0.1:5500/subasta.html" readonly class="url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn">Copiar URL</button>
+                        <button class="action-btn">Testear</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overlay-content-layout subasta-layout">
+                    
+                    <div class="overlay-config subasta-config">
+                        <div class="config-section subasta-config-section">
+                            <h4>Configuración</h4>
+                            
+                            <div class="config-item checkbox-row">
+                                <input type="checkbox" id="activate-widget-subasta" checked>
+                                <label for="activate-widget-subasta">ACTIVAR WIDGET</label>
+                            </div>
+                            <div class="config-item checkbox-row">
+                                <input type="checkbox" id="snipe-extra-subasta" checked>
+                                <label for="snipe-extra-subasta">SNIPE EXTRA</label>
+                            </div>
+                            <div class="config-item checkbox-row">
+                                <input type="checkbox" id="sound-subasta" checked>
+                                <label for="sound-subasta">SOUND</label>
+                            </div>
+                            
+                            <div class="subasta-col-group">
+                                <label for="filas-overlay">FILAS (OVERLAY)</label>
+                                <input type="number" id="filas-overlay" value="3" min="1" max="10" class="subasta-input">
+                            </div>
+                            
+                            <div class="config-item inline-inputs">
+                                <div class="subasta-col-group">
+                                    <label for="name-subasta">NOMBRE</label>
+                                    <input type="text" id="name-subasta" placeholder="Ej. Pedro" class="subasta-input">
+                                </div>
+                                
+                                <div class="subasta-col-group">
+                                    <label for="coins-subasta">MONEDAS</label>
+                                    <input type="number" id="coins-subasta" value="0" min="0" class="half-width-input">
+                                </div>
+                            </div>
+                            
+                            <button class="action-btn sum-coins-btn">Sumar Monedas</button>
+                        </div>
+                        <p class="subasta-info-text"><i class="fas fa-bolt" style="color: #ffc107;"></i> 20 Segundos Snipe !!</p>
+                        <p class="subasta-info-text"><i class="fas fa-coins" style="color: #ffeb3b;"></i> MINIMO 1 MONEDAS</p>
+                    </div>
+                    
+                    <div class="subasta-participants-panel">
+                        <h4>Participantes</h4>
+                        <div class="participants-header">
+                            <div>#</div>
+                            <div>JUGADOR</div>
+                            <div>MONEDAS</div>
+                            <div>ACCIONES</div>
+                        </div>
+                        <div class="participants-list">
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Meta Win General 1</h3>
+                    </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/overlay.html" readonly class="url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn">Copiar URL</button>
+                        <button class="action-btn">Testear</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+                <div id="meta-win-widget-1" class="meta-win-content">
+                    <div class="meta-win-controls">
+                        <h4 class="meta-win-title">
+                            <img src="images/trophy.png" alt="Trofeo">
+                            <span>Win Game</span>
+                        </h4>
+                        <div class="control-group-win">
+                            <label for="meta-win-meta-input">META</label>
+                            <button class="btn-win minus" data-target="meta-win-meta-input">-</button>
+                            <input type="number" id="meta-win-meta-input" value="5"> 
+                            <button class="btn-win plus" data-target="meta-win-meta-input">+</button>
+                        </div>
+                        <div class="control-group-win">
+                            <label for="meta-win-conteo-input">CONTEO</label>
+                            <button class="btn-win minus" data-target="meta-win-conteo-input">-</button>
+                            <input type="number" id="meta-win-conteo-input" value="0">
+                            <button class="btn-win plus" data-target="meta-win-conteo-input">+</button>
+                        </div>
+                    </div>
+                    <div class="meta-win-preview">
+                        <div class="preview-box">
+                            <img src="images/trophy.png" alt="Trofeo">
+                            <span class="preview-text">Win</span>
+                            <span class="preview-number" id="preview-win-conteo">0</span>
+                            <span class="preview-separator">/</span>
+                            <span class="preview-number" id="preview-win-meta">5</span>
+                        </div>
+                    </div>
+                </div>
+                </div>
+    </div>
+    
+    <div id="create-profile-form-container" class="profile-form-overlay">
+        <div class="profile-form-content">
+            <h3>Nuevo Perfil</h3>
+            <input type="text" id="new-profile-name-input" placeholder="Nombre del perfil...">
+            <div class="profile-form-buttons">
+                <button id="apply-new-profile-btn">✓ Aplicar</button>
+                <button id="discard-new-profile-btn">✗ Descartar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-profile-form-container" class="profile-form-overlay">
+        <div class="profile-form-content">
+            <h3>Editar Perfil</h3>
+            <input type="text" id="edit-profile-name-input" placeholder="Nuevo nombre del perfil...">
+            <div class="profile-form-buttons">
+                <button id="apply-edit-profile-btn">✓ Aplicar</button>
+                <button id="discard-edit-profile-btn">✗ Descartar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-profile-modal" class="profile-form-overlay">
+        <div class="profile-form-content">
+            <h3>Confirmar Eliminación</h3>
+            <p id="delete-profile-message">¿Seguro que quieres eliminar este perfil?</p>
+            <div class="profile-form-buttons">
+                <button id="confirm-delete-profile-btn">✓ Aceptar</button>
+                <button id="cancel-delete-profile-btn">✗ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="create-action-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="modal-title">Nueva Accion</h3><button class="modal-close-button" id="close-action-modal-button">&times;</button></div>
+            <input type="hidden" id="editing-action-id" value=""><div class="form-group"><label for="action-name">¿Cómo se llama la acción?</label><input type="text" id="action-name" placeholder="ej. Nuevo Seguidor" value=""></div>
+            <div class="accordion">
+                <div class="accordion-header active" id="general-actions-header">
+                    Acciones Generales
+                    <span>(múltiples opciones seleccionables)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="accordion-content open" id="general-actions-content">
+                    
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-minecraft"><label for="action-minecraft">Comandos Minecraft</label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-play-audio"><label for="action-play-audio">Play Audio</label>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-show-media"><label for="action-show-media">Mostrar IMG / GIF / VIDEO</label>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-show-alert"><label for="action-show-alert">Mostrar Alerta</label>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-simulate-keystrokes"><label for="action-simulate-keystrokes">Simular Keystrokes</label>
+                        </div>
+                        <div id="keystroke-config" class="keystroke-config">
+                            <div id="keystroke-summary" class="keystroke-summary-box"></div>
+                            <div class="keystroke-controls">
+                                <div>
+                                    <label>x</label>
+                                    <input type="number" id="keystroke-repeat" value="1" min="1">
+                                </div>
+                                <div>
+                                    <input type="number" id="keystroke-interval" value="250" min="0">
+                                    <span>ms</span>
+                                </div>
+                                <input type="checkbox" id="keystroke-add-to-queue">
+                                <label for="keystroke-add-to-queue">Añadir a la Cola</label>
+                            </div>
+                            <div class="keystroke-links">
+                                <a href="#" id="open-keystroke-editor-link">Expandir Editor</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-streamerbot"><label for="action-streamerbot">Streamer.bot Action</label>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-webhook"><label for="action-webhook">Comandos WebHook</label>
+                        </div>
+                        <div id="webhook-config" class="webhook-config">
+                            <label for="webhook-url">Introduce un comando:</label>
+                            <input type="text" id="webhook-url" placeholder="WebHook URL (https://example.com/trigger/eventos)" value="">
+                            <div class="input-inline-group">
+                                <div class="input-box">
+                                    <div class="label-container"><label>Cantidad:</label></div>
+                                    <div class="input-with-label"><span>#:</span><input type="number" id="webhook-quantity" value="1" min="1"></div>
+                                </div>
+                                <div class="input-box">
+                                    <div class="label-container"><label>Intervalo:</label></div>
+                                    <div class="input-with-label"><input type="number" id="webhook-interval" value="100" min="1"><span class="unit">ms</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-rcon"><label for="action-rcon">Conexión RCON</label>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="action-extra"><label for="action-extra">Acciones Extra</label>
+                        </div>
+                        <div id="extra-actions-config" class="extra-actions-config">
+
+                            <div class="extra-action-group">
+                                <label>Selecciona una opción:</label>
+                                <div class="custom-select-wrapper">
+                                    <img src="images/trophy.png" alt="Icono Win">
+                                    <select id="extra-action-widget-selector">
+                                        <option value="metaWin1" selected>Contador Win</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="extra-action-group">
+                                <label>Selecciona una opción:</label>
+                                <div class="custom-select-wrapper">
+                                    <img src="images/sumar_icon.png" alt="Icono Operación" id="extra-action-op-icon">
+                                    <select id="extra-action-operation-selector">
+                                        <option value="sumar" data-icon="images/sumar_icon.png" selected>1 Contador Win - Sumar</option>
+                                        <option value="quitar" data-icon="images/quitar_icon.png" selected>1 Contador Win - Quitar</option>
+                                        <option value="reset" data-icon="images/reset_icon.png" selected>1 Contador Win - Reset</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="extra-action-group">
+                                <label for="extra-action-quantity">Cantidad:</label>
+                                <div class="input-with-label">
+                                    <span>#:</span>
+                                    <input type="number" id="extra-action-quantity" value="1" min="1">
+                                </div>
+                            </div>
+
+                         </div>
+                    </div>
+                    </div>
+            </div>
+            <h4 class="modal-section-title">¿Durante cuánto tiempo debe permanecer visible?</h4><div class="modal-sub-section"><div class="input-group-row"><label for="display-duration">Duración de la visualización</label><input type="number" id="display-duration" value="5" min="1"><span class="unit">Segundos</span></div></div>
+            <h4 class="modal-section-title">Configuraciones adicionales (opcionales)</h4>
+            <div class="modal-sub-section">
+
+                <!-- Fila para la Cola de Acciones -->
+                <div class="input-group-row">
+                    <label for="action-queue">Cola de Acciones</label>
+                    <select id="action-queue">
+                        <option value="Screen 1" selected>Screen 1</option>
+                        <option value="Screen 2">Screen 2</option>
+                        <option value="Screen 3">Screen 3</option>
+                    </select>
+                </div>
+
+                <!-- Fila para la Imagen de Acción -->
+                <div class="input-group-row">
+                    <label for="action-image">Imagen de Accion</label>
+                    <input type="text" id="action-image" placeholder="www.imagen_ejemplo.png" value="">
+                </div>
+
+                <!-- Fila para Repetir con Combo de Regalos (CORREGIDA) -->
+                <div class="input-group-row checkbox-align">
+                    <label for="repeat-with-gift-combo">¿Repetir con combo de regalos?</label>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="repeat-with-gift-combo">
+                        <label for="repeat-with-gift-combo" style="font-style: italic; color: #b0b0b0;">
+                            (Si se activa, la acción se ejecutará por cada unidad del combo de un regalo)
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+            <a href="https://interactiveapp.live/#overlays/screen/1" target="_blank" class="overlay-link">https://interactiveapp.live/#overlays/screen/1</a>
+            <div class="info-message">¡Ten en cuenta que tienes <strong>9 pantallas superpuestas</strong> disponibles y puedes asignar múltiples acciones a cada pantalla! Las acciones en la misma pantalla se agregan a una cola cuya longitud máxima puedes configurar más abajo en esta página.</div>
+            <div class="action-modal-buttons"><button id="apply-action-button">✅ Aplicar</button><button id="discard-action-button">❌ Descartar</button></div>
+        </div>
+    </div>
+    
+    <div id="keystroke-editor-modal" class="modal-overlay">
+        <div class="modal-content keystroke-editor">
+            <div class="modal-header"><h3>Configurar Keystroke</h3><button class="modal-close-button" id="close-keystroke-modal-button">&times;</button></div>
+            <p>Si quieres saber que tecla estas presionando, puedes testearlo <a href="#">aquí</a>.</p>
+            <div id="virtual-keyboard" class="virtual-keyboard">
+                </div>
+            <div class="keyboard-modifiers">
+                <button data-key="control">Ctrl</button>
+                <button data-key="alt">Alt</button>
+                <button data-key="shift">Shift</button>
+                <button data-key="space">SPACE</button>
+            </div>
+            <div class="mouse-actions">
+                <button data-key="left_click">Left Click</button>
+                <button data-key="middle_click">Middle Click</button>
+                <button data-key="right_click">Right Click</button>
+                <button data-key="text_input">Texto</button>
+            </div>
+            <div class="game-compatibility">
+                <input type="checkbox" id="game-compat-check" checked>
+                <label for="game-compat-check">Habilitar compatibilidad con juegos (GTA 5, Roblox, etc)</label>
+            </div>
+            
+            <div id="keystroke-sequence-list" class="keystroke-sequence-list">
+                </div>
+            
+            <div class="modal-footer">
+                <button id="apply-keystroke-btn">✓ Aplicar</button>
+                <button id="discard-keystroke-btn">✗ Descartar</button>
+                <button id="test-keystroke-btn">Testear</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="create-event-modal" class="modal-overlay">
+        <div class="modal-content event-modal">
+            <div class="modal-header"><h3 id="event-modal-title">Nuevo Evento</h3><button class="modal-close-button" id="close-event-modal-button">&times;</button></div>
+            <input type="hidden" id="editing-event-id" value="">
+            <div class="event-platform-tabs">
+                <div class="event-tab active">
+                    <i class="fab fa-tiktok"></i>
+                    <span>TikTok</span>
+                </div>
+            </div>
+            <div class="event-modal-scroll-content">
+                <div class="event-modal-body">
+                    <div class="event-section" id="event-who-section"><label class="event-section-title">¿Quién puede activar el evento?</label><div class="event-radio-group"><div class="radio-item"><input type="radio" id="who-all" name="event_who" value="all" checked><label for="who-all">Todos</label></div><div class="radio-item"><input type="radio" id="who-followers" name="event_who" value="followers"><label for="who-followers">Seguidores</label></div><div class="radio-item"><input type="radio" id="who-subs" name="event_who" value="subs"><label for="who-subs">Suscriptores</label></div><div class="radio-item"><input type="radio" id="who-mods" name="event_who" value="mods"><label for="who-mods">Moderadores</label></div><div class="radio-item"><input type="radio" id="who-top" name="event_who" value="top"><label for="who-top">Top Gifters Rank</label></div><div class="radio-item"><input type="radio" id="who-specific" name="event_who" value="specific"><label for="who-specific">Usuario específico</label></div></div></div>
+                    <div class="event-section" id="event-why-section"><label class="event-section-title">¿Por qué se activará el evento?</label><div class="event-radio-group"><div class="radio-item"><input type="radio" id="why-join" name="event_why" value="join" checked><label for="why-join">Join</label></div><div class="radio-item"><input type="radio" id="why-share" name="event_why" value="share"><label for="why-share">Share</label></div><div class="radio-item"><input type="radio" id="why-follow" name="event_why" value="follow"><label for="why-follow">Follow</label></div><div class="radio-item"><input type="radio" id="why-superfan" name="event_why" value="superfan"><label for="why-superfan">Super Fan</label></div><div class="radio-item"><input type="radio" id="why-likes" name="event_why" value="likes"><label for="why-likes">Likes (taps)</label></div><div class="radio-item"><input type="radio" id="why-chat-global" name="event_why" value="chat-global"><label for="why-chat-global">Chat (global)</label></div><div class="radio-item"><input type="radio" id="why-chat-comment" name="event_why" value="chat-comment"><label for="why-chat-comment">Chat (comentario)</label></div><div class="radio-item"><input type="radio" id="why-emote" name="event_why" value="emote"><label for="why-emote">Emote (Fan Club)</label></div><div class="radio-item"><input type="radio" id="why-gift-specific" name="event_why" value="gift-specific"><label for="why-gift-specific">Gift (regalo específico)</label></div><div class="radio-item"><input type="radio" id="why-gift-min" name="event_why" value="gift-min"><label for="why-gift-min">Gift (mínimo coins)</label></div><div class="radio-item"><input type="radio" id="why-gift-id" name="event_why" value="gift-id"><label for="why-gift-id">Gift (id específico)</label></div></div></div>
+                    <div class="event-section bottom-section">
+                        <div id="dynamic-event-fields">
+                            <div class="event-input-row" id="gift-specific-selector" style="display: none;">
+                                <label>Elige un regalo</label>
+                                <div class="custom-gift-selector" id="custom-gift-selector">
+                                    <input type="hidden" id="selected-gift-id">
+                                    <div class="gift-selector-display" id="gift-selector-display">
+                                        <span class="placeholder">Selecciona...</span>
+                                    </div>
+                                    <div class="gift-selector-options" id="gift-selector-options">
+                                        <input type="text" class="gift-search-input" id="gift-search-input" placeholder="Buscar regalo...">
+                                        <div class="gift-options-list" id="gift-options-list"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="event-input-row" id="likes-amount-selector" style="display: none;">
+                                <label for="likes-amount">Definir una cantidad de likes</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="likes-amount" value="20" min="1">
+                                    <span>Likes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="event-input-row"><label>Activar todas estas acciones</label><div class="custom-multiselect" id="multi-select-all"><div class="multiselect-display"><span class="placeholder">Selecciona...</span></div><div class="multiselect-options"></div></div></div>
+                        <div class="event-input-row"><label>Activa una de estas acciones (aleatorias)</label><div class="custom-multiselect" id="multi-select-random"><div class="multiselect-display"><span class="placeholder">Selecciona...</span></div><div class="multiselect-options"></div></div></div>
+                        <div class="event-input-row"><label for="event-cooldown">User Cooldown</label><div class="input-with-unit"><input type="number" id="event-cooldown" value="0" min="0"><span>Segundos</span></div></div>
+                        <div class="event-input-row"><label for="event-image">Imagen de Evento</label><input type="text" id="event-image" placeholder="www.imagen_ejemplo.png"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="event-modal-footer"><button id="apply-event-button">✅ Aplicar</button><button id="discard-event-button">❌ Descartar</button></div>
+        </div>
+    </div>
+    
+    <div id="toast-notification"></div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <script>
+      var firebaseConfig = {
+        databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/", // <-- ¡TU URL!
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
+    
+    <script src="scripts/script.js"></script>
+    <script src="scripts/meta-win.js"></script> </body>
+    <script src="scripts/subasta.js"></script> <!-- AÑADE ESTA LÍNEA -->
+</html>

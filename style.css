@@ -1,0 +1,1741 @@
+/* ESTRUCTURA PRINCIPAL */
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #ffffff; margin: 0; padding: 0; display: grid; grid-template-columns: 200px 1fr; height: 100vh; overflow: hidden; }
+/* SIDEBAR */
+#sidebar { background-color: #252526; padding: 15px 0; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
+.nav-item { padding: 15px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.1s, border-left 0.1s; border-left: 3px solid transparent; text-align: center; }
+.nav-item:hover { background-color: #2d2d2d; }
+.nav-item.active { background-color: #1e1e1e; border-left: 3px solid #0078d4; font-weight: bold; }
+/* CONTENIDO PRINCIPAL */
+#main-content { padding: 20px 40px; display: flex; flex-direction: column; overflow-y: auto; gap: 20px; align-items: left; }
+.content-section { display: none; flex-direction: column; width: 100%; max-width: 1200px; gap: 20px; }
+.content-section.active { display: flex; }
+/* PESTAÑA INICIO */
+#config-menu { margin-bottom: 20px; padding: 15px; border: 1px solid #3c3c3c; border-radius: 8px; background-color: #2d2d2d; display: flex; align-items: center; gap: 10px; }
+#config-menu label { margin-right: 10px; font-size: 14px; color: #cccccc; white-space: nowrap; }
+#username-input { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #333333; color: white; margin-right: 15px; font-size: 15px; }
+#config-menu button { padding: 10px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; white-space: nowrap; }
+#connect-button { background-color: #0078d4; }
+#disconnect-button { background-color: #a4262c; }
+#emotes-button { background-color: #4a4a4a; }
+#config-menu button:disabled { cursor: not-allowed; opacity: 0.6; }
+#status { font-weight: bold; margin-bottom: 20px; padding: 10px; background-color: #2d2d2d; border-radius: 4px; font-size: 14px; border-left: 3px solid #0078d4; }
+#log-container { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+.log-entry { padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 14px; line-height: 1.4; }
+.chat { background-color: #2d2d2d; border-left: 4px solid #108038; }
+.gift { background-color: #3a2d48; border-left: 4px solid #ff56a8; font-weight: 500; }
+.win { background-color: #581616; border-left: 6px solid #ff0000; font-weight: bold; font-size: 15px; }
+/* LISTAS DE ACCIONES Y EVENTOS */
+.list-view-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.control-group { display: flex; gap: 10px; }
+.action-button { background-color: #5c1d80; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 14px; font-weight: 500; }
+.action-button.secondary { background-color: #4a4a4a; }
+.action-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.search-wrapper { position: relative; }
+.search-wrapper span { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #777; }
+.search-wrapper input { background-color: #23272a; border: 1px solid #3c3c3c; border-radius: 4px; padding: 8px 12px 8px 35px; color: white; width: 250px; }
+.list-view-header { display: grid; align-items: center; background-color: #23272a; border-radius: 4px; font-weight: bold; font-size: 13px; color: #b0b0b0; }
+
+/* --- ¡ESTA ES LA CORRECCIÓN DEFINITIVA PARA LAS LÍNEAS! --- */
+.list-view-header > *, .list-view-row > * {
+    padding: 10px 15px;
+    border-right: 1px solid #3c3c3c; /* Volvemos a border-right */
+}
+.list-view-header > *:last-child, .list-view-row > *:last-child {
+    border-right: none; /* El último elemento no tiene borde */
+}
+.list-view-row > * { 
+    padding: 15px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    min-width: 0; 
+}
+.list-view-row { 
+    display: grid; 
+    align-items: center; 
+    border-bottom: 1px solid #3c3c3c; 
+    font-size: 14px; 
+}
+/* La clave es eliminar el borde de las celdas y dejar solo el de la fila */
+.event-row > * {
+    border-right: none;
+}
+/* Y luego añadir el borde solo a los elementos que NO sean el último */
+.event-row > div:not(:last-child) {
+    border-right: 1px solid #3c3c3c;
+}
+/* --- FIN DE LA CORRECCIÓN --- */
+
+.action-header { grid-template-columns: 40px 120px 2fr 1.5fr 1.5fr 2fr; }
+.event-header { grid-template-columns: 40px 100px 80px 80px 1.5fr 2fr 2fr; }
+.action-header > div:first-of-type, .event-header > div:first-of-type { visibility: hidden; }
+
+.list-view-row:last-child { border-bottom: none; }
+.action-row { grid-template-columns: 40px 120px 2fr 1.5fr 1.5fr 2fr; }
+.event-row { grid-template-columns: 40px 100px 80px 80px 1.5fr 2fr 2fr; }
+.header-checkbox, .list-view-row input[type="checkbox"] { margin: 0 auto; }
+.row-icons { gap: 10px; }
+.action-icon { cursor: pointer; font-size: 16px; transition: color 0.2s; }
+.action-icon.play:hover { color: #10c35b; } .action-icon.edit:hover { color: #4a90e2; } .action-icon.delete:hover { color: #d9534f; }
+
+/* Centrado de iconos y texto de cabecera */
+.icon-center, .event-row > div:nth-child(3), .event-row > div:nth-child(4) { 
+    justify-content: center; 
+}
+.event-header > div:nth-child(3), .event-header > div:nth-child(4) {
+    text-align: center;
+}
+.action-icon.toggle { color: #10c35b; }
+
+/* ========================================================== */
+/* ✅ NUEVO CAMBIO: ESTILOS PARA LOS ICONOS DE TRIGGER       */
+/* ========================================================== */
+.trigger-content {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre icono y texto */
+}
+.trigger-content img {
+    width: 24px;  /* Tamaño de la imagen del regalo */
+    height: 24px;
+    flex-shrink: 0;
+}
+.trigger-content i {
+    font-size: 18px; /* Tamaño de los iconos de Font Awesome */
+    color: #a0a0a0;   /* Color grisáceo para los iconos */
+    width: 25px;      /* Ancho fijo para alinear con las imágenes */
+    text-align: center;
+}
+
+
+/* --- NUEVO ESTILO DE PAGINACIÓN --- */
+.list-view-pagination { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    margin-top: 20px; 
+    gap: 8px; 
+}
+
+.list-view-pagination button, .list-view-pagination .page-number { 
+    background-color: transparent; 
+    border: 1px solid #444; 
+    color: #aaa; 
+    border-radius: 6px; 
+    width: 36px; 
+    height: 36px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.list-view-pagination button:hover, .list-view-pagination .page-number:hover {
+    background-color: #333;
+    border-color: #666;
+}
+
+.list-view-pagination .page-number.active { 
+    background-color: #8A2BE2; /* Lo ponemos morado para que coincida con tus iconos */
+    border-color: #8A2BE2;
+    color: white; 
+    font-weight: bold; 
+}
+
+.list-view-pagination button:disabled { 
+    background-color: transparent; 
+    color: #555; 
+    cursor: not-allowed; 
+    border-color: #333;
+}
+#actions-list-container .no-items-message, #events-list-container .no-items-message { text-align: center; color: #999; padding: 20px; }
+.list-view-container.empty .list-view-header, .list-view-container.empty .list-view-pagination { display: none; }
+/* MODAL GENERAL */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h3 { margin: 0; color: #ffffff; font-size: 18px; font-weight: bold; }
+.modal-close-button { background: none; border: none; color: #cccccc; font-size: 24px; cursor: pointer; transition: color 0.2s; }
+.modal-close-button:hover { color: #ffffff; }
+
+/* Ancho de los modales */
+#create-action-modal .modal-content { background-color: #252526; padding: 25px; border-radius: 8px; width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+.modal-content.event-modal { background-color: #2c2c2c; width: 650px; padding: 0; color: #e0e0e0; max-height: 85vh; display: flex; flex-direction: column; }
+
+.form-group { margin-bottom: 20px; } .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #cccccc; font-size: 14px; } .form-group input[type="text"] { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #333333; color: white; box-sizing: border-box; font-size: 15px; }
+.accordion-header { background-color: #3c3c3c; padding: 12px 15px; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #ffffff; font-size: 14px; margin-bottom: 10px; transition: background-color 0.2s; } .accordion-header:hover { background-color: #4a4a4a; } .accordion-header .arrow { transition: transform 0.2s; } .accordion-header.active .arrow { transform: rotate(180deg); }
+.accordion-content { padding: 10px 15px; background-color: #2d2d2d; border-radius: 4px; display: none; flex-direction: column; margin-top: -5px; } .accordion-content.open { display: flex; }
+.checkbox-item { display: flex; align-items: flex-start; margin-bottom: 10px; cursor: pointer; flex-direction: column; } .checkbox-item .checkbox-label-row { display: flex; align-items: center; width: 100%; } .checkbox-item:last-child { margin-bottom: 0; } .checkbox-item input[type="checkbox"] { margin-right: 10px; width: 18px; height: 18px; accent-color: #0078d4; } .checkbox-item label { margin: 0; cursor: pointer; font-size: 14px; color: #ffffff; }
+.webhook-config { background-color: #333333; border-radius: 4px; padding: 15px; margin-top: 10px; margin-left: 28px; width: calc(100% - 28px); box-sizing: border-box; display: none; } .webhook-config.open { display: block; } .webhook-config label { display: block; margin-bottom: 5px; color: #cccccc; font-size: 14px; } .webhook-config input[type="text"] { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #252526; color: white; box-sizing: border-box; font-size: 15px; margin-bottom: 15px; }
+.input-inline-group { display: flex; gap: 15px; align-items: flex-end; } .input-box { display: flex; flex-direction: column; flex: 1; } .input-box .label-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; } .input-box .input-with-label { display: flex; align-items: center; border-radius: 4px; border: 1px solid #505050; background-color: #252526; padding: 0 10px; } .input-box .input-with-label span { color: #cccccc; font-size: 15px; margin-right: 5px; font-weight: bold; } .input-box input[type="number"] { flex-grow: 1; padding: 10px 0; border: none; background: none; color: white; font-size: 15px; text-align: right; -moz-appearance: textfield; } .input-box input[type="number"]::-webkit-outer-spin-button, .input-box input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } .input-box .unit { color: #cccccc; font-size: 14px; white-space: nowrap; margin-left: 5px; }
+.modal-section-title { font-weight: 600; color: #ffffff; font-size: 16px; margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid #3c3c3c; padding-bottom: 8px; } .modal-sub-section { background-color: #2d2d2d; border-radius: 4px; padding: 15px; margin-bottom: 20px; }
+.input-group-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; } .input-group-row:last-child { margin-bottom: 0; } .input-group-row label { margin-bottom: 0; white-space: nowrap; color: #cccccc; font-size: 14px; flex-shrink: 0; width: 150px; text-align: right; } .input-group-row input[type="number"], .input-group-row input[type="text"], .input-group-row select { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #333333; color: white; font-size: 15px; box-sizing: border-box; }
+.input-group-row.checkbox-align { align-items: flex-start; } .input-group-row.checkbox-align .checkbox-container { flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; padding-top: 10px; padding-left: 10px; } .input-group-row.checkbox-align input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; margin-top: 0; } .input-group-row.checkbox-align label { width: auto; text-align: left; }
+.overlay-link { display: block; margin-top: 15px; color: #0078d4; text-decoration: none; font-size: 14px; cursor: pointer; text-align: center; font-weight: 500; } .overlay-link:hover { text-decoration: underline; } .info-message { background-color: #108038; color: white; padding: 15px; border-radius: 4px; font-size: 14px; line-height: 1.4; margin: 20px 0; }
+.action-modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; border-top: 1px solid #3c3c3c; padding-top: 20px; } .action-modal-buttons button { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; } #apply-action-button { background-color: #0078d4; color: white; } #discard-action-button { background-color: #4a4a4a; color: white; }
+/* MODAL EVENTO */
+.event-modal .modal-header { padding: 15px 20px; background-color: #252526; border-bottom: 1px solid #3c3c3c; margin-bottom: 0; }
+.event-platform-tabs { padding: 0 20px; } .event-tab { display: inline-flex; align-items: center; gap: 8px; padding: 15px 0; margin-right: 20px; color: #8A2BE2; font-weight: bold; border-bottom: 2px solid #8A2BE2; cursor: pointer; }
+.event-modal-scroll-content { overflow-y: auto; padding: 0 5px 0 20px; margin-right: 15px; }
+.event-modal-body { padding-top: 20px; display: flex; flex-direction: column; gap: 35px; } .event-section-title { display: block; margin-bottom: 15px; font-size: 15px; font-weight: 600; }
+.event-radio-group { display: grid; grid-template-columns: 1fr; gap: 15px; } .radio-item { display: flex; align-items: center; } .radio-item input[type="radio"] { display: none; } .radio-item label { cursor: pointer; padding-left: 30px; position: relative; font-size: 14px; color: #b0b0b0; display: flex; align-items: center; } .radio-item label::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border: 2px solid #555; border-radius: 50%; background-color: #333; } .radio-item label::after { content: ''; position: absolute; left: 5px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8A2BE2; border-radius: 50%; opacity: 0; transition: opacity 0.2s; } .radio-item input[type="radio"]:checked + label::before { border-color: #8A2BE2; } .radio-item input[type="radio"]:checked + label::after { opacity: 1; } .radio-item input[type="radio"]:checked + label { color: #ffffff; }
+.bottom-section { border-top: 1px solid #3c3c3c; padding-top: 25px; }
+.event-input-row { display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 15px; margin-bottom: 15px; } .event-input-row label { text-align: right; font-size: 14px; font-weight: 500; } .event-input-row input[type="text"], .event-input-row input[type="number"], .event-input-row select { padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #252526; color: white; font-size: 14px; }
+.input-with-unit { display: flex; align-items: center; } .input-with-unit input { width: 100%; border-top-right-radius: 0; border-bottom-right-radius: 0; } .input-with-unit span { padding: 10px; background-color: #3c3c3c; border: 1px solid #505050; border-left: none; border-top-right-radius: 4px; border-bottom-right-radius: 4px; font-size: 14px; color: #b0b0b0; }
+.custom-multiselect { position: relative; width: 100%; } .multiselect-display { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 5px 10px; min-height: 28px; border: 1px solid #505050; background-color: #252526; border-radius: 4px; cursor: pointer; } .multiselect-display.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; } .multiselect-display .placeholder { color: #777; font-size: 14px; } .multiselect-tag { display: inline-flex; align-items: center; background-color: #3c3c3c; color: #e0e0e0; padding: 3px 8px; border-radius: 4px; font-size: 13px; } .multiselect-tag .remove-tag { margin-left: 8px; cursor: pointer; font-weight: bold; } .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: #333333; border: 1px solid #505050; border-top: none; z-index: 1002; max-height: 150px; overflow-y: auto; } .multiselect-option { padding: 10px 15px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; } .multiselect-option:hover { background-color: #4a4a4a; } .multiselect-option.selected { background-color: #108038; color: white; } .multiselect-option.selected::after { content: '✔'; }
+.event-modal-footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 15px; padding: 15px 20px; background-color: #252526; border-top: 1px solid #3c3c3c; } .event-modal-footer button { padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #555; background-color: #3c3c3c; color: white; }
+/* TOAST NOTIFICATION */
+#toast-notification { visibility: hidden; min-width: 250px; background-color: #108038; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1001; right: 20px; bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); font-weight: 500; font-size: 15px; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
+#toast-notification.show { visibility: visible; opacity: 1; }
+
+.custom-gift-selector { position: relative; width: 100%; }
+.gift-selector-display { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #505050; background-color: #252526; border-radius: 4px; cursor: pointer; min-height: 20px; }
+.gift-selector-display.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.gift-selector-display img { width: 24px; height: 24px; flex-shrink: 0; }
+.gift-selector-display span { font-size: 14px; color: white; }
+.gift-selector-display .placeholder { color: #b0b0b0; font-size: 14px; }
+.gift-selector-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: #333333; border: 1px solid #505050; border-top: none; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; z-index: 1003; }
+.custom-gift-selector.open .gift-selector-options { display: block; }
+.gift-search-input { width: 100%; padding: 10px; box-sizing: border-box; background-color: #252526; border: none; border-bottom: 1px solid #505050; color: white; font-size: 14px; }
+.gift-search-input:focus { outline: none; }
+.gift-options-list { max-height: 220px; overflow-y: auto; }
+.gift-option-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #444; }
+.gift-option-item:last-child { border-bottom: none; }
+.gift-option-item:hover { background-color: #4a4a4a; }
+.gift-option-item img { width: 32px; height: 32px; flex-shrink: 0; }
+.gift-option-item .gift-details { display: flex; flex-direction: column; }
+.gift-option-item .gift-details .gift-name { color: #e0e0e0; font-weight: 500; }
+.gift-option-item .gift-details .gift-cost { font-size: 12px; color: #999; }
+.no-gifts-message { padding: 15px; text-align: center; color: #999; }
+
+/* ======================================================= */
+/* ESTILOS PARA LA SECCIÓN DE PERFILES      */
+/* ======================================================= */
+
+/* Contenedor principal de la sección de perfiles */
+/* --- NUEVO ESTILO UNIFICADO PARA CONTENEDORES PRINCIPALES --- */
+.list-view-container, .section-container {
+    background-color: #292b2f; /* Un gris ligeramente más claro */
+    border: 1px solid #5c1d80; /* El borde azul de la referencia */
+    border-radius: 8px;
+    padding: 25px;
+    color: #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.list-view-container h2, .section-container h2 {
+    color: #8A2BE2;
+    font-size: 1.5em; /* Título más grande */
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.list-view-container p, .section-container p, .list-view-container .help-text {
+    color: #b0b0b0;
+    font-size: 0.95em;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    background-color: transparent; /* Limpiamos estilos antiguos */
+    border: none;
+    padding: 0;
+    margin-top: -10px; /* Acercarlo al título */
+}
+
+/* Caja de información verde */
+.info-box {
+    background-color: rgba(72, 23, 100, 0.411);
+    border-left: 4px solid #5c1d80;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+.info-box p {
+    margin: 0;
+    color: #ac2fff;
+    font-weight: 500;
+}
+
+/* Barra de herramientas de controles */
+.controls-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Estilo del selector de perfil */
+#profile-selector {
+    background-color: #23272a;
+    color: #ffffff;
+    border: 1px solid #3c3c3c;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+/* Contenedor para grupos de botones */
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* Estilo base para los nuevos botones */
+.btn {
+    background-color: #5c1d80; /* Azul tipo Discord */
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espacio entre icono y texto */
+}
+.btn:hover {
+    background-color: #4752c4;
+}
+
+/* Botón de peligro (Eliminar) */
+.btn.btn-danger {
+    background-color: #ed4245;
+}
+.btn.btn-danger:hover {
+    background-color: #c43235;
+}
+
+/* Botones secundarios (Exportar/Importar) */
+.btn.btn-secondary {
+    background-color: #4f545c;
+}
+.btn.btn-secondary:hover {
+    background-color: #6a707a;
+}
+/* ======================================================= */
+/* ESTILOS PARA EL FORMULARIO DE PERFILES   */
+/* ======================================================= */
+.profile-form-overlay {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+.profile-form-overlay.visible {
+    display: flex; /* Se muestra al hacer clic en crear */
+}
+.profile-form-content {
+    background-color: #252526;
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #0078d4;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.profile-form-content h3 {
+    margin: 0;
+    text-align: center;
+    font-size: 16px;
+}
+.profile-form-content input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 1px solid #505050;
+    background-color: #333333;
+    color: white;
+    font-size: 15px;
+}
+.profile-form-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.profile-form-buttons button {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+}
+.profile-form-buttons button:first-of-type { /* Botón Aplicar */
+    background-color: #108038;
+}
+.profile-form-buttons button:last-of-type { /* Botón Descartar */
+    background-color: #a4262c;
+}
+
+/* ESTILOS PARA MODAL DE ELIMINACIÓN */
+#delete-profile-message {
+    text-align: center;
+    color: #e0e0e0;
+    margin: 10px 0;
+    font-size: 15px;
+    line-height: 1.5;
+}
+#confirm-delete-profile-btn {
+    background-color: #a4262c; /* Rojo de peligro */
+}
+#cancel-delete-profile-btn {
+    background-color: #4a4a4a; /* Gris neutro */
+}
+/* ======================================================= */
+/* --- ESTILOS PARA LA GALERÍA DE OVERLAYS: TOP GIFTERS --- */
+/* ======================================================= */
+
+.overlay-card-container {
+    background-color: #2e2e2e; /* Fondo oscuro del contenedor */
+    border: 1px solid #5c1d80; /* Borde azul de la referencia */
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+/* Encabezado del Overlay */
+.overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.overlay-title {
+    color: #8A2BE2 ; 
+    margin: 0;
+    font-size: 1.5em;
+}
+
+/* --- ESTILOS DE URL Y BOTONES DE ACCIÓN --- */
+
+.overlay-url-actions {
+    display: flex;
+    gap: 10px; 
+    margin-bottom: 25px;
+    align-items: center;
+}
+
+.url-input {
+    flex-grow: 1; 
+    background-color: #1e1e1e;
+    color: #cccccc;
+    border: 1px solid #444;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #555;
+}
+
+/* Estilo para el botón 'Personalizar' con icono */
+.personalize-btn i {
+    margin-right: 5px;
+}
+
+/* --- LAYOUT DE DOS COLUMNAS --- */
+
+.overlay-content-layout {
+    display: flex;
+    gap: 20px; 
+}
+
+.overlay-preview {
+    flex: 2; /* Columna izquierda, más ancha */
+    background-color: #1e1e1e; 
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+    min-height: 250px; 
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Eliminar el texto de placeholder cuando agreguemos el ranking */
+}
+
+.overlay-config {
+    flex: 1; /* Columna derecha, más estrecha */
+    padding: 15px 0 0 15px;
+    border-left: 1px solid #444; 
+}
+
+/* --- ESTILOS DE CONFIGURACIÓN (CORREGIDOS) --- */
+
+.config-section h4 {
+    color: white;
+    margin-top: 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+/* Estilos generales: Hacemos que todos los items sean columna */
+.config-item {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column; /* Cambiado a COLUMNA */
+    align-items: flex-start;
+    color: #ccc;
+    gap: 5px; /* Espacio entre el label y el input/checkbox */
+}
+
+/* Estilos para el label: todos los labels deben ser visibles */
+.config-item label {
+    font-weight: bold; /* Labels en negrita */
+    margin-bottom: 0; /* Sin margen inferior extra */
+}
+
+/* Estilos para el input de checkbox */
+.config-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #0078d4;
+    /* Aseguramos que el checkbox esté debajo del label */
+    margin-top: 5px; 
+}
+
+
+/* Estilos para los inputs de número */
+.config-item input[type="number"] {
+    width: 60px;
+    background-color: #1e1e1e;
+    color: #cccccc;
+    border: 1px solid #444;
+    padding: 5px;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+.config-item small {
+    font-size: 0.75em;
+    color: #888;
+    margin-top: 5px;
+}
+
+/* ======================================================= */
+/* --- ESTILOS PARA EL NUEVO OVERLAY DE SUBASTA --- */
+/* ======================================================= */
+
+/* --- GENERALES DE SUBASTA --- */
+
+.premium-tag {
+    background: linear-gradient(90deg, #9b59b6, #8e44ad); /* Morado degradado */
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.overlay-title[style] { /* Para aplicar el color verde de la imagen */
+    color: #8A2BE2 !important;
+}
+
+/* --- 1. Panel de controles (Duración, Snipe, Base, Botones de acción) --- */
+
+.subasta-controls-panel {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    margin-bottom: 15px;
+}
+.subasta-control-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.subasta-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.subasta-control-group label {
+    font-size: 0.9em;
+    color: #cccccc;
+    font-weight: 500;
+}
+
+.subasta-input {
+    width: 60px;
+    background-color: #2e2e2e;
+    color: white;
+    border: 1px solid #505050;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 1em;
+    text-align: center;
+}
+
+.subasta-actions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.subasta-actions-group label {
+    font-size: 0.9em;
+    color: #cccccc;
+    font-weight: 500;
+    /* Los labels de Iniciar/Pausar/Reiniciar/Reset Total tienen espacio pero son invisibles */
+    opacity: 1; 
+    height: 1.2em;
+}
+
+/* Nuevo estilo para que la etiqueta quede encima del input */
+.subasta-col-group {
+    display: flex;
+    flex-direction: column; /* ESTA ES LA CLAVE */
+    gap: 5px; /* Espacio pequeño entre la etiqueta y el input */
+}
+
+/* Opcional: ajustar el contenedor padre si es necesario */
+.config-item.inline-inputs {
+    /* Aseguramos que los dos grupos (NOMBRE y MONEDAS) sigan en fila */
+    align-items: flex-start; 
+    gap: 20px; /* Ajusta esta separación entre las dos columnas */
+}
+
+.icon-btn {
+    width: 75px;
+    height: 35px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+    background-color: #4a4a4a; 
+}
+.icon-btn i {
+    color: white;
+}
+
+/* Ajuste de URL para Subasta (va debajo de los controles principales) */
+.overlay-url-actions.subasta-url {
+    margin-top: 15px;
+    margin-bottom: 25px; 
+    border-top: 1px solid #444;
+    padding-top: 15px;
+}
+.overlay-url-actions.subasta-url .url-input {
+    background-color: #2e2e2e;
+}
+
+
+/* --- 2. Layout de contenido de Subasta (Configuración + Participantes) --- */
+
+.overlay-content-layout.subasta-layout {
+    gap: 15px; 
+}
+
+/* 2.1 Panel de Configuración de Subasta */
+.overlay-config.subasta-config {
+    flex: 1; 
+    padding: 0;
+    border-right: 1px solid #444; 
+    border-left: none; 
+    padding-right: 15px;
+}
+.subasta-config-section {
+    padding-right: 0; 
+}
+.subasta-config-section h4 {
+    margin-bottom: 10px;
+}
+
+/* Ítems de configuración: Checkboxes */
+.config-item.checkbox-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* Alineación inicial */
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    background-color: #333333;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+.config-item.checkbox-row input[type="checkbox"] {
+    margin-top: 0;
+}
+.config-item.checkbox-row label {
+    font-weight: normal;
+    cursor: pointer;
+    flex-grow: 0;
+    margin-right: 15px;
+}
+
+/* Ítems de configuración: Input de Filas */
+.config-item.input-row {
+    margin-top: 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+.config-item.input-row label {
+    font-weight: normal;
+    flex-grow: 0;
+}
+.config-item.input-row .full-width-input {
+    width: 60px;
+    text-align: center;
+    padding: 8px 5px;
+    margin-top: 0;
+}
+
+/* Ítems de configuración: Inputs en línea (Nombre/Monedas) */
+.config-item.inline-inputs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+.config-item.inline-inputs label {
+    font-weight: normal;
+    width: auto;
+    text-align: left;
+}
+.config-item.inline-inputs .half-width-input {
+    width: 100px;
+    padding: 8px 5px;
+    margin-top: 0;
+    text-align: center;
+}
+
+/* Botón Sumar Monedas */
+.sum-coins-btn {
+    background-color: #5c1d80; /* Color verde */
+    width: 100%;
+    margin-bottom: 20px;
+    font-weight: bold;
+    padding: 10px 15px;
+}
+.sum-coins-btn:hover {
+    background-color: #0c6a2e;
+}
+
+/* Texto de información */
+.subasta-info-text {
+    font-size: 0.9em;
+    color: #cccccc;
+    margin: 5px 0;
+}
+.subasta-info-text i {
+    margin-right: 5px;
+}
+
+
+/* --- 2.2 Panel de Participantes de Subasta --- */
+
+.subasta-participants-panel {
+    flex: 1.5; 
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+    min-height: 350px; 
+}
+
+.subasta-participants-panel h4 {
+    color: white;
+    margin-top: 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.participants-header {
+    display: grid;
+    grid-template-columns: 0.5fr 2fr 1.5fr 1.5fr;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: #cccccc;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.participants-header div {
+    padding: 0 5px;
+}
+
+.no-participants {
+    text-align: center;
+    color: #999;
+    padding: 20px 0;
+    font-size: 0.9em;
+}
+/* Fin de estilos de Subasta */
+/* Nuevo bloque: Asegura que los inputs en los grupos de columnas tengan el mismo estilo que .subasta-input */
+.subasta-col-group input[type="text"],
+.subasta-col-group input[type="number"] {
+    /* Copiamos los valores que queremos que sean idénticos al input de monedas */
+    width: 90px; /* Ancho compacto */
+    background-color: #2e2e2e; 
+    color: white; 
+    border: 1px solid #505050; 
+    padding: 8px 10px; /* Altura */
+    border-radius: 4px;
+    font-size: 1em;
+    text-align: center;
+    /* !important es una opción de último recurso, pero es mejor aumentar la especificidad */
+}
+/* ======================================================= */
+/* --- ESTILOS PARA EL WIDGET META WIN GENERAL --- */
+/* ======================================================= */
+
+/* Contenedor principal del contenido del widget, oculto por defecto */
+.meta-win-content {
+    display: flex; /* Inicia oculto */
+    gap: 30px;
+    background-color: #252526;
+    padding: 20px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border-top: 1px solid #444;
+}
+
+/* Columna izquierda: Controles */
+.meta-win-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+}
+
+.meta-win-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    margin: 0 0 10px 0;
+}
+
+.meta-win-title img {
+    width: 24px;
+    height: 24px;
+}
+
+.control-group-win {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-group-win label {
+    width: 60px;
+    font-weight: bold;
+    color: #cccccc;
+    font-size: 0.9em;
+}
+
+.control-group-win input[type="number"] {
+    width: 80px;
+    text-align: center;
+    background-color: #1e1e1e;
+    color: white;
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 1.1em;
+    -moz-appearance: textfield; /* Oculta flechas en Firefox */
+}
+.control-group-win input[type="number"]::-webkit-outer-spin-button,
+.control-group-win input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Oculta flechas en Chrome/Safari */
+    margin: 0;
+}
+
+.btn-win {
+    background-color: #3a3a3a;
+    color: #8A2BE2  ; /* Color verde de la imagen de referencia */
+    border: none;
+    border-radius: 4px;
+    width: 30px;
+    height: 35px;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background-color 0.2s;
+}
+.btn-win:hover {
+    background-color: #4f4f4f;
+}
+
+/* Columna derecha: Vista Previa */
+.meta-win-preview {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-box {
+    background-color: #000000;
+    color: white;
+    border-radius: 12px;
+    padding: 10px 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: 'Arial Black', Gadget, sans-serif;
+    font-size: 2.5em; /* Tamaño de fuente grande para "Win" */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.preview-box img {
+    width: 50px;
+    height: 50px;
+}
+
+.preview-number {
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+    padding: 0px 12px;
+    font-size: 0.9em; /* Ligeramente más pequeño que "Win" */
+    min-width: 30px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.preview-separator {
+    font-weight: normal;
+    color: #aaa;
+}
+/* ======================================================= */
+/* --- ESTILOS PARA EL SUBMENÚ DE ACCIONES EXTRA --- */
+/* ======================================================= */
+
+/* Contenedor principal del submenú, oculto por defecto */
+.extra-actions-config {
+    display: none; /* Inicia oculto */
+    background-color: #333333;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 10px;
+    margin-left: 28px; /* Para alinear con el submenú de WebHook */
+    width: calc(100% - 28px);
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Clase para mostrar el submenú */
+.extra-actions-config.open {
+    display: flex;
+}
+
+/* Estilo para cada grupo (label + selector/input) */
+.extra-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.extra-action-group label {
+    font-size: 14px;
+    color: #cccccc;
+    font-weight: 500;
+}
+
+/* Contenedor para el selector con icono */
+.custom-select-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: #252526;
+    border: 1px solid #505050;
+    border-radius: 4px;
+}
+
+.custom-select-wrapper img {
+    width: 20px;
+    height: 20px;
+    margin: 0 10px;
+}
+
+.custom-select-wrapper select {
+    flex-grow: 1;
+    padding: 10px 5px;
+    border: none;
+    background: none;
+    color: white;
+    font-size: 15px;
+    -webkit-appearance: none; /* Quita la flecha por defecto */
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+/* Estilo para el input de cantidad (reutilizamos uno existente) */
+.extra-action-group .input-with-label {
+    border: 1px solid #505050;
+    background-color: #252526;
+    border-radius: 4px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+}
+.extra-action-group .input-with-label span {
+    color: #cccccc;
+    font-weight: bold;
+    margin-right: 5px;
+}
+.extra-action-group .input-with-label input {
+    flex-grow: 1;
+    padding: 10px 0;
+    border: none;
+    background: none;
+    color: white;
+    font-size: 15px;
+}
+/* Arreglo para el fondo del selector en Acciones Extra */
+.custom-select-wrapper select {
+    background-color: #252526; /* Hereda el color del contenedor */
+    color: white;
+}
+
+/* Estilo para cada opción dentro del desplegable */
+.custom-select-wrapper option {
+    background-color: #333333; /* Un gris oscuro para el fondo del menú */
+    color: white;
+    padding: 10px;
+    border-bottom: 1px solid #555;
+}
+/* ======================================================= */
+/* --- ESTILOS PARA SIMULAR KEYSTROKES --- */
+/* ======================================================= */
+
+/* Submenú en el modal de acción (sin cambios) */
+.keystroke-config {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #333;
+    padding: 15px;
+    margin-top: 10px;
+    margin-left: 28px;
+    border-radius: 4px;
+}
+.keystroke-config.open { display: flex; }
+
+.keystroke-summary-box {
+    min-height: 40px;
+    background-color: #252526;
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 10px;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.keystroke-controls, .keystroke-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+.keystroke-controls input[type="number"] {
+    width: 60px;
+    text-align: center;
+    background-color: #1e1e1e;
+    border: 1px solid #505050;
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+}
+.keystroke-links a { color: #0078d4; text-decoration: none; }
+.keystroke-links a:hover { text-decoration: underline; }
+
+/* -- NUEVOS ESTILOS PARA EL MODAL Y TECLADO VIRTUAL -- */
+
+.modal-content.keystroke-editor {
+    width: 900px; /* Un poco más ancho para el nuevo layout */
+    max-width: 95vw;
+    background-color: #2b2d31; /* Fondo más oscuro */
+    border: 1px solid #1e1f22;
+}
+.modal-content.keystroke-editor p { color: #b0b0b0; }
+.modal-content.keystroke-editor p a { color: #3ba55d; text-decoration: none; }
+
+.virtual-keyboard {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #202225;
+    border-radius: 8px;
+}
+.keyboard-main {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    grid-auto-rows: 40px;
+    gap: 8px;
+}
+.keyboard-side { display: flex; flex-direction: column; gap: 20px; }
+.side-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 40px; gap: 8px; }
+.numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 40px; gap: 8px; }
+
+.virtual-keyboard button {
+    background-color: #40444b;
+    border: none;
+    border-bottom: 2px solid #202225;
+    color: #dcddde;
+    border-radius: 6px;
+    padding: 0;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.virtual-keyboard button:hover { background-color: #585d66; }
+.virtual-keyboard button:active { transform: translateY(1px); border-bottom-width: 1px; }
+
+/* Estilos para teclas especiales */
+.key-backspace { grid-column: span 2; }
+.key-tab { grid-column: span 2; }
+.key-capslock { grid-column: span 2; }
+.key-enter { grid-column: span 2; }
+.key-shift { grid-column: span 2; }
+.key-space { grid-column: span 4; }
+.key-arrow-up { grid-column: 2; }
+.key-arrow-left { grid-column: 1; }
+.key-arrow-down { grid-column: 2; }
+.key-arrow-right { grid-column: 3; }
+
+.keyboard-modifiers, .mouse-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: flex-start;
+}
+.keyboard-modifiers button, .mouse-actions button {
+    padding: 10px 20px;
+    background-color: #40444b;
+    border: 1px solid #202225;
+    color: #dcddde;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.game-compatibility { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.game-compatibility label { color: #b0b0b0; }
+
+.keystroke-sequence-list {
+    min-height: 150px;
+    background-color: #202225;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #1e1f22;
+}
+.keystroke-sequence-item {
+    display: grid;
+    grid-template-columns: 30px 1fr 1fr 1fr 100px 100px auto;
+    gap: 10px;
+    align-items: center;
+    background-color: #2f3136;
+    padding: 10px;
+    border-radius: 6px;
+}
+.keystroke-sequence-item select, .keystroke-sequence-item input {
+    background-color: #40444b;
+    border: 1px solid #202225;
+    color: #dcddde;
+    padding: 8px;
+    border-radius: 4px;
+}
+.keystroke-sequence-item .seq-buttons { display: flex; gap: 5px; }
+.keystroke-sequence-item .seq-buttons button { background: none; border: none; color: #b0b0b0; cursor: pointer; font-size: 16px; }
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    border-top: 1px solid #202225;
+    padding-top: 20px;
+}
+.modal-footer button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+#apply-keystroke-btn { background-color: #3ba55d; color: white; }
+#discard-keystroke-btn { background-color: #4f545c; color: white; }
+#test-keystroke-btn { background-color: transparent; border: 1px solid #4f545c; color: #dcddde; }
+
+/* --- Estilos para la Nueva Página de Inicio --- */
+
+/* Contenedor del interruptor de modo */
+.connection-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+#connection-mode-toggle {
+    display: inline-flex;
+    background-color: #2a2d30;
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid #444;
+}
+
+.toggle-btn {
+    padding: 8px 16px;
+    border: none;
+    background-color: transparent;
+    color: #a0a0a0;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.toggle-btn.active {
+    background-color: #108038; /* Verde */
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.toggle-btn:not(.active):hover {
+    background-color: #3f4246;
+}
+
+/* Paneles de conexión */
+.connection-panel {
+    display: none; /* Ocultos por defecto */
+    background-color: #1e1f22;
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.connection-panel.active {
+    display: block; /* Solo el activo se muestra */
+}
+
+.panel-header {
+    background-color: #2a2d30;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.panel-header h3 {
+    margin: 0 0 5px 0;
+    color: #fff;
+    font-size: 1.2em;
+}
+
+.panel-header p {
+    margin: 0;
+    color: #a0a0a0;
+    font-size: 0.9em;
+}
+
+.panel-content {
+    padding: 20px;
+}
+
+.panel-content label {
+    display: block;
+    margin-bottom: 8px;
+    color: #ccc;
+    font-weight: bold;
+}
+
+.input-group, .button-group, .status-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#username-input {
+    flex-grow: 1;
+}
+
+#update-gifts-container {
+    margin-top: 15px;
+}
+
+.secondary-btn {
+    background-color: #4f545c;
+    color: #f0f0f0;
+}
+.secondary-btn:hover {
+    background-color: #5f646c;
+}
+
+/* Estilos específicos para el panel de TikFinity */
+.provider-badge {
+    background-color: #e51351;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+.status-indicator {
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.status-indicator.disconnected {
+    color: #ff4d4d;
+    background-color: rgba(255, 77, 77, 0.1);
+}
+.status-indicator.connected {
+    color: #10c35b;
+    background-color: rgba(16, 195, 91, 0.1);
+}
+.status-indicator.connecting {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Contenedor de logs */
+.log-wrapper {
+    margin-top: 20px;
+    background-color: #1e1f22;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#status {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #2a2d30;
+    border-bottom: 1px solid #333;
+}
+#log-container {
+    height: 300px; /* O el alto que prefieras */
+    overflow-y: auto;
+    padding: 10px;
+}
+.join {
+    background-color: #2d3748; /* Un color azul-grisáceo */
+    border-left: 4px solid #4a90e2;
+}
+/* --- NUEVOS ESTILOS PARA ICONOS DE ACCIÓN CIRCULARES --- */
+
+.action-icon-bg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;  /* Tamaño del círculo */
+    height: 20px; /* Tamaño del círculo */
+    border-radius: 50%; /* Esto lo hace redondo */
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-icon-bg i {
+    color: white; /* Color del icono (la flecha, el lápiz, etc.) */
+    font-size: 10px; /* Tamaño del icono */
+}
+
+/* Al pasar el ratón, el icono se agranda un poco */
+.action-icon-bg:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* Colores de fondo para cada botón */
+.action-icon-bg.play {
+    background-color: #8A2BE2; /* Morado */
+}
+.action-icon-bg.edit {
+    background-color: #8A2BE2; /* Morado */
+}
+.action-icon-bg.duplicate {
+    background-color: #8A2BE2; /* Morado */
+}
+.action-icon-bg.delete {
+    background-color: #8A2BE2; /* Morado */
+}
+
+/* Opcional: Si quieres que cada uno tenga un tono diferente de morado */
+/*
+.action-icon-bg.play { background-color: #6a0dad; }
+.action-icon-bg.edit { background-color: #8a2be2; }
+.action-icon-bg.duplicate { background-color: #9932cc; }
+.action-icon-bg.delete { background-color: #4b0082; }
+*/
+/* 
+  Esta es la regla principal. Se aplica a todas las celdas (`div`)
+  dentro de una fila de acción (`.action-row`), excepto a la primera 
+  (el checkbox) y la segunda (los iconos).
+*/
+.action-row > div:not(:first-child):not(:nth-child(2)) {
+    white-space: nowrap;      /* 1. Evita que el texto salte a la siguiente línea */
+    overflow: hidden;         /* 2. Oculta cualquier contenido que se desborde */
+    text-overflow: ellipsis;  /* 3. Muestra "..." en lugar del texto oculto */
+    display: block;           /* Necesario para que text-overflow funcione bien */
+    line-height: 1.5;         /* Ajusta la altura de línea para centrar verticalmente */
+    padding-top: 15px;        /* Ajustes para que el texto se vea centrado */
+    padding-bottom: 15px;
+}
+/* --- ESTILOS PARA MANEJO DE TEXTO LARGO EN EVENTOS --- */
+
+/* 
+  Se aplica a las celdas de Usuario, Trigger y Acciones.
+  (Columnas 5, 6 y 7 de la fila de evento)
+*/
+.event-row > div:nth-child(n+5) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block; /* O display: inline-block si prefieres */
+    padding-top: 15px; /* Ajuste para centrado vertical */
+    padding-bottom: 15px;
+}
+/* --- ESTILOS PARA EL ICONO DE TIKTOK EN LA LISTA DE EVENTOS --- */
+
+.event-row .fa-tiktok {
+    font-size: 20px;
+    color: #8A2BE2; /* O el color que prefieras */
+}
+/* --- ESTILOS PERSONALIZADOS PARA CHECKBOXES (CORREGIDO Y ESPECÍFICO) --- */
+
+/* 
+   Estilo Base: Se aplica a los checkboxes de la columna 'Activo' en Eventos 
+   Y a los checkboxes principales de los modales.
+*/
+.event-row .icon-center input[type="checkbox"],
+.checkbox-item input[type="checkbox"],
+.input-group-row input[type="checkbox"],
+.config-item input[type="checkbox"] {    /* <--- ¡AÑADIMOS ESTE! */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #23272a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+}
+
+/* Estado Marcado: para los mismos checkboxes */
+.event-row .icon-center input[type="checkbox"]:checked,
+.checkbox-item input[type="checkbox"]:checked,
+.input-group-row input[type="checkbox"]:checked,
+.config-item input[type="checkbox"]:checked { /* <-- AÑADIDO AQUÍ */
+    background-color: #8A2BE2; /* TU COLOR MORADO */
+    border-color: #8A2BE2;
+}
+
+/* La Marca de Verificación: para los mismos checkboxes */
+.event-row .icon-center input[type="checkbox"]:checked::after,
+.checkbox-item input[type="checkbox"]:checked::after,
+.input-group-row input[type="checkbox"]:checked::after,
+.config-item input[type="checkbox"]:checked::after { /* <-- AÑADIDO AQUÍ */
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* 
+   RESTAURACIÓN: Devolvemos el estilo por defecto a los checkboxes de selección de fila,
+   que habíamos roto sin querer.
+*/
+.list-view-row > div:first-child input[type="checkbox"],
+.list-view-header input[type="checkbox"] {
+    -webkit-appearance: checkbox; /* ¡LA CLAVE! Volvemos al estilo nativo */
+    -moz-appearance: checkbox;
+    appearance: checkbox;
+    width: auto;  /* Dejamos que el navegador decida el tamaño */
+    height: auto;
+    accent-color: #8A2BE2; /* Damos el color morado de forma nativa */
+}
+/* --- ESTILOS ADICIONALES PARA LA LISTA DE PARTICIPANTES DE LA SUBASTA --- */
+
+.participant-row-content {
+    display: grid;
+    grid-template-columns: 0.5fr 2fr 1.5fr 1.5fr;
+    width: 100%;
+    align-items: center;
+    text-align: center;
+}
+
+.kick-btn {
+    background-color: #ed4245;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+/* --- ESTILOS PARA EL PANEL DE PARTICIPANTES DE SUBASTA --- */
+
+.subasta-participants-panel .participants-header,
+.subasta-participants-panel .participant-row-panel {
+    display: grid;
+    grid-template-columns: 0.5fr 3fr 1.5fr 1.5fr;
+    align-items: center;
+    text-align: left;
+    padding: 8px 12px;
+}
+
+.subasta-participants-panel .participants-header {
+    font-weight: bold;
+    color: #ccc;
+    border-bottom: 2px solid #555;
+    margin-bottom: 5px;
+}
+
+.subasta-participants-panel .participant-row-panel {
+    border-bottom: 1px solid #444;
+}
+.subasta-participants-panel .participant-row-panel:last-child {
+    border-bottom: none;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.player-info .nickname {
+    font-weight: bold;
+    color: white;
+}
+
+.player-info .username {
+    font-size: 0.8em;
+    color: #999;
+}
+/* Añade esto al CSS de tu panel de administrador */
+.participant-row-panel .participant-pfp {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 10px;
+    flex-shrink: 0; /* Evita que la imagen se encoja */
+}
+
+/* Ajuste para alinear la imagen con el texto */
+.participant-row-panel .player-info-container {
+    display: flex;
+    align-items: center;
+}
+/* --- ESTILOS PARA EL NUEVO TEMPORIZADOR DEL PANEL DE SUBASTA --- */
+
+.subasta-timer-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.subasta-timer-group label {
+    font-size: 0.8rem;
+    color: #a0aec0;
+}
+
+#subasta-timer-display {
+    background-color: #1a202c; /* Fondo oscuro */
+    color: #e2e8f0; /* Texto claro */
+    font-family: 'Courier New', Courier, monospace; /* Fuente de tipo digital */
+    font-size: 1.5rem; /* Tamaño grande para que se vea bien */
+    font-weight: bold;
+    padding: 5px 15px;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+    min-width: 80px; /* Ancho mínimo para que no salte */
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Estilo opcional para cuando esté en modo snipe */
+#subasta-timer-display.snipe-mode {
+    background-color: #c53030; /* Fondo rojo */
+    color: #fff;
+    border-color: #f56565;
+}
+/* Añade esto a tu archivo style.css */
+
+.log-entry {
+    padding: 8px 12px;
+    border-bottom: 1px solid #3a3a3a; /* Un borde sutil */
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre el icono y el texto */
+    line-height: 1.4;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+/* Estilo general para los iconos en el log */
+.log-entry i.fas {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    color: #a0a0a0; /* Un color gris por defecto */
+}
+
+/* Icono especial para regalos */
+.gift-icon {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+}
+
+/* Estilos específicos para cada tipo de log */
+.log-entry.gift, .log-entry.win {
+    background-color: rgba(255, 215, 0, 0.05);
+    border-left: 3px solid #ffd700;
+}
+
+.log-entry.win {
+    font-weight: bold; /* Regalos caros en negrita */
+}
+
+.log-entry.follow {
+    border-left: 3px solid #ff4d4d;
+}
+
+.log-entry.share {
+    border-left: 3px solid #38c172;
+}
+
+.log-entry.like {
+    border-left: 3px solid #ff005c;
+}
+
+.log-entry.join {
+    color: #ccc; /* Un color más sutil para los joins */
+}
+/* === ESTILO DE SCROLLBAR PERSONALIZADO (ESTILO TIKFINITY) === */
+
+/* Para navegadores WebKit (Chrome, Safari, Edge, y Electron) */
+
+/* 1. Define el scrollbar en general: grosor y altura */
+::-webkit-scrollbar {
+  width: 10px; /* Ancho de la barra vertical */
+  height: 8px; /* Alto de la barra horizontal */
+}
+
+/* 2. El "track" o fondo del scrollbar */
+::-webkit-scrollbar-track {
+  background: #2e2e2e; /* Un gris oscuro que se mezcla con el fondo */
+  border-radius: 4px; /* Opcional: redondear también el track */
+}
+
+/* 3. El "thumb" o la parte que se arrastra */
+::-webkit-scrollbar-thumb {
+  background-color: #5c1d80; /* Color del thumb, un gris medio */
+  border-radius: 8px; /* ¡La clave! Bordes súper redondeados para el efecto píldora */
+  border: 0px solid #2e2e2e; /* Crea un pequeño espacio alrededor del thumb */
+  background-clip: content-box; /* Asegura que el borde no se pinte con el fondo del thumb */
+}
+
+/* 4. Efecto al pasar el ratón por encima del thumb */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #5c1d80; /* Un gris un poco más claro para el feedback */
+}
+
+/* 5. (Opcional) Ocultar los botones de flecha */
+::-webkit-scrollbar-button {
+  display: none;
+}
+/* Para poner scrollbar en lista participantes */
+.participants-list {
+  /* 
+   *  Paso 1: Definir una altura máxima.
+   *  El contenedor NUNCA crecerá más allá de esta altura.
+   *  Puedes ajustar este valor (en px, vh, rem, etc.) según tu diseño.
+   *  300px es un buen punto de partida.
+   */
+  max-height: 300px; 
+  
+  /* 
+   *  Paso 2: Controlar el desbordamiento vertical.
+   *  'auto' es la mejor opción: solo mostrará la barra de scroll
+   *  SI Y SOLO SI el contenido es más alto que max-height.
+   *  Si el contenido cabe, no se verá ninguna barra.
+   */
+  overflow-y: auto;
+
+  /* 
+   *  (Opcional, pero recomendado) Un pequeño padding a la derecha
+   *  para que el texto no se pegue a la barra de scroll.
+   *  Ajusta el valor según el grosor de tu scrollbar.
+   */
+  padding-right: 8px; 
+}

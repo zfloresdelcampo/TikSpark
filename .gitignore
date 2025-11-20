@@ -1,0 +1,3 @@
+# Carpetas generadas que no van en el código fuente
+/node_modules
+/dist

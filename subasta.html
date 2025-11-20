@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subasta Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos generales */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Contenedor principal */
+        .auction-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Estilo para el cuadro del temporizador */
+        .timer-box {
+            background-color: #000;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 5em;
+            font-weight: bold;
+            width: 350px;
+            box-sizing: border-box;
+            align-self: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-family: "Luckiest Guy";
+        }
+
+        /* Contenedor de participantes */
+        .participants-container {
+            background-color: #1d1c1c;
+            border-radius: 12px;
+            padding: 15px;
+            width: 350px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+        }
+
+        .participants-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Estilo base para cada fila de participante */
+        .participant-row {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 10px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.1); 
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            margin-right: 15px;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .medal-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .default-avatar-icon {
+            background-color: rgba(0, 0, 0, 0.2); 
+            box-shadow: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:%23cccccc;%7D%3C/style%3E%3C/defs%3E%3Ccircle class='cls-1' cx='50' cy='32.5' r='22.5'/%3E%3Cpath class='cls-1' d='M50,60c-24.85,0-45,20.15-45,45h90c0-24.85-20.15-45-45-45Z' transform='translate(0 -5)'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 60%;
+        }
+
+        .info-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .text-bar.name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .text-bar {
+            height: auto;
+            width: auto;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: normal;
+            background-color: transparent !important;
+        }
+
+        .participant-row.gold { background-color: #483618; border-color: #aa8c34; }
+        .gold .text-bar { color: #ffffff; font-weight: bold; }
+        
+        .participant-row.silver { background-color: #414040; border-color: #8a8a8a; }
+        .silver .text-bar { color: #ffffff; font-weight: bold; }
+
+        .participant-row.bronze { background-color: #492d1a; border-color: #a25f2b; }
+        .bronze .text-bar { color: #ffffff; font-weight: bold; }
+
+        .timer-box.snipe-mode {
+            background-color: #ff000d;
+            animation: blink-animation 1s infinite;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 7);
+        }
+
+        @keyframes blink-animation {
+            0%   { background-color: #ff000d; }
+            50%  { background-color: #850d13; }
+            100% { background-color: #ff000d; }
+        }
+
+        .bid-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .coin-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-image: url('images/coin-icon.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        /* --- ESTILOS CORREGIDOS PARA LA PANTALLA DEL GANADOR --- */
+
+        #winner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            
+            /* 1. Alineamos la tarjeta a la izquierda */
+            justify-content: flex-start; 
+            align-items: center;
+            
+            /* 2. La empujamos usando una fórmula calc() */
+            /* 50vw (centro) - 175px (mitad del ranking) - 180px (offset a la izquierda) */
+            padding-left: calc(50vw - 175px - 180px);
+            box-sizing: border-box;
+        }
+
+        .winner-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: linear-gradient(135deg, #2c2c2c, #1a1a1a);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            transform: scale(0.9);
+            opacity: 0;
+            animation: pop-in 0.5s forwards ease-out;
+        }
+
+        .winner-pfp {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #FFD700;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .winner-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            color: white;
+            min-width: 0; /* Permite que el contenedor se encoja */
+        }
+
+        .ganador-text {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .winner-name {
+            font-size: 2.5em;
+            font-weight: bold;
+            /* Estilos para truncar el nombre */
+            width: 200px; /* Ancho máximo - ¡AJÚSTALO SI ES NECESARIO! */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .winner-coins {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .winner-coin-icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        #winner-coin-amount {
+            font-size: 2em;
+            font-weight: bold;
+            color: #fce205;
+        }
+
+        .top1-badge {
+            width: 120px;
+            height: auto;
+        }
+
+        @keyframes pop-in {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="winner-overlay">
+        <div class="winner-card">
+            <div id="winner-pfp" class="winner-pfp"></div>
+            <div class="winner-info">
+                <span class="ganador-text">¡GANADOR!</span>
+                <span id="winner-name" class="winner-name"></span>
+                <div id="winner-coins" class="winner-coins">
+                    <img src="images/coin-icon.png" class="winner-coin-icon">
+                    <span id="winner-coin-amount"></span>
+                </div>
+            </div>
+            <img src="images/top1.png" class="top1-badge">
+        </div>
+    </div>
+
+    <div class="auction-container">
+        <div class="timer-box">
+            05:00
+        </div>
+
+        <div class="participants-container">
+            <div class="participants-list">
+                <!-- El contenido se genera dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+      var firebaseConfig = {
+        databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/", // ¡TU URL!
+      };
+      firebase.initializeApp(firebaseConfig);
+
+      const dbRef = firebase.database().ref('widgets/subasta');
+      const timerElement = document.querySelector('.timer-box');
+      const participantsList = document.querySelector('.participants-list');
+      
+      const winnerOverlay = document.getElementById('winner-overlay');
+      const winnerPfp = document.getElementById('winner-pfp');
+      const winnerName = document.getElementById('winner-name');
+      const winnerCoinAmount = document.getElementById('winner-coin-amount');
+
+      const medalImages = {
+          gold: 'images/primero.png',
+          silver: 'images/segundo.png',
+          bronze: 'images/tercero.png'
+      };
+
+      function formatTime(seconds) {
+        if (typeof seconds !== 'number' || seconds < 0) { seconds = 0; }
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+      }
+
+      function createPlaceholderRow(medal) {
+          return `
+            <div class="participant-row ${medal}">
+                <img class="medal-icon" src="${medalImages[medal]}">
+                <div class="profile-icon default-avatar-icon"></div>
+                <div class="info-container">
+                    <div style="height: 12px; width: 150px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div>
+                    <div style="height: 12px; width: 100px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div>
+                </div>
+            </div>
+          `;
+      }
+      
+      dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            // Lógica del temporizador y snipe
+            if (data.inSnipeMode) {
+                timerElement.textContent = data.timeLeft;
+                timerElement.classList.add('snipe-mode');
+            } else {
+                timerElement.textContent = formatTime(data.timeLeft);
+                timerElement.classList.remove('snipe-mode');
+            }
+
+            // Lógica de renderizado de la lista de participantes
+            const participants = data.participants || {};
+            const sortedParticipants = Object.values(participants).sort((a, b) => b.coins - a.coins);
+            
+            participantsList.innerHTML = ''; // Limpiamos la lista
+
+            const medals = ['gold', 'silver', 'bronze'];
+
+            // Creamos las 3 filas del ranking
+            for (let i = 0; i < 3; i++) {
+                const participant = sortedParticipants[i];
+                
+                if (participant) {
+                    // Si existe un participante real, creamos su fila
+                    const row = document.createElement('div');
+                    row.className = `participant-row ${medals[i]}`;
+                    row.innerHTML = `
+                        <img class="medal-icon" src="${medalImages[medals[i]]}">
+                        <div class="profile-icon" style="background-image: url('${participant.profilePictureUrl || ''}')"></div>
+                        <div class="info-container">
+                            <div class="text-bar name">${participant.nickname}</div>
+                            <div class="bid-container">
+                                <span class="coin-icon"></span>
+                                <span class="text-bar bid">${participant.coins}</span>
+                            </div>
+                        </div>
+                    `;
+                    participantsList.appendChild(row);
+                } else {
+                    // Si no hay participante, añadimos un placeholder
+                    participantsList.innerHTML += createPlaceholderRow(medals[i]);
+                }
+            }
+
+            // Lógica del ganador
+            if (data.winnerInfo && !data.isRunning) {
+                // Hay un ganador y la subasta ha terminado, ¡mostramos la pantalla!
+                
+                // Llenamos los datos en la tarjeta del ganador
+                winnerPfp.style.backgroundImage = `url('${data.winnerInfo.profilePictureUrl || ''}')`;
+                winnerName.textContent = data.winnerInfo.nickname;
+                winnerCoinAmount.textContent = data.winnerInfo.coins;
+
+                // Mostramos el overlay del ganador
+                winnerOverlay.style.display = 'flex';
+
+                // Lanzamos el confeti, pero solo una vez
+                if (!winnerOverlay.dataset.confettiFired) {
+                    confetti({
+                        particleCount: 150,
+                        spread: 90,
+                        origin: { y: 0.6 }
+                    });
+                    winnerOverlay.dataset.confettiFired = 'true';
+                }
+
+            } else {
+                // Si no hay ganador o la subasta está activa, nos aseguramos de que el overlay esté oculto
+                winnerOverlay.style.display = 'none';
+                delete winnerOverlay.dataset.confettiFired;
+            }
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.js"></script>
+
+</body>
+</html>

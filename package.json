@@ -1,0 +1,39 @@
+{
+  "name": "giftdetector",
+  "version": "1.0.0",
+  "description": "Detector de Regalos de TikTok usando Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "author": "JaddelTwo",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^31.0.1",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2",
+    "tiktok-live-connector": "^2.1.0",
+    "winreg": "^1.2.5",
+    "ws": "^8.18.3"
+  },
+  "build": {
+    "appId": "com.giftdetector.app",
+    "productName": "GiftDetector",
+    "files": [
+      "**/*",
+      "!dist/**/*",
+      "!node_modules/.cache/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
