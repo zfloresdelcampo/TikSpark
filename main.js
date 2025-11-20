@@ -1,3 +1,5 @@
+// --- START OF FILE main.js ---
+
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -5,6 +7,7 @@ const { execFile } = require('child_process');
 const WinReg = require('winreg');
 const WebSocket = require('ws');
 const { startTikTokDetector } = require('./detector.js');
+const { autoUpdater } = require('electron-updater'); // <-- 1. LÍNEA AÑADIDA
 
 // --- DECLARACIÓN DE VARIABLES GLOBALES ---
 let mainWindow = null;
@@ -39,6 +42,32 @@ function createWindow() {
     mainWindow = new BrowserWindow({ width: 1200, height: 800, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true } });
     mainWindow.loadFile('index.html');
     
+    // === 2. BLOQUE DE CÓDIGO AÑADIDO ===
+    // En cuanto la app esté lista, busca una actualización.
+    mainWindow.once('ready-to-show', () => {
+        autoUpdater.checkForUpdatesAndNotify();
+    });
+
+    // Evento: Se encontró una actualización disponible.
+    autoUpdater.on('update-available', () => {
+        mainWindow.webContents.send('show-toast', '¡Nueva actualización disponible! Descargando...');
+    });
+
+    // Evento: La actualización se ha descargado.
+    autoUpdater.on('update-downloaded', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            title: 'Actualización Lista',
+            message: 'Nueva versión descargada. ¿Reiniciar e instalar ahora?',
+            buttons: ['Sí, reiniciar', 'Más tarde']
+        }).then(result => {
+            if (result.response === 0) { // Si el usuario hace clic en "Sí, reiniciar"
+                autoUpdater.quitAndInstall();
+            }
+        });
+    });
+    // === FIN DEL BLOQUE AÑADIDO ===
+
     // --- MANEJADORES DE IPC ---
     ipcMain.handle('get-username', () => currentUsername);
     ipcMain.handle('load-data', async () => loadData());
@@ -46,7 +75,6 @@ function createWindow() {
     
     ipcMain.handle('save-username', (event, newUsername) => { if (tikfinitySocket) { tikfinitySocket.close(); tikfinitySocket = null; } currentUsername = newUsername || ''; saveConfig({ username: currentUsername }); startDetector(); return true; });
     
-    // === ¡NUEVO MANEJADOR PARA DESCONECTAR! ===
     ipcMain.handle('disconnect-tiktok', () => {
         if (currentDetector) {
             currentDetector.stop();
@@ -62,13 +90,12 @@ function createWindow() {
     ipcMain.handle('import-profile', async () => { const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, { title: 'Importar Perfil', properties: ['openFile'], filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePaths.length > 0) { const filePath = filePaths[0]; try { const fileContent = fs.readFileSync(filePath, 'utf-8'); const profileData = JSON.parse(fileContent); return { success: true, data: profileData }; } catch (error) { return { success: false, error: 'El archivo está dañado o no tiene el formato correcto.' }; } } return { success: false, canceled: true }; });
 
     // -- Conexión a TikFinity --
-    // -- Conexión a TikFinity (VERSIÓN MEJORADA) --
     ipcMain.handle('connect-tikfinity', () => {
         if (tikfinitySocket) return;
         if (currentDetector) { currentDetector.stop(); currentDetector = null; }
 
         mainWindow.webContents.send('connection-status', 'Conectando a TikFinity...');
-        tikfinitySocket = new WebSocket('ws://localhost:21213/'); // Puerto correcto
+        tikfinitySocket = new WebSocket('ws://localhost:21213/');
 
         tikfinitySocket.on('open', () => {
             mainWindow.webContents.send('connection-status', '✅ Conectado vía TikFinity');
@@ -77,25 +104,13 @@ function createWindow() {
         tikfinitySocket.on('message', (data) => {
             try {
                 const message = JSON.parse(data.toString());
-
-                // ==========================================================
-                //  ¡¡¡LA LÍNEA DE DIAGNÓSTICO MÁS IMPORTANTE!!!
-                //  Esto nos mostrará TODO lo que TikFinity envía, sin filtros.
                 console.log('[TIKFINITY RAW EVENT]', JSON.stringify(message, null, 2));
-                // ==========================================================
-
-                // --- LÓGICA DE EVENTOS MEJORADA ---
-
-                // Caso 1: Regalos (AHORA MÁS FLEXIBLE)
-                // Aceptamos cualquier evento 'gift' siempre que tenga datos.
-                // La condición `repeatEnd` se gestiona en el frontend o se asume que los regalos únicos son válidos.
+                
                 if (message.event === 'gift' && message.data) {
-                    
                     mainWindow.webContents.send('new-gift', message.data);
                     return;
                 }
 
-                // El resto de tu lógica es buena, la mantenemos.
                 if (message.event === 'chat' || message.event === 'like') {
                     if (message.data.nickname) {
                         mainWindow.webContents.send(message.event === 'chat' ? 'new-chat' : 'new-like', message.data);
@@ -119,7 +134,6 @@ function createWindow() {
                     });
                     return;
                 }
-
             } catch (error) {
                 console.error('Error procesando mensaje de TikFinity:', error);
             }
@@ -130,7 +144,7 @@ function createWindow() {
             tikfinitySocket = null;
         });
 
-        tikfinitySocket.on('error', (err) => { // Añadimos 'err' para ver el error específico
+        tikfinitySocket.on('error', (err) => {
             console.error('[TIKFINITY WEBSOCKET ERROR]', err.message);
             mainWindow.webContents.send('show-toast', '❌ Error: No se pudo conectar a TikFinity. ¿Está abierto y conectado?');
             mainWindow.webContents.send('connection-status', '❌ Error de conexión con TikFinity');
