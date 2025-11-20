@@ -1,7 +1,7 @@
 {
-  "name": "giftdetector",
+  "name": "tikspark",
   "version": "1.0.0",
-  "description": "Detector de Regalos de TikTok usando Electron",
+  "description": "TikSpark - Detector de Regalos de TikTok",
   "main": "main.js",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "build": "electron-builder",
     "publish": "electron-builder --publish always"
   },
-  "author": "Tu Nombre",
+  "author": "JaddelTwo",
   "license": "ISC",
   "devDependencies": {
     "electron": "^31.0.1",
@@ -25,8 +25,8 @@
     "ws": "^8.18.3"
   },
   "build": {
-    "appId": "com.giftdetector.app",
-    "productName": "GiftDetector",
+    "appId": "com.tikspark.app",
+    "productName": "TikSpark",
     "publish": {
       "provider": "github"
     },
