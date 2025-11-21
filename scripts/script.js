@@ -2,22 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
-    // ▼▼▼ PÉGALO EXACTAMENTE AQUÍ ▼▼▼
-    async function sendNicknameToGame(nickname) {
-        if (!window.electronAPI) return; 
-        try {
-            await fetch("http://localhost:8080/nickname", {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: nickname
-            });
-            console.log(`[MOD] Nickname '${nickname}' enviado al juego.`);
-        } catch (error) {
-            console.warn("[MOD] No se pudo conectar al juego. ¿Está abierto y en modo Admin?");
-        }
-    }
-    // ▲▲▲ FIN DEL CÓDIGO A PEGAR ▲▲▲
-
 // ==========================================================
 // SECCIÓN 0: NAVEGACIÓN Y CONFIGURACIÓN INICIAL
 // ==========================================================
@@ -1298,18 +1282,31 @@ if (window.electronAPI) {
                 resolve(); // Asumimos que es rápido
                 return;
             }
+            // Dentro de la función executeAction en script.js
+
             if (action.webhookChecked) {
                 let url = action.webhookUrl.trim();
                 if (!url) return resolve();
-                if (eventData.nickname) url = url.replace(/{nickname}/g, encodeURIComponent(eventData.nickname));
-                
+
+                // Creamos el cuerpo del JSON que enviaremos
+                const eventType = url.substring(url.lastIndexOf('/') + 1); // Extrae 'customer', 'shoplifter', etc.
+                const payload = {
+                    type: eventType,
+                    name: eventData.nickname || "Usuario" // Usamos el nombre del donador
+                };
+
                 const quantity = parseInt(action.webhookQuantity) || 1;
                 const interval = parseInt(action.webhookInterval) || 100;
                 
                 let count = 0;
                 const intervalId = setInterval(() => {
                     if (count < quantity) {
-                        fetch(url).catch(error => console.error('Error de WebHook:', error));
+                        // ¡AQUÍ ESTÁ EL CAMBIO! Enviamos una petición POST con el JSON
+                        fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        }).catch(error => console.error('Error de WebHook:', error));
                         count++;
                     } else {
                         clearInterval(intervalId);
