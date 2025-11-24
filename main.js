@@ -180,7 +180,7 @@ function createWindow() {
         // --- INICIO DE LA CORRECCIÓN ---
         const isPackaged = app.isPackaged;
         const scriptPath = isPackaged
-            ? path.join(path.dirname(app.getPath('exe')), 'resources', 'keystroke.au3')
+            ? path.join(path.dirname(app.getPath('exe')), 'resources', 'app.asar.unpacked', 'keystroke.au3')
             : path.join(__dirname, 'keystroke.au3');
         // --- FIN DE LA CORRECCIÓN ---
 
