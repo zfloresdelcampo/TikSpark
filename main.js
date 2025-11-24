@@ -178,7 +178,10 @@ function createWindow() {
         }
         
         // --- INICIO DE LA CORRECCIÓN ---
-        const scriptPath = path.join(__dirname, 'keystroke.au3');
+        const isPackaged = app.isPackaged;
+        const scriptPath = isPackaged
+            ? path.join(path.dirname(app.getPath('exe')), 'resources', 'keystroke.au3')
+            : path.join(__dirname, 'keystroke.au3');
         // --- FIN DE LA CORRECCIÓN ---
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
