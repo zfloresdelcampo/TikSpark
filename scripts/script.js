@@ -2,6 +2,73 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
+    // ==========================================================
+    // LÓGICA UNIVERSAL PARA MINI-JUEGOS
+    // ==========================================================
+    
+    // Función para configurar cualquier juego
+    // gameId: El nombre que usas en los IDs del HTML (ej: 'peak', 'gta5')
+    // modFolderName: El nombre exacto de la carpeta dentro de 'mods' (ej: 'PEAK', 'GTA5_MOD')
+    function setupGameController(gameId, modFolderName) {
+        
+        const btnSelect = document.getElementById(`btn-select-${gameId}-path`);
+        const textPath = document.getElementById(`${gameId}-game-path`);
+        const btnInstall = document.getElementById(`btn-install-${gameId}`);
+        const btnDelete = document.getElementById(`btn-delete-${gameId}`);
+        
+        let gamePath = ""; // Variable local para este juego
+
+        // 1. Selección de Carpeta
+        if (btnSelect) {
+            btnSelect.addEventListener('click', async () => {
+                if (!window.electronAPI) return;
+                const selectedPath = await window.electronAPI.selectFolder();
+                if (selectedPath) {
+                    gamePath = selectedPath;
+                    textPath.textContent = selectedPath;
+                    textPath.style.color = "#ffffff";
+                    showToastNotification(`📂 Ruta de ${modFolderName} seleccionada`);
+                }
+            });
+        }
+
+        // 2. Instalar
+        if (btnInstall) {
+            btnInstall.addEventListener('click', async () => {
+                if (!gamePath) return showToastNotification("⚠️ Primero selecciona la carpeta del juego.");
+                showToastNotification(`⏳ Instalando ${modFolderName}...`);
+                
+                const result = await window.electronAPI.installMod({ 
+                    gamePath: gamePath, 
+                    modName: modFolderName 
+                });
+                showToastNotification(result.message);
+            });
+        }
+
+        // 3. Borrar
+        if (btnDelete) {
+            btnDelete.addEventListener('click', async () => {
+                if (!gamePath) return showToastNotification("⚠️ Primero selecciona la carpeta del juego.");
+                
+                if(confirm(`¿Borrar mod de ${modFolderName}?`)) {
+                    showToastNotification(`⏳ Eliminando ${modFolderName}...`);
+                    const result = await window.electronAPI.deleteMod({ 
+                        gamePath: gamePath, 
+                        modName: modFolderName 
+                    });
+                    showToastNotification(result.message);
+                }
+            });
+        }
+    }
+
+    // --- AQUI ACTIVAS TUS JUEGOS ---
+    setupGameController('peak', 'PEAK'); 
+    setupGameController('supermarket-simulator', 'Supermarket Simulator');
+    setupGameController('the-forest', 'The Forest');
+    // setupGameController('gta5', 'GTA5_MOD');  <-- Cuando agregues GTA, solo descomentas esto
+
 // ==========================================================
 // SECCIÓN 0: NAVEGACIÓN Y CONFIGURACIÓN INICIAL
 // ==========================================================
@@ -9,6 +76,15 @@ const navItems = document.querySelectorAll('.nav-item');
 const contentSections = document.querySelectorAll('.content-section');
 const toggleButtons = document.querySelectorAll('.toggle-btn');
 const connectionPanels = document.querySelectorAll('.connection-panel');
+
+// --- NUEVAS VARIABLES PARA EL SIDEBAR ---
+const sidebarHeaderServer = document.getElementById('header-server');
+const sidebarHeaderTikfinity = document.getElementById('header-tikfinity');
+const sidebarConnectBtn = document.getElementById('sidebar-connect-btn');
+const sidebarUsernameDisplay = document.getElementById('sidebar-username-display');
+const sidebarTikfinityStatusText = document.getElementById('sidebar-tikfinity-status-text');
+const sidebarDefaultIcon = document.getElementById('sidebar-default-icon');
+const sidebarProfileImg = document.getElementById('sidebar-profile-img');
 
 let currentConnectionMode = 'api-server'; // 'api-server' o 'api-tikfinity'
 
@@ -27,6 +103,16 @@ toggleButtons.forEach(button => {
         toggleButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
         currentConnectionMode = button.dataset.target.includes('server') ? 'api-server' : 'api-tikfinity';
+
+        // === PEGAR ESTO AQUÍ ===
+        if (currentConnectionMode === 'api-server') {
+            sidebarHeaderServer.classList.remove('hidden');
+            sidebarHeaderTikfinity.classList.add('hidden');
+        } else {
+            sidebarHeaderServer.classList.add('hidden');
+            sidebarHeaderTikfinity.classList.remove('hidden');
+        }
+        // ========================
         
         connectionPanels.forEach(panel => {
             if (panel.id === button.dataset.target) {
@@ -37,6 +123,15 @@ toggleButtons.forEach(button => {
         });
     });
 });
+
+if (window.electronAPI) {
+    window.electronAPI.onSetVersion((version) => {
+        const versionElement = document.getElementById('app-version');
+        if (versionElement) {
+            versionElement.textContent = `v${version}`;
+        }
+    });
+}
 
 // ==========================================================
 // SECCIÓN 1: LÓGICA DE CONEXIÓN CON ELECTRON (SI EXISTE)
@@ -59,6 +154,48 @@ if (window.electronAPI) {
     const tikfinityStatusSpan = document.getElementById('tikfinity-status');
 
     // --- Lógica API Server ---
+
+    // 1. Hacer que el botón del sidebar active el botón principal
+    sidebarConnectBtn.addEventListener('click', () => {
+        // Simplemente hacemos clic virtual en el botón principal correspondiente
+        if (connectButton.disabled) {
+             disconnectButton.click();
+        } else {
+             connectButton.click();
+        }
+    });
+
+    // 2. Sincronizar el nombre de usuario al escribir
+    usernameInput.addEventListener('input', () => {
+        sidebarUsernameDisplay.textContent = usernameInput.value || 'Tu Usuario';
+    });
+
+    // 3. Actualizar nombre al cargar (Busca tu línea existente window.electronAPI.getUsername()...)
+    // Y modifícala así:
+    window.electronAPI.getUsername().then(username => { 
+        if (username) { 
+            usernameInput.value = username; 
+            sidebarUsernameDisplay.textContent = username; // <-- AÑADE ESTO
+        } 
+    });
+
+    // 4. Actualizar estado visual (Busca tu window.electronAPI.onStatus...)
+    // Y añade esto dentro:
+    window.electronAPI.onStatus(statusMessage => {
+        // ... tu código existente ...
+        const isConnected = statusMessage.includes('✅');
+        
+        // Actualizar texto del botón del sidebar
+        if (currentConnectionMode === 'api-server') {
+            sidebarConnectBtn.textContent = isConnected ? 'Desconectar' : 'Conectar';
+            sidebarConnectBtn.style.color = isConnected ? '#ff4d4d' : '#ccc'; // Rojo si está conectado (para desconectar)
+        } else {
+            // Lógica para Tikfinity Sidebar
+            sidebarTikfinityStatusText.textContent = isConnected ? 'Connected' : 'Disconnected';
+            sidebarTikfinityStatusText.style.color = isConnected ? '#10c35b' : '#888';
+        }
+    });
+
     window.electronAPI.getUsername().then(username => { if (username) usernameInput.value = username; });
     connectButton.addEventListener('click', () => { 
         const username = usernameInput.value.trim(); 
@@ -164,7 +301,7 @@ if (window.electronAPI) {
     window.electronAPI.onJoin(data => {
         addLogEntry(`<i class="fas fa-walking"></i> <b>${data.nickname}</b> se ha unido.`, 'join');
         processTikTokEvent('join', data);
-        sendNicknameToGame(data.nickname);
+        // sendNicknameToGame(data.nickname);
     });
 
     // Listener de "Seguir" (NUEVO)
@@ -183,6 +320,33 @@ if (window.electronAPI) {
     window.electronAPI.onLike(data => {
         addLogEntry(`<i class="fas fa-heart" style="color: #ff005c;"></i> <b>${data.nickname}</b> ha dado ${data.likeCount} Me gusta.`, 'like');
         processTikTokEvent('likes', data);
+    });
+
+    // === AÑADE ESTO AQUÍ ===
+    // === CÓDIGO FINAL Y LIMPIO PARA SCRIPT.JS ===
+    window.electronAPI.onUserProfile(data => {
+        console.log("Datos de perfil recibidos:", data);
+
+        const defaultIcon = document.getElementById('sidebar-default-icon');
+        const profileImg = document.getElementById('sidebar-profile-img');
+        const nameDisplay = document.getElementById('sidebar-username-display');
+
+        // 1. Poner el nombre
+        if (data.nickname && nameDisplay) {
+            nameDisplay.textContent = data.nickname;
+        }
+
+        // 2. Poner la foto
+        if (data.avatar && profileImg && defaultIcon) {
+            profileImg.src = data.avatar;
+            profileImg.style.display = 'block'; 
+            defaultIcon.style.display = 'none';
+            
+            // Log opcional para confirmar visualmente
+            if(typeof addLogEntry === 'function') {
+                addLogEntry(`🖼️ Perfil actualizado: ${data.nickname}`, 'info');
+            }
+        }
     });
 
     // Listener de Notificaciones Toast (ya lo tenías)
@@ -237,6 +401,24 @@ if (window.electronAPI) {
             } catch (error) {
                 console.error("No se pudo pre-cargar la lista de regalos al inicio:", error);
             }
+        }
+    }
+
+    function updateSidebarProfile(nickname, imageUrl) {
+        // Actualizar Nombre
+        if (nickname) {
+            sidebarUsernameDisplay.textContent = nickname;
+        }
+        
+        // Actualizar Foto
+        if (imageUrl) {
+            sidebarProfileImg.src = imageUrl;
+            sidebarProfileImg.style.display = 'block'; // Mostrar imagen
+            sidebarDefaultIcon.style.display = 'none'; // Ocultar icono
+        } else {
+            // Si no hay imagen, volver al estado por defecto
+            sidebarProfileImg.style.display = 'none';
+            sidebarDefaultIcon.style.display = 'block';
         }
     }
 
@@ -1729,3 +1911,25 @@ if (window.electronAPI) {
     await loadAllData();
     initializeProfiles();
 });
+// REEMPLAZA TU FUNCIÓN openSection ACTUAL CON ESTA
+window.openSection = function(sectionId) {
+    console.log(`--- PASO 2: La función openSection se ha ejecutado con el ID: "${sectionId}" ---`);
+
+    // 1. Ocultar todas las secciones
+    document.querySelectorAll('.content-section').forEach(s => {
+        s.classList.remove('active');
+    });
+
+    // 2. Mostrar la que queremos
+    const targetSection = document.getElementById(sectionId);
+    
+    // Log para ver si encontró el elemento
+    console.log('--- PASO 3: Buscando el elemento en el HTML...', targetSection);
+
+    if (targetSection) {
+        targetSection.classList.add('active');
+        console.log('--- PASO 4: ¡ÉXITO! La sección se ha activado.');
+    } else {
+        console.error('--- ¡ERROR CRÍTICO! No se encontró ninguna sección con el ID:', sectionId);
+    }
+};

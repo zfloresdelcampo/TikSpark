@@ -1,0 +1,20 @@
+[Message:   BepInEx] BepInEx 5.4.23.4 - TheForest (7/26/2025 11:46:07 PM)
+[Info   :   BepInEx] Running under Unity v5.6.5.1082900
+[Info   :   BepInEx] CLR runtime version: 2.0.50727.1433
+[Info   :   BepInEx] Supports SRE: True
+[Info   :   BepInEx] System platform: Bits64, Windows
+[Message:   BepInEx] Preloader started
+[Info   :   BepInEx] Loaded 1 patcher method from [BepInEx.Preloader 5.4.23.4]
+[Info   :   BepInEx] 1 patcher plugin loaded
+[Info   :   BepInEx] Patching [UnityEngine] with [BepInEx.Chainloader]
+[Message:   BepInEx] Preloader finished
+[Warning:  HarmonyX] AccessTools.Property: Could not find property for type UnityEngine.Application and name isBatchMode
+[Message:   BepInEx] Chainloader ready
+[Message:   BepInEx] Chainloader started
+[Info   :   BepInEx] 1 plugin to load
+[Info   :   BepInEx] Loading [The Forest Mod 1.1.0]
+[Info   :The Forest Mod] Mod v1.1 Cargado - F10 actualizado con ejército de 15 normales.
+[Message:   BepInEx] Chainloader startup complete
+[Info   :   Console] Rewired: Searching for compatible XInput library...
+[Info   :   Console] Rewired: Found Xinput1_4.dll.
+[Info   :   Console] Rewired: [WARNING] The Action "Mouse ScrollWheel" does not exist. You can create Actions in the editor.

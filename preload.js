@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    // --- AGREGAR ESTA LÍNEA ---
+    selectFolder: () => ipcRenderer.invoke('select-folder'),
+    installMod: (data) => ipcRenderer.invoke('install-mod', data),
+    deleteMod: (data) => ipcRenderer.invoke('delete-mod', data),
     // --- LÍNEAS A AÑADIR PARA TIKFINITY ---
     connectTikFinity: () => ipcRenderer.invoke('connect-tikfinity'),
     disconnectTikFinity: () => ipcRenderer.invoke('disconnect-tikfinity'),
@@ -31,7 +35,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onLike: (callback) => ipcRenderer.on('new-like', (_event, data) => callback(data)),
     // --- AÑADE ESTA LÍNEA NUEVA ---
     onJoin: (callback) => ipcRenderer.on('new-join', (_event, data) => callback(data)),
+    // === AÑADE ESTA LÍNEA ===
+    onUserProfile: (callback) => ipcRenderer.on('update-user-profile', (_event, data) => callback(data)),
+    // ========================
     onShowToast: (callback) => ipcRenderer.on('show-toast', (_event, message) => callback(message)),
+    onSetVersion: (callback) => ipcRenderer.on('set-version', (_event, version) => callback(version)),
     // --- NUEVA LÍNEA PARA KEYSTROKES ---
     simulateKeystroke: (data) => ipcRenderer.invoke('simulate-keystroke', data),
     simulateKeystrokes: (actionData) => ipcRenderer.invoke('simulate-keystrokes', actionData) // <--- AÑADE ESTA LÍNEA

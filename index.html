@@ -8,6 +8,46 @@
 </head>
 <body>
     <div id="sidebar">
+        <!-- 1. Primera Línea Separadora -->
+        <div class="sidebar-separator"></div>
+
+        <!-- 2. Contenedor Dinámico (Cambia entre Server y TikFinity) -->
+        <div id="sidebar-dynamic-content">
+            
+            <!-- OPCIÓN A: Modo API Server (Visible por defecto) -->
+            <div id="header-server" class="sidebar-header-mode">
+                <div class="sidebar-profile-container">
+                    <div class="sidebar-avatar">
+                        <!-- Icono por defecto -->
+                        <i id="sidebar-default-icon" class="fas fa-user"></i>
+                        <!-- Imagen de perfil (oculta al inicio) -->
+                        <img id="sidebar-profile-img" src="" alt="PFP" style="display: none;">
+                    </div>
+                    <div class="sidebar-info-col">
+                        <span id="sidebar-username-display" class="sidebar-username-text">Tu Nombre</span>
+                        <button id="sidebar-connect-btn" class="sidebar-small-btn">Conectar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPCIÓN B: Modo API TikFinity (Oculto por defecto con clase hidden) -->
+            <div id="header-tikfinity" class="sidebar-header-mode hidden">
+                <div class="sidebar-profile-container">
+                    <div class="sidebar-avatar">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <div class="sidebar-info-col">
+                        <span class="sidebar-username-text" style="color: #e51351;">API TikFinity</span>
+                        <span id="sidebar-tikfinity-status-text" style="font-size: 11px; color: #888;">Disconnected</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. Segunda Línea Separadora -->
+        <div class="sidebar-separator"></div>
+        
         <div class="nav-item active" data-target="home-section">
             Inicio
         </div>
@@ -17,6 +57,13 @@
         <div class="nav-item" data-target="overlay-gallery">
             Galería de Overlays
         </div>
+        <div class="nav-item" data-target="alerts-section">
+            Alertas
+        </div>
+        <div class="nav-item" data-target="minigames-section">
+            Mini-Juegos
+        </div>
+        <div id="app-version"></div>
     </div>
 
     <div id="main-content">
@@ -282,12 +329,10 @@
                             <input type="number" id="subasta-base" value="1" min="1" class="subasta-input">
                         </div>
                         
-                        <!-- =================== INICIO DEL BLOQUE A AÑADIR =================== -->
                         <div class="subasta-timer-group">
                             <label>Tiempo:</label>
                             <div id="subasta-timer-display">--:--</div>
                         </div>
-                        <!-- ==================== FIN DEL BLOQUE A AÑADIR ===================== -->
 
                         <div class="subasta-actions-group">
                             <label>Iniciar:</label>
@@ -420,9 +465,235 @@
                         </div>
                     </div>
                 </div>
-                </div>
-    </div>
+            </div>
+        </div>
     
+        <div id="alerts-section" class="content-section">
+            <div class="section-container">
+                <h2>Alertas</h2>
+                <div class="info-box">
+                    <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="minigames-section" class="content-section">
+            <div class="section-container">
+                <h2>Mini-Juegos</h2>
+                <div class="info-box">
+                    <p>TikSpark no incluye ni distribuye juegos comerciales. Ofrecemos únicamente mods y plugins.</p>
+                </div>
+
+                <div class="games-grid">
+                    <div class="game-card locked"> 
+                        <div class="game-img-container">
+                            <img src="images/minigames/minecraft_tnt.jpg" alt="Cubo TNT">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
+                            </div>
+                        </div>
+                        <div class="game-title">CUBO TNT</div>
+                    </div>
+                    <div class="game-card locked">
+                        <div class="game-img-container">
+                            <img src="images/minigames/sandbox.jpg" alt="Sandbox">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
+                            </div>
+                        </div>
+                        <div class="game-title">SANDBOX</div>
+                    </div>
+                    <div class="game-card locked">
+                        <div class="game-img-container">
+                            <img src="images/minigames/gta5.jpg" alt="GTA 5">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
+                            </div>
+                        </div>
+                        <div class="game-title">GTA 5</div>
+                    </div>
+                    <div class="game-card locked">
+                        <div class="game-img-container">
+                            <img src="images/minigames/eldenring.jpg" alt="Elden Ring">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
+                            </div>
+                        </div>
+                        <div class="game-title">ELDEN RING</div>
+                    </div>
+                    <div class="game-card" onclick="openSection('section-peak')">
+                        <div class="game-img-container">
+                            <img src="images/minigames/peak.jpg" alt="PEAK">
+                        </div>
+                        <div class="game-title">PEAK</div>
+                    </div>
+                    <div class="game-card" onclick="openSection('section-supermarket-simulator')">
+                        <div class="game-img-container">
+                            <img src="images/minigames/supermarket-simulator.jpg" alt="Supermarket Simulator">
+                        </div>
+                        <div class="game-title">SUPERMARKET SIMULATOR</div>
+                    </div>
+                    <div class="game-card" onclick="openSection('section-the-forest')">
+                        <div class="game-img-container">
+                            <img src="images/minigames/the-forest.jpg" alt="The Forest">
+                        </div>
+                        <div class="game-title">THE FOREST</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIONES DE JUEGOS INDIVIDUALES (VAN AFUERA DE minigames-section) -->
+
+        <div id="section-peak" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">PEAK</h2>
+                </div>
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/peak.jpg" alt="Icono Peak">
+                        </div>
+                        <h2>PEAK</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-right" style="background-image: url('images/minigames/peak.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="peak-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-peak-path">
+                                Select PEAK
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-peak">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-peak">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-supermarket-simulator" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">Supermarket Simulator</h2>
+                </div>
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/supermarket-simulator.jpg" alt="Icono Supermarket Simulator">
+                        </div>
+                        <h2>Supermarket Simulator</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-right" style="background-image: url('images/minigames/supermarket-simulator.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="supermarket-simulator-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-supermarket-simulator-path">
+                                Select Supermarket Simulator
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-supermarket-simulator">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-supermarket-simulator">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-the-forest" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">The Forest</h2>
+                </div>
+
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/the-forest.jpg" alt="Icono The Forest">
+                        </div>
+                        <h2>The Forest</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-right" style="background-image: url('images/minigames/the-forest.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="the-forest-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-the-forest-path">
+                                Select The Forest
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-the-forest">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-the-forest">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FIN DE LAS SECCIONES DE CONTENIDO PRINCIPAL -->
+    </div>
+
+    <!-- MODALES (VAN AFUERA DE #main-content) -->
+
     <div id="create-profile-form-container" class="profile-form-overlay">
         <div class="profile-form-content">
             <h3>Nuevo Perfil</h3>
@@ -455,7 +726,6 @@
             </div>
         </div>
     </div>
-
 
     <div id="create-action-modal" class="modal-overlay">
         <div class="modal-content">
@@ -592,8 +862,6 @@
             <h4 class="modal-section-title">¿Durante cuánto tiempo debe permanecer visible?</h4><div class="modal-sub-section"><div class="input-group-row"><label for="display-duration">Duración de la visualización</label><input type="number" id="display-duration" value="5" min="1"><span class="unit">Segundos</span></div></div>
             <h4 class="modal-section-title">Configuraciones adicionales (opcionales)</h4>
             <div class="modal-sub-section">
-
-                <!-- Fila para la Cola de Acciones -->
                 <div class="input-group-row">
                     <label for="action-queue">Cola de Acciones</label>
                     <select id="action-queue">
@@ -602,14 +870,10 @@
                         <option value="Screen 3">Screen 3</option>
                     </select>
                 </div>
-
-                <!-- Fila para la Imagen de Acción -->
                 <div class="input-group-row">
                     <label for="action-image">Imagen de Accion</label>
                     <input type="text" id="action-image" placeholder="www.imagen_ejemplo.png" value="">
                 </div>
-
-                <!-- Fila para Repetir con Combo de Regalos (CORREGIDA) -->
                 <div class="input-group-row checkbox-align">
                     <label for="repeat-with-gift-combo">¿Repetir con combo de regalos?</label>
                     <div class="checkbox-container">
@@ -619,7 +883,6 @@
                         </label>
                     </div>
                 </div>
-
             </div>
             <a href="https://interactiveapp.live/#overlays/screen/1" target="_blank" class="overlay-link">https://interactiveapp.live/#overlays/screen/1</a>
             <div class="info-message">¡Ten en cuenta que tienes <strong>9 pantallas superpuestas</strong> disponibles y puedes asignar múltiples acciones a cada pantalla! Las acciones en la misma pantalla se agregan a una cola cuya longitud máxima puedes configurar más abajo en esta página.</div>
@@ -721,6 +984,7 @@
     </script>
     
     <script src="scripts/script.js"></script>
-    <script src="scripts/meta-win.js"></script> </body>
-    <script src="scripts/subasta.js"></script> <!-- AÑADE ESTA LÍNEA -->
+    <script src="scripts/meta-win.js"></script>
+    <script src="scripts/subasta.js"></script>
+</body>
 </html>

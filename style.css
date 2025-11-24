@@ -1,7 +1,7 @@
 /* ESTRUCTURA PRINCIPAL */
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #ffffff; margin: 0; padding: 0; display: grid; grid-template-columns: 200px 1fr; height: 100vh; overflow: hidden; }
 /* SIDEBAR */
-#sidebar { background-color: #252526; padding: 15px 0; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
+#sidebar { background-color: #252526; padding: 0 0 15px 0; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
 .nav-item { padding: 15px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.1s, border-left 0.1s; border-left: 3px solid transparent; text-align: center; }
 .nav-item:hover { background-color: #2d2d2d; }
 .nav-item.active { background-color: #1e1e1e; border-left: 3px solid #0078d4; font-weight: bold; }
@@ -1738,4 +1738,391 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
    *  Ajusta el valor según el grosor de tu scrollbar.
    */
   padding-right: 8px; 
+}
+#app-version {
+    margin-top: auto; /* Empuja el elemento al fondo */
+    padding: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffffff;
+    font-weight: 500;
+}
+/* === ESTILOS PARA LA CABECERA DINÁMICA DEL SIDEBAR === */
+
+/* Clase de utilidad para ocultar elementos */
+.hidden {
+    display: none !important;
+}
+
+/* Línea Separadora */
+.sidebar-separator {
+    height: 1px;
+    background-color: #3c3c3c; /* Mismo color que tus bordes actuales */
+    margin: 12px 15px; /* Espaciado vertical y horizontal */
+}
+
+/* Contenedor del perfil/estado en la barra lateral */
+.sidebar-profile-container {
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    gap: 12px;
+}
+
+/* Avatar Circular */
+.sidebar-avatar {
+    width: 38px;
+    height: 38px;
+    background-color: #b0b0b0; /* Gris claro para el fondo del avatar */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* Columna de texto (Nombre + Botón) */
+.sidebar-info-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 100%; /* Para que ocupe el espacio restante */
+    overflow: hidden;
+}
+
+/* Nombre de usuario / Título de API */
+.sidebar-username-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Botón "Conectar" pequeño en la barra lateral */
+.sidebar-small-btn {
+    background-color: #2b2b2b;
+    border: 1px solid #444;
+    color: #ccc;
+    font-size: 11px;
+    padding: 3px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s;
+}
+
+.sidebar-small-btn:hover {
+    background-color: #3a3a3a;
+    color: white;
+}
+/* Asegurar que la imagen llene el círculo del avatar */
+.sidebar-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover; /* Para que no se deforme */
+}
+/* ======================================================= */
+/* --- ESTILOS PARA LA SECCIÓN DE MINI-JUEGOS --- */
+/* ======================================================= */
+
+.games-grid {
+    display: grid;
+    /* Esto crea columnas automáticas que se ajustan al tamaño */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    padding-top: 15px;
+}
+
+.game-card {
+    background-color: #1e1e1e; /* Fondo de la carta */
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #3c3c3c;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border-color: #8A2BE2;
+}
+
+.game-img-container {
+    position: relative;
+    width: 100%;
+    height: 220px; /* Altura fija para que todas sean iguales */
+}
+
+.game-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Recorta la imagen para llenar el espacio sin deformar */
+    display: block;
+}
+
+/* Título del juego (Superpuesto arriba como en la foto o abajo) */
+.game-title {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-weight: 900;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+    font-size: 1.1em;
+    padding: 0 5px;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+/* --- ESTILOS DEL CANDADO Y ETIQUETA PREMIUM --- */
+
+.lock-overlay {
+    display: none; /* Oculto por defecto */
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    z-index: 3;
+}
+
+/* Solo se muestra si la carta tiene la clase 'locked' */
+.game-card.locked .lock-overlay {
+    display: flex;
+}
+
+/* Oscurecer la imagen si está bloqueado */
+.game-card.locked .game-img-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* Capa oscura transparente */
+}
+
+.lock-overlay i.fa-lock {
+    color: white;
+    font-size: 14px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.premium-badge {
+    background-color: #ffc107; /* Color amarillo/dorado */
+    color: black;
+    font-weight: 800;
+    font-size: 0.75em;
+    padding: 5px 10px;
+    border-radius: 12px; /* Bordes redondeados tipo píldora */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+/* --- CABECERA DE JUEGO (Botón + Título) --- */
+.game-header-row {
+    display: flex;
+    align-items: center; /* Centra verticalmente */
+    gap: 15px;           /* Espacio entre botón y título */
+    margin-bottom: 20px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+}
+
+.game-header-row h2 {
+    margin: 0; /* Quita márgenes extra para que se alinee bien */
+    color: #8A2BE2; /* Color morado del título */
+}
+
+/* Botón morado solo icono */
+.btn-back-purple {
+    background-color: #5c1d80; /* Morado */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Redondo */
+    width: 35px;        /* Tamaño fijo */
+    height: 35px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-back-purple:hover {
+    background-color: #7a29aa; /* Morado más claro al pasar mouse */
+    transform: scale(1.1);
+}
+/* ======================================================= */
+/* --- ESTILO DASHBOARD JUEGO (Referencia GTA V) --- */
+/* ======================================================= */
+
+.game-dashboard-card {
+    display: flex;
+    height: 300px; /* Altura fija como en la referencia */
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #3c3c3c;
+    margin-top: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* --- PANEL IZQUIERDO --- */
+.dashboard-left {
+    width: 250px; /* Ancho fijo */
+    background-color: #181818; /* Un poco más oscuro */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-right: 1px solid #333;
+    z-index: 2;
+}
+
+.dashboard-icon img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; /* Redondo como en la foto */
+    object-fit: cover;
+    border: 3px solid #333;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    margin-bottom: 15px;
+}
+
+.dashboard-left h2 {
+    color: white;
+    font-size: 1.8em;
+    margin: 0 0 15px 0;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+.dashboard-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+.meta-tag.premium {
+    color: #ffc107; /* Amarillo */
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+.meta-version {
+    color: #666;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+/* --- PANEL DERECHO LIMPIO --- */
+.dashboard-right {
+    flex-grow: 1;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Empuja todo al fondo */
+    padding: 25px;
+}
+
+/* --- BARRA DE RUTA (El fondo semitransparente) --- */
+.game-path-bar {
+    display: flex;
+    justify-content: space-between; /* Separa texto a la izq y botón a la der */
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(5px); /* Efecto borroso opcional estilo Windows 11 */
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px; /* Espacio antes de los botones de instalar */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Icono y Texto de la ruta */
+.path-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e0e0e0;
+    font-size: 0.9em;
+    font-family: 'Segoe UI', monospace;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 60%; /* Para que no empuje al botón si la ruta es larga */
+}
+
+.path-info i {
+    font-size: 1.2em;
+}
+
+/* BOTÓN SELECT (Ahora dentro de la barra) */
+.btn-select-path {
+    /* Ya no es absolute, ahora vive dentro de la barra */
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid #777;
+    color: #fff;
+    padding: 6px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-select-path:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: #fff;
+}
+
+/* BOTONES DE ACCIÓN (Instalar/Borrar) */
+.dashboard-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-dashboard {
+    padding: 10px 25px;
+    border-radius: 20px;
+    border: none;
+    font-weight: bold;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+}
+.btn-dashboard:active { transform: scale(0.98); }
+
+.btn-install {
+    background: linear-gradient(90deg, #d35400, #e67e22); 
+    color: white;
+    min-width: 140px;
+}
+.btn-install:hover { filter: brightness(1.1); }
+
+.btn-delete {
+    background-color: rgba(30, 30, 30, 0.85); /* Fondo oscuro sólido pero suave */
+    border: 1px solid #555;
+    color: #ccc;
+}
+.btn-delete:hover {
+    background-color: rgba(50, 50, 50, 1);
+    color: white;
 }

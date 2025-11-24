@@ -1,15 +1,18 @@
-/* ======================================================= */
-/* --- CÓDIGO FINAL CON ESCUCHA EN TIEMPO REAL --- */
-/* ======================================================= */
+// scripts/meta-win.js
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Asegurarnos de que Firebase está listo antes de usarlo
-    if (typeof firebase === 'undefined') {
-        console.error("Firebase no está cargado. Asegúrate de que los scripts de Firebase estén en index.html.");
-        return;
+    // ESTA ES LA LÍNEA MÁS IMPORTANTE:
+    // Solo ejecutamos el código si encontramos el widget en la página actual.
+    const metaWinWidget = document.getElementById('meta-win-widget-1');
+    if (!metaWinWidget) {
+        return; // Si no lo encontramos, detenemos la ejecución de este script.
     }
 
-    const metaWinWidget = document.getElementById('meta-win-widget-1');
-    if (!metaWinWidget) return;
+    // El resto de tu código ahora está seguro.
+    if (typeof firebase === 'undefined') {
+        console.error("Firebase no está cargado.");
+        return;
+    }
 
     const databaseRef = firebase.database().ref('widgets/metaWin1');
 
@@ -20,8 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const plusButtons = metaWinWidget.querySelectorAll('.btn-win.plus');
     const minusButtons = metaWinWidget.querySelectorAll('.btn-win.minus');
 
-    // --- LA MAGIA ESTÁ AQUÍ ---
-    // Esta función ahora se ejecutará CADA VEZ que los datos cambien en Firebase
     databaseRef.on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('[Meta-Win Panel] Datos recibidos de Firebase:', data);
@@ -34,14 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
             meta = data.meta;
         }
 
-        // Actualizamos tanto los inputs como la vista previa del panel
         conteoInput.value = conteo;
         metaInput.value = meta;
         previewConteo.textContent = conteo;
         previewMeta.textContent = meta;
     });
 
-    // Esta función ahora solo se usa para ESCRIBIR en Firebase
     function saveData() {
         const data = {
             conteo: parseInt(conteoInput.value, 10) || 0,
@@ -50,12 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
         databaseRef.set(data);
     }
 
-    // Los botones ahora solo llaman a saveData
     plusButtons.forEach(button => {
         button.addEventListener('click', () => {
             const targetInput = metaWinWidget.querySelector('#' + button.dataset.target);
             targetInput.value = (parseInt(targetInput.value, 10) || 0) + 1;
-            saveData(); // Guardamos el nuevo valor
+            saveData();
         });
     });
 
@@ -63,11 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const targetInput = metaWinWidget.querySelector('#' + button.dataset.target);
             targetInput.value = (parseInt(targetInput.value, 10) || 0) - 1;
-            saveData(); // Guardamos el nuevo valor
+            saveData();
         });
     });
     
-    // Los inputs también llaman a saveData
     metaInput.addEventListener('input', saveData);
     conteoInput.addEventListener('input', saveData);
 });

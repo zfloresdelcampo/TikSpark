@@ -1,6 +1,14 @@
 // scripts/subasta.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ESTA ES LA LÍNEA MÁS IMPORTANTE:
+    // Solo ejecutamos el resto del código si encontramos el panel de control de la subasta en la página actual.
+    const subastaControlPanel = document.querySelector('.subasta-controls-panel');
+    if (!subastaControlPanel) {
+        return; // Si no lo encontramos, detenemos la ejecución de este script.
+    }
+
+    // El resto de tu código ahora está seguro dentro de esta comprobación.
     if (typeof firebase === 'undefined') return;
 
     const dbRef = firebase.database().ref('widgets/subasta');
@@ -18,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const winnerCoinAmount = document.getElementById('winner-coin-amount');
     const timerDisplay = document.getElementById('subasta-timer-display');
     
-    // Creamos el elemento del mensaje aquí para tenerlo listo
     const noParticipantsMessage = document.createElement('p');
     noParticipantsMessage.className = 'no-participants';
     noParticipantsMessage.textContent = 'Aún no hay participantes.';
@@ -39,22 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!currentData || !currentData.isRunning) return;
                 if (currentData.timeLeft > 0) {
                     currentData.timeLeft--;
-                } else { // El temporizador ha llegado a cero
+                } else {
                     if (!currentData.inSnipeMode) {
-                        // Entra en modo snipe
                         currentData.inSnipeMode = true;
                         currentData.timeLeft = parseInt(snipeInput.value, 10);
                     } else {
-                        // ¡FIN DE LA SUBASTA!
                         currentData.isRunning = false;
-
-                        // Encontramos al ganador
                         const participants = currentData.participants || {};
                         const sortedParticipants = Object.values(participants).sort((a, b) => b.coins - a.coins);
                         const winner = sortedParticipants[0];
-
                         if (winner) {
-                            // Guardamos la información del ganador en Firebase
                             currentData.winnerInfo = {
                                 nickname: winner.nickname,
                                 profilePictureUrl: winner.profilePictureUrl,
@@ -73,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         timerInterval = null;
     }
 
-    // --- LÓGICA DE BOTONES (Sin cambios) ---
     startBtn.addEventListener('click', () => {
         dbRef.child('isRunning').set(true);
         dbRef.get().then(snapshot => {
@@ -101,12 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeLeft: parseInt(durationInput.value, 10),
                 inSnipeMode: false,
                 participants: {},
-                winnerInfo: null // ¡AÑADE ESTA LÍNEA!
+                winnerInfo: null
             });
         }
     });
     
-    // --- SINCRONIZACIÓN CON FIREBASE ---
     dbRef.child('isRunning').on('value', snapshot => {
         if (snapshot.val()) {
             startLocalTimer();
@@ -117,54 +116,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dbRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data || !timerDisplay) return;
-        if (data.inSnipeMode) {
-            timerDisplay.textContent = data.timeLeft;
-            timerDisplay.classList.add('snipe-mode');
-        } else {
-            timerDisplay.textContent = formatTime(data.timeLeft);
-            timerDisplay.classList.remove('snipe-mode');
-        }
+        if (!data) return;
 
-        if (data.winnerInfo && !data.isRunning) {
-            // Hay un ganador y la subasta ha terminado, ¡mostramos la pantalla!
-            
-            // Llenamos los datos
-            winnerPfp.style.backgroundImage = `url('${data.winnerInfo.profilePictureUrl || ''}')`;
-            winnerName.textContent = data.winnerInfo.nickname;
-            winnerCoinAmount.textContent = data.winnerInfo.coins;
-
-            // Mostramos el overlay
-            winnerOverlay.style.display = 'flex';
-
-            // ¡Lanzamos el confeti!
-            confetti({
-                particleCount: 150,
-                spread: 90,
-                origin: { y: 0.6 }
-            });
-
-        } else {
-            // Si no hay ganador o la subasta está activa, nos aseguramos de que esté oculto
-            winnerOverlay.style.display = 'none';
+        if (timerDisplay) {
+            if (data.inSnipeMode) {
+                timerDisplay.textContent = data.timeLeft;
+                timerDisplay.classList.add('snipe-mode');
+            } else {
+                timerDisplay.textContent = formatTime(data.timeLeft);
+                timerDisplay.classList.remove('snipe-mode');
+            }
         }
     });
 
-    // --- GESTIÓN EFICIENTE DE LA LISTA DE PARTICIPANTES ---
     const participantsRef = dbRef.child('participants');
     
-    // --- FUNCIÓN MEJORADA ---
     const checkEmptyList = () => {
-        // Buscamos si hay alguna fila de participante real
         const hasParticipants = participantsList.querySelector('.participant-row-panel');
-        // Buscamos si el mensaje de "no hay participantes" ya está en la lista
         const messageExists = participantsList.querySelector('.no-participants');
-
         if (hasParticipants && messageExists) {
-            // Si HAY participantes Y el mensaje existe, lo quitamos.
             participantsList.removeChild(messageExists);
         } else if (!hasParticipants && !messageExists) {
-            // Si NO hay participantes Y el mensaje NO existe, lo añadimos.
             participantsList.appendChild(noParticipantsMessage);
         }
     };
@@ -188,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div><button class="kick-btn">Expulsar</button></div>
         `;
         participantsList.appendChild(row);
-        checkEmptyList(); // Comprueba el estado de la lista
+        checkEmptyList();
         sortParticipantList();
     });
 
@@ -211,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rowToRemove) {
             participantsList.removeChild(rowToRemove);
         }
-        checkEmptyList(); // Vuelve a comprobar tras eliminar
+        checkEmptyList();
         sortParticipantList();
     });
 
@@ -238,6 +210,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Hacemos una comprobación inicial al cargar la página
     checkEmptyList();
 });
