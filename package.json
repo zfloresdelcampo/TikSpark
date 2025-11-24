@@ -31,7 +31,7 @@
       "provider": "github"
     },
     "asarUnpack": [
-      "keystroke.au3"
+      "**/*.au3"
     ],
     "files": [
       "**/*",
