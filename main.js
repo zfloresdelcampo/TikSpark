@@ -1,4 +1,4 @@
-// --- START OF FILE main.js ---
+// --- START OF FILE main.js (CORREGIDO Y FINAL) ---
 
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
@@ -177,11 +177,9 @@ function createWindow() {
             return { success: false };
         }
         
-        // --- INICIO DE LA CORRECCIÓN ---
-        const isPackaged = app.isPackaged;
-        const scriptPath = isPackaged
-            ? path.join(path.dirname(app.getPath('exe')), 'resources', 'keystroke.au3')
-            : path.join(__dirname, 'keystroke.au3');
+        // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
+        // Volvemos al método simple que funciona con la configuración "asarUnpack" de package.json
+        const scriptPath = path.join(__dirname, 'keystroke.au3');
         // --- FIN DE LA CORRECCIÓN ---
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
