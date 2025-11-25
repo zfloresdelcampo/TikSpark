@@ -847,18 +847,56 @@ if (window.electronAPI) {
 
             // Si es regalo específico, rellenar datos
             if (alertData.why === 'gift-specific' && alertData.giftId) {
-                selectedGiftIdInput.value = alertData.giftId;
-                giftSelectorDisplay.innerHTML = `<span>${alertData.giftName || 'Regalo ID: ' + alertData.giftId}</span>`;
+                // Usamos los IDs CORRECTOS de la sección de Alertas
+                const alertInput = document.getElementById('alert-selected-gift-id');
+                const alertDisplay = document.getElementById('alert-gift-selector-display');
+
+                if (alertInput) alertInput.value = alertData.giftId;
+                
+                if (alertDisplay) {
+                    // Intentamos recuperar la imagen si está en caché para que se vea bonito
+                    const cachedGift = availableGiftsCache.find(g => g.id == alertData.giftId);
+                    const imgUrl = cachedGift ? cachedGift.image.url_list[0] : null;
+                    
+                    if (imgUrl) {
+                        alertDisplay.innerHTML = `<img src="${imgUrl}" alt="${alertData.giftName}"><span>${alertData.giftName}</span>`;
+                    } else {
+                        // Si no hay imagen, solo texto
+                        alertDisplay.innerHTML = `<span>${alertData.giftName || 'Regalo ID: ' + alertData.giftId}</span>`;
+                    }
+                }
             }
 
             // Audio
             if (alertData.audioAction) {
-                const cb = document.getElementById('action-play-audio'); // Reusamos IDs si coinciden o crea nuevos en el HTML
-                if(cb) {
-                    cb.checked = true; 
-                    cb.dispatchEvent(new Event('change'));
-                }
+                // 1. Marcar el checkbox y mostrar el menú
+                const cb = document.getElementById('alert-action-play-audio');
+                const configMenu = document.getElementById('alert-audio-config');
+                
+                if(cb) cb.checked = true;
+                if(configMenu) configMenu.classList.add('open'); // <--- Esto fuerza que se vea el menú
+
+                // 2. Importante: Decirle al sistema que estamos en ALERTAS
+                audioSelectionContext = 'alert'; 
+                
+                // 3. Mostrar el archivo visualmente
                 selectAudio(alertData.audioAction.file);
+
+                // 4. Restaurar Volumen y actualizar color del slider
+                const vol = alertData.audioAction.volume || 50;
+                const volSlider = document.getElementById('alert-audio-volume');
+                const volLabel = document.getElementById('alert-volume-label');
+                
+                if (volSlider) {
+                    volSlider.value = vol;
+                    volSlider.style.background = `linear-gradient(to right, #5c1d80 ${vol}%, #555 ${vol}%)`;
+                }
+                if (volLabel) volLabel.textContent = `Volumen: ${vol}`;
+
+                // 5. Restaurar los otros checkboxes
+                if (alertData.audioAction.oneShot) document.getElementById('alert-audio-oneshot').checked = true;
+                if (alertData.audioAction.skip) document.getElementById('alert-audio-skip').checked = true;
+                if (alertData.audioAction.queue) document.getElementById('alert-audio-add-queue').checked = true;
             }
         }
         
