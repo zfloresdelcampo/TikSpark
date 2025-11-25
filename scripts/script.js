@@ -652,47 +652,119 @@ if (window.electronAPI) {
     }
 
     function openAlertModal(alertData = null) {
-        // Lógica para rellenar y abrir el modal
+        resetAlertModal(); // Limpiamos primero
+        
+        if (alertData) {
+            // Si estamos editando (hay datos)
+            document.getElementById('alert-modal-title').textContent = 'Editar Alerta';
+            document.getElementById('editing-alert-id').value = alertData.id;
+            document.getElementById('alert-name').value = alertData.name;
+            document.getElementById('display-duration').value = alertData.duration || 5;
+
+            // Seleccionar el "trigger" (Por qué ocurre)
+            const whyRadio = document.querySelector(`input[name="alert_why"][value="${alertData.why}"]`);
+            if (whyRadio) {
+                whyRadio.checked = true;
+                // Forzar evento change para mostrar inputs específicos
+                whyRadio.dispatchEvent(new Event('change')); 
+            }
+            
+            // Seleccionar el "who" (Quién lo activa)
+            const whoRadio = document.querySelector(`input[name="alert_who"][value="${alertData.who}"]`);
+            if (whoRadio) whoRadio.checked = true;
+
+            // Si es regalo específico, rellenar datos
+            if (alertData.why === 'gift-specific' && alertData.giftId) {
+                selectedGiftIdInput.value = alertData.giftId;
+                giftSelectorDisplay.innerHTML = `<span>${alertData.giftName || 'Regalo ID: ' + alertData.giftId}</span>`;
+            }
+
+            // Audio
+            if (alertData.audioAction) {
+                const cb = document.getElementById('action-play-audio'); // Reusamos IDs si coinciden o crea nuevos en el HTML
+                if(cb) {
+                    cb.checked = true; 
+                    cb.dispatchEvent(new Event('change'));
+                }
+                selectAudio(alertData.audioAction.file);
+            }
+        }
+        
         alertModalOverlay.classList.add('open');
     }
     
     const closeAlertModal = () => alertModalOverlay.classList.remove('open');
+
+    // === LÓGICA PARA GUARDAR ALERTAS (PEGAR ESTO) ===
+    applyAlertButton.addEventListener('click', async () => {
+        const currentProfile = profiles[activeProfileName];
+        if (!currentProfile) return showToastNotification('⚠️ Error: No hay perfil activo.');
+        
+        // Aseguramos que existe el array de alertas
+        if (!currentProfile.alerts) currentProfile.alerts = [];
+
+        const id = document.getElementById('editing-alert-id').value ? parseInt(document.getElementById('editing-alert-id').value) : null;
+        const name = document.getElementById('alert-name').value.trim();
+        
+        if (!name) return showToastNotification('⚠️ La alerta necesita un nombre.');
+
+        // Obtenemos los valores de los radios (quién y por qué)
+        const whoElement = document.querySelector('input[name="alert_who"]:checked');
+        const whyElement = document.querySelector('input[name="alert_why"]:checked');
+        const who = whoElement ? whoElement.value : 'all';
+        const why = whyElement ? whyElement.value : 'join';
+
+        const newAlertData = {
+            id: id || Date.now(), // Generamos ID único basado en tiempo si es nuevo
+            name: name,
+            enabled: true,
+            who: who,
+            why: why,
+            duration: document.getElementById('display-duration').value || 5
+        };
+
+        // Lógica para Audio
+        const playAudioCheck = document.getElementById('action-play-audio');
+        if (playAudioCheck && playAudioCheck.checked) {
+            if (selectedAudioFile) {
+                newAlertData.audioAction = {
+                    file: selectedAudioFile,
+                    volume: document.getElementById('audio-volume').value
+                };
+            }
+        }
+
+        // Lógica para Regalos Específicos
+        if (why === 'gift-specific') {
+            const giftIdInput = document.getElementById('selected-gift-id');
+            if (giftIdInput && giftIdInput.value) {
+                newAlertData.giftId = parseInt(giftIdInput.value);
+                // Intentamos guardar el nombre también para mostrarlo bonito en la lista
+                const gift = availableGiftsCache.find(g => g.id == newAlertData.giftId);
+                if (gift) newAlertData.giftName = gift.name;
+            } else {
+                return showToastNotification('⚠️ Selecciona un regalo específico.');
+            }
+        }
+
+        // Guardar en el perfil
+        if (id) {
+            // Editar existente
+            const index = currentProfile.alerts.findIndex(a => a.id === id);
+            if (index !== -1) currentProfile.alerts[index] = newAlertData;
+        } else {
+            // Crear nueva
+            currentProfile.alerts.push(newAlertData);
+        }
+
+        await saveAllData();
+        renderAlerts();
+        closeAlertModal();
+        showToastNotification('✅ Alerta guardada correctamente.');
+    });
     
     if(closeAlertButton) closeAlertButton.addEventListener('click', closeAlertModal);
     if(discardAlertButton) discardAlertButton.addEventListener('click', closeAlertModal);
-
-    // === MODIFICACIÓN: En processTikTokEvent ===
-    function processTikTokEvent(triggerType, eventData) {
-        // ... tu bucle `currentProfile.events.forEach` no cambia ...
-
-        // === AÑADE ESTE NUEVO BUCLE ===
-        const alerts = currentProfile.alerts || [];
-        alerts.forEach(alertRule => {
-            if (!alertRule.enabled) return;
-            
-            let match = false;
-            if (alertRule.why === triggerType) {
-                if (triggerType === 'gift-specific') {
-                    if (alertRule.giftId === eventData.giftId) match = true;
-                } else {
-                    match = true;
-                }
-            }
-
-            if (match) {
-                console.log(`[MOTOR] Coincidencia para Alerta "${alertRule.name}"`);
-                // Creamos una "acción" temporal a partir de la alerta
-                const actionToExecute = {
-                    name: alertRule.name,
-                    duration: alertRule.duration,
-                    audioAction: alertRule.audioAction
-                    // ... etc. para otras propiedades de acción
-                };
-                actionQueue.push({ action: actionToExecute, eventData });
-                processQueue();
-            }
-        });
-    }
 
     // ==========================================================
     // SECCIÓN 1.5: LÓGICA PARA LA SECCIÓN DE PERFILES
@@ -1777,6 +1849,57 @@ if (window.electronAPI) {
     function handleActionPageChange(page) { currentPageActions = page; renderActions(); }
     function handleEventPageChange(page) { currentPageEvents = page; renderEvents(); }
     
+    // === FUNCIONES FALTANTES PARA ALERTAS ===
+    window.toggleAlertStatus = async (id) => {
+        const currentProfile = profiles[activeProfileName];
+        if (!currentProfile) return;
+        const alert = currentProfile.alerts.find(a => a.id === id);
+        if (alert) {
+            alert.enabled = !alert.enabled;
+            await saveAllData();
+            // No necesitamos re-renderizar todo, el checkbox ya cambió visualmente, 
+            // pero si quieres asegurar consistencia:
+            // renderAlerts(); 
+        }
+    };
+
+    window.playAlert = (id) => {
+        const currentProfile = profiles[activeProfileName];
+        if (!currentProfile) return;
+        const alert = currentProfile.alerts.find(a => a.id === id);
+        if (alert) {
+            // Simulamos una acción para probarla
+            const testAction = {
+                name: alert.name,
+                duration: alert.duration,
+                audioAction: alert.audioAction
+            };
+            actionQueue.push({ action: testAction, eventData: { nickname: 'TEST' } });
+            processQueue();
+        }
+    };
+
+    window.deleteAlert = async (id) => {
+        const currentProfile = profiles[activeProfileName];
+        if (!currentProfile) return;
+        if (confirm('¿Borrar esta alerta?')) {
+            currentProfile.alerts = currentProfile.alerts.filter(a => a.id !== id);
+            renderAlerts();
+            await saveAllData();
+        }
+    };
+
+    window.editAlert = (id) => {
+        const alert = profiles[activeProfileName]?.alerts.find(a => a.id === id);
+        if (alert) {
+            // Aquí debes llamar a tu lógica de abrir modal con los datos
+            // Como openAlertModal espera datos, asegúrate de implementarlo
+            openAlertModal(alert); 
+            // Nota: Tendrás que asegurarte que openAlertModal rellene el formulario
+            // basándose en el objeto 'alert' que le pasas.
+        }
+    };
+
     // ==========================================================
     // SECCIÓN 4: MOTOR DE EVENTOS Y SISTEMA DE COLA
     // ==========================================================´
@@ -1908,61 +2031,82 @@ if (window.electronAPI) {
     
     function processTikTokEvent(triggerType, eventData) { 
         const currentProfile = profiles[activeProfileName];
-        if (!currentProfile || !currentProfile.events) return;
+        if (!currentProfile) return;
 
-        currentProfile.events.forEach(eventRule => {
+        // 1. PROCESAR EVENTOS (Tu lógica original de Eventos/Perfiles)
+        if (currentProfile.events) {
+            currentProfile.events.forEach(eventRule => {
+                if (!eventRule.enabled) return;
+                
+                let match = false;
 
-            if (!eventRule.enabled) return; // Si el evento está desactivado, lo saltamos.
+                // Lógica de Likes por usuario
+                if (eventRule.why === 'likes' && triggerType === 'likes') {
+                    const userId = eventData.userId;
+                    if (!userLikeCounters[userId]) userLikeCounters[userId] = 0;
+                    userLikeCounters[userId] += eventData.likeCount || 1;
+                    
+                    if (userLikeCounters[userId] >= eventRule.likesAmount) {
+                        match = true;
+                        userLikeCounters[userId] -= eventRule.likesAmount; 
+                        console.log(`[MOTOR] Umbral likes alcanzado por ${eventData.nickname}`);
+                    }
+                }
+                // Lógica Estándar
+                else if (eventRule.why === triggerType) {
+                    if (triggerType === 'gift-specific') {
+                        if (eventRule.giftId === eventData.giftId) match = true;
+                    } else {
+                        match = true;
+                    }
+                }
+
+                if (match) {
+                    console.log(`[MOTOR] Coincidencia evento: "${eventRule.why}"`);
+                    eventRule.actionsAll?.forEach(actionInfo => { 
+                        const fullAction = currentProfile.actions.find(a => a.id === actionInfo.id); 
+                        if(fullAction) actionQueue.push({ action: fullAction, eventData }); 
+                    });
+                    
+                    if (eventRule.actionsRandom?.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * eventRule.actionsRandom.length);
+                        const fullAction = currentProfile.actions.find(a => a.id === eventRule.actionsRandom[randomIndex].id);
+                        if (fullAction) actionQueue.push({ action: fullAction, eventData });
+                    }
+                    
+                    if ((eventRule.actionsAll?.length > 0) || (eventRule.actionsRandom?.length > 0)) {
+                        processQueue();
+                    }
+                }
+            });
+        }
+
+        // 2. PROCESAR ALERTAS (Tu nueva lógica fusionada aquí)
+        const alerts = currentProfile.alerts || [];
+        alerts.forEach(alertRule => {
+            if (!alertRule.enabled) return;
             
             let match = false;
-
-            // Condición para likes (AHORA CON LÓGICA POR USUARIO)
-            if (eventRule.why === 'likes' && triggerType === 'likes') {
-                const userId = eventData.userId; // Necesitamos el ID del usuario que dio like
-                
-                // Si el usuario no está en nuestro contador, lo inicializamos.
-                if (!userLikeCounters[userId]) {
-                    userLikeCounters[userId] = 0;
-                }
-                
-                // Sumamos los likes de este usuario específico.
-                userLikeCounters[userId] += eventData.likeCount || 1;
-                
-                // Comprobamos si ESTE usuario ha alcanzado el umbral.
-                if (userLikeCounters[userId] >= eventRule.likesAmount) {
-                    match = true;
-                    // Reseteamos el contador para ESE usuario restando el umbral.
-                    userLikeCounters[userId] -= eventRule.likesAmount; 
-                    console.log(`[MOTOR] Umbral de ${eventRule.likesAmount} likes alcanzado por ${eventData.nickname}. Sobrante: ${userLikeCounters[userId]}`);
-                }
-            }
-            // Condición para otros eventos (lógica que ya tenías)
-            else if (eventRule.why === triggerType) {
+            if (alertRule.why === triggerType) {
                 if (triggerType === 'gift-specific') {
-                    if (eventRule.giftId === eventData.giftId) match = true;
+                    if (alertRule.giftId === eventData.giftId) match = true;
                 } else {
                     match = true;
                 }
             }
 
-            // Si hay coincidencia, ejecuta las acciones (esta parte no cambia)
             if (match) {
-                console.log(`[MOTOR] Coincidencia para evento "${eventRule.why}"`);
-                eventRule.actionsAll?.forEach(actionInfo => { 
-                    const fullAction = currentProfile.actions.find(a => a.id === actionInfo.id); 
-                    if(fullAction) actionQueue.push({ action: fullAction, eventData }); 
-                });
-                
-                if (eventRule.actionsRandom?.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * eventRule.actionsRandom.length);
-                    const randomActionInfo = eventRule.actionsRandom[randomIndex];
-                    const fullAction = currentProfile.actions.find(a => a.id === randomActionInfo.id);
-                    if (fullAction) actionQueue.push({ action: fullAction, eventData });
-                }
-                
-                if ((eventRule.actionsAll?.length > 0) || (eventRule.actionsRandom?.length > 0)) {
-                    processQueue();
-                }
+                console.log(`[MOTOR] Coincidencia para Alerta "${alertRule.name}"`);
+                // Construimos la acción 'al vuelo' basada en la alerta
+                const actionToExecute = {
+                    name: alertRule.name,
+                    duration: alertRule.duration || 5,
+                    audioAction: alertRule.audioAction,
+                    image: alertRule.image,
+                    // Si tienes webhook o keystrokes en alertas, añádelos aquí
+                };
+                actionQueue.push({ action: actionToExecute, eventData });
+                processQueue();
             }
         });
     }
