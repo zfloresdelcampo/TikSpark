@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const audioPlayer = document.getElementById('audio-player');
     const myInstantsUrlInput = document.getElementById('myinstants-url-input');
     const addMyInstantsBtn = document.getElementById('add-myinstants-btn');
+    
+    // === AGREGA ESTA LÍNEA AQUÍ ===
+    let audioSelectionContext = 'action'; // Valores: 'action' o 'alert'
 
     // === NUEVO: Función para renderizar Alertas ===
     function renderAlerts() {
@@ -101,9 +104,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     function selectAudio(fileName) {
-        selectedAudioFile = fileName; // Guardamos el nombre del archivo
+        selectedAudioFile = fileName; // Guardamos el nombre globalmente
         
-        // Creamos y mostramos el nombre del archivo seleccionado
+        // Creamos el elemento visual
         const audioFileNameDisplay = document.createElement('div');
         audioFileNameDisplay.className = 'selected-audio-file';
         audioFileNameDisplay.innerHTML = `
@@ -111,16 +114,185 @@ document.addEventListener('DOMContentLoaded', async function() {
             <button class="remove-selected-audio">&times;</button>
         `;
 
-        const existingDisplay = audioConfigMenu.querySelector('.selected-audio-file');
-        if (existingDisplay) existingDisplay.remove();
-        
-        audioConfigMenu.appendChild(audioFileNameDisplay);
-        
-        audioFileNameDisplay.querySelector('.remove-selected-audio').addEventListener('click', () => {
-            selectedAudioFile = null;
-            audioFileNameDisplay.remove();
+        // === CAMBIO CLAVE: Decidimos dónde mostrarlo ===
+        let targetContainer;
+        if (audioSelectionContext === 'alert') {
+            targetContainer = document.getElementById('alert-audio-config');
+        } else {
+            targetContainer = document.getElementById('audio-config'); // Por defecto Acciones
+        }
+
+        // Si el contenedor existe, limpiamos el anterior y ponemos el nuevo
+        if (targetContainer) {
+            const existingDisplay = targetContainer.querySelector('.selected-audio-file');
+            if (existingDisplay) existingDisplay.remove();
+            targetContainer.appendChild(audioFileNameDisplay);
+            
+            // Listener para borrar selección
+            audioFileNameDisplay.querySelector('.remove-selected-audio').addEventListener('click', () => {
+                selectedAudioFile = null;
+                audioFileNameDisplay.remove();
+            });
+        }
+    }
+
+    // === NUEVO: Lógica de Audio para ALERTAS ===
+    const alertPlayAudioCb = document.getElementById('alert-action-play-audio');
+    const alertAudioConfig = document.getElementById('alert-audio-config');
+    const alertOpenListBtn = document.getElementById('alert-open-audio-list-btn');
+    const alertUploadBtn = document.getElementById('alert-upload-audio-btn');
+    const alertVolumeSlider = document.getElementById('alert-audio-volume');
+    const alertVolumeLabel = document.getElementById('alert-volume-label');
+
+    // 1. Mostrar menú al marcar checkbox (Alertas)
+    if (alertPlayAudioCb) {
+        alertPlayAudioCb.addEventListener('change', (e) => {
+            alertAudioConfig.classList.toggle('open', e.target.checked);
         });
     }
+
+    // 2. Abrir Lista (Contexto Alertas)
+    if (alertOpenListBtn) {
+        alertOpenListBtn.addEventListener('click', () => {
+            audioSelectionContext = 'alert'; // <--- ¡Importante!
+            renderLocalAudios();
+            audioListModal.classList.add('open');
+        });
+    }
+
+    // 3. Subir Archivo (Contexto Alertas)
+    if (alertUploadBtn) {
+        alertUploadBtn.addEventListener('click', async () => {
+            if (window.electronAPI) {
+                audioSelectionContext = 'alert'; // <--- ¡Importante!
+                const result = await window.electronAPI.selectAudioFile();
+                if (result.success && result.fileName) {
+                    selectAudio(result.fileName);
+                }
+            }
+        });
+    }
+
+    // 4. Slider Volumen (Alertas)
+    if (alertVolumeSlider) {
+        alertVolumeSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if(alertVolumeLabel) alertVolumeLabel.textContent = `Volumen: ${value}`;
+            e.target.style.background = `linear-gradient(to right, #5c1d80 ${value}%, #555 ${value}%)`;
+        });
+    }
+
+    // === ACTUALIZACIÓN: Botones originales de ACCIONES ===
+    // (Aseguramos que devuelvan el contexto a 'action' si los tocas)
+    if (openAudioListBtn) {
+        openAudioListBtn.addEventListener('click', () => {
+            audioSelectionContext = 'action'; // Resetear a acción
+            renderLocalAudios(); // Tu función existente
+            audioListModal.classList.add('open');
+        });
+    }
+    
+    if (uploadAudioBtn) {
+        uploadAudioBtn.addEventListener('click', async () => {
+            if (window.electronAPI) {
+                audioSelectionContext = 'action'; // Resetear a acción
+                // ... tu lógica existente de subida o llamada a API ...
+                 const result = await window.electronAPI.selectAudioFile();
+                if (result.success && result.fileName) {
+                    selectAudio(result.fileName);
+                }
+            }
+        });
+    }
+
+    // === LÓGICA DINÁMICA PARA ALERTAS (Mostrar/Ocultar Regalos y Likes) ===
+    document.querySelectorAll('input[name="alert_why"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const selectedValue = e.target.value;
+            
+            // 1. Ocultar todo primero
+            const giftSelector = document.getElementById('alert-gift-specific-selector');
+            const likesSelector = document.getElementById('alert-likes-amount-selector');
+            
+            if (giftSelector) giftSelector.style.display = 'none';
+            if (likesSelector) likesSelector.style.display = 'none';
+
+            // 2. Mostrar según lo elegido
+            if (selectedValue === 'gift-specific') {
+                if (giftSelector) giftSelector.style.display = 'grid'; // O 'flex' según tu CSS
+            } else if (selectedValue === 'likes') {
+                if (likesSelector) likesSelector.style.display = 'grid';
+            }
+        });
+    });
+
+    // === Lógica para el Buscador de Regalos dentro de ALERTAS ===
+    const alertGiftSelectorDisplay = document.getElementById('alert-gift-selector-display');
+    const alertGiftSelector = document.getElementById('alert-custom-gift-selector');
+    const alertGiftSearchInput = document.getElementById('alert-gift-search-input');
+    const alertGiftOptionsList = document.getElementById('alert-gift-options-list');
+    const alertSelectedGiftIdInput = document.getElementById('alert-selected-gift-id');
+
+    // Función auxiliar para seleccionar regalo en Alertas
+    function selectGiftForAlert(gift) {
+        alertGiftSelectorDisplay.innerHTML = `<img src="${gift.image.url_list[0]}" alt="${gift.name}"><span>${gift.name}</span>`;
+        alertSelectedGiftIdInput.value = gift.id;
+        alertGiftSelector.classList.remove('open');
+    }
+
+    // Renderizar opciones en el modal de Alertas
+    function renderAlertGiftOptions(gifts) {
+        if (!alertGiftOptionsList) return;
+        alertGiftOptionsList.innerHTML = '';
+        gifts.sort((a, b) => a.diamond_count - b.diamond_count);
+        
+        gifts.forEach(gift => {
+            if (!gift.image || !gift.image.url_list[0]) return;
+            const optionItem = document.createElement('div');
+            optionItem.className = 'gift-option-item';
+            optionItem.innerHTML = `<img src="${gift.image.url_list[0]}" alt="${gift.name}"><div class="gift-details"><span class="gift-name">${gift.name}</span><span class="gift-cost">${gift.diamond_count} Coins - ID:${gift.id}</span></div>`;
+            optionItem.addEventListener('click', (e) => { 
+                e.stopPropagation(); 
+                selectGiftForAlert(gift); 
+            });
+            alertGiftOptionsList.appendChild(optionItem);
+        });
+    }
+
+    // Abrir/Cerrar menú
+    if (alertGiftSelectorDisplay) {
+        alertGiftSelectorDisplay.addEventListener('click', async () => {
+            alertGiftSelector.classList.toggle('open');
+            // Cargar regalos si no están cargados
+            if (availableGiftsCache.length === 0 && window.electronAPI) {
+                 try {
+                    const gifts = await window.electronAPI.getAvailableGifts();
+                    availableGiftsCache = gifts || [];
+                 } catch(e) { console.error(e); }
+            }
+            renderAlertGiftOptions(availableGiftsCache);
+        });
+    }
+
+    // Buscador
+    if (alertGiftSearchInput) {
+        alertGiftSearchInput.addEventListener('input', () => {
+            const term = alertGiftSearchInput.value.toLowerCase();
+            const allOptions = alertGiftOptionsList.querySelectorAll('.gift-option-item');
+            allOptions.forEach(option => {
+                const name = option.querySelector('.gift-name').textContent.toLowerCase();
+                const idText = option.querySelector('.gift-cost').textContent.toLowerCase();
+                option.style.display = (name.includes(term) || idText.includes(term)) ? 'flex' : 'none';
+            });
+        });
+    }
+    
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (e) => { 
+        if (alertGiftSelector && !alertGiftSelector.contains(e.target)) { 
+            alertGiftSelector.classList.remove('open'); 
+        } 
+    });
 
     // Manejador de clics para los botones de las tarjetas de audio
     if (localAudiosGrid) {
@@ -720,23 +892,30 @@ if (window.electronAPI) {
             enabled: true,
             who: who,
             why: why,
-            duration: document.getElementById('display-duration').value || 5
+            duration: document.getElementById('alert-duration').value || 5
         };
 
-        // Lógica para Audio
-        const playAudioCheck = document.getElementById('action-play-audio');
+        // === CAMBIAR ESTO: Lógica de Audio para ALERTAS ===
+        const playAudioCheck = document.getElementById('alert-action-play-audio'); // ID Nuevo
         if (playAudioCheck && playAudioCheck.checked) {
             if (selectedAudioFile) {
                 newAlertData.audioAction = {
                     file: selectedAudioFile,
-                    volume: document.getElementById('audio-volume').value
+                    // Usamos los IDs nuevos del modal de alertas
+                    volume: document.getElementById('alert-audio-volume').value, 
+                    oneShot: document.getElementById('alert-audio-oneshot').checked,
+                    skip: document.getElementById('alert-audio-skip').checked,
+                    queue: document.getElementById('alert-audio-add-queue').checked
                 };
+            } else {
+                 return showToastNotification('⚠️ Selecciona un archivo de audio.');
             }
         }
+        // =================================================
 
         // Lógica para Regalos Específicos
         if (why === 'gift-specific') {
-            const giftIdInput = document.getElementById('selected-gift-id');
+            const giftIdInput = document.getElementById('alert-selected-gift-id');
             if (giftIdInput && giftIdInput.value) {
                 newAlertData.giftId = parseInt(giftIdInput.value);
                 // Intentamos guardar el nombre también para mostrarlo bonito en la lista

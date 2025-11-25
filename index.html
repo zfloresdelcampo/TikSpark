@@ -733,14 +733,17 @@
             <div class="accordion">
                 <div class="accordion-header active">Acciones Generales</div>
                 <div class="accordion-content open">
+
                     <div class="checkbox-item">
                         <div class="checkbox-label-row">
-                            <input type="checkbox" id="alert-action-play-audio" name="alert-action-type" value="audio">
+                            <!-- Checkbox principal para activar el menú -->
+                            <input type="checkbox" id="alert-action-play-audio">
                             <label for="alert-action-play-audio">Play Audio</label>
                         </div>
-                        <!-- Aquí irá el submenú de audio que ya creamos, pero con nuevos IDs -->
-                        <!-- BLOQUE DE CONFIGURACIÓN DE AUDIO PARA ALERTAS -->
+                        
+                        <!-- Menú Desplegable de Audio (Específico para Alertas) -->
                         <div id="alert-audio-config" class="audio-config">
+                            <!-- 1. Slider de Volumen -->
                             <div class="audio-control-group">
                                 <label id="alert-volume-label">Volumen: 50</label>
                                 <div class="volume-slider-container">
@@ -749,14 +752,32 @@
                                     <i class="fas fa-volume-up"></i>
                                 </div>
                             </div>
+
+                            <!-- 2. Botones de Archivo (¡CON IDs NUEVOS AGREGADOS!) -->
                             <div class="audio-control-group file-upload-group">
-                                <button class="audio-btn" id="alert-open-audio-list">Abrir Lista de Audios</button>
-                                <button class="audio-btn" id="alert-upload-audio">Subir Archivo</button>
+                                <button class="audio-btn" id="alert-open-audio-list-btn">Abrir Lista de Audios</button>
+                                <button class="audio-btn" id="alert-upload-audio-btn">Subir Archivo</button>
+                                <span>o suéltalo aquí</span>
                             </div>
-                            <!-- Aquí se mostrará el archivo seleccionado -->
-                            <div id="alert-selected-file-container"></div>
+
+                            <!-- 3. Opciones Extra -->
+                            <div class="audio-control-group extra-options-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="alert-audio-oneshot">
+                                    <label for="alert-audio-oneshot">Audio One-Shot</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="alert-audio-skip">
+                                    <label for="alert-audio-skip">Skip Audio</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="alert-audio-add-queue">
+                                    <label for="alert-audio-add-queue">Añadir a la cola</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <div class="checkbox-item">
                         <div class="checkbox-label-row">
                             <input type="checkbox" id="alert-action-show-media" name="alert-action-type" value="media">
