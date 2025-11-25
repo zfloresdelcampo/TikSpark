@@ -2126,3 +2126,328 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     background-color: rgba(50, 50, 50, 1);
     color: white;
 }
+/* === ESTILOS PARA EL SUB-MENÚ DE AUDIO === */
+
+/* Contenedor principal del sub-menú, oculto por defecto */
+.audio-config {
+    display: none; /* Inicia oculto */
+    flex-direction: column;
+    gap: 20px;
+    background-color: #333333;
+    padding: 20px;
+    margin-top: 10px;
+    margin-left: 28px; /* Para alinear con otros sub-menús */
+    border-radius: 4px;
+}
+
+/* Clase para mostrar el sub-menú */
+.audio-config.open {
+    display: flex;
+}
+
+/* Grupo de controles (volumen, botones, etc.) */
+.audio-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.audio-control-group label {
+    color: #ccc;
+    font-weight: 500;
+}
+
+/* Contenedor del slider de volumen */
+.volume-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.volume-slider-container i {
+    color: #ccc;
+}
+
+/* Estilo del slider de volumen */
+input[type="range"].volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #5c1d80 50%, #555 50%); /* <-- AÑADE ESTA LÍNEA */
+    outline: none;
+    border-radius: 4px;
+}
+
+input[type="range"].volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #5c1d80; /* Verde como la referencia */
+    border: 3px solid #000;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"].volume-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #5c1d80;
+    border: 3px solid #000;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Grupo de botones de archivo (CORREGIDO) */
+.file-upload-group {
+    display: grid; /* Usamos grid para más control */
+    grid-template-columns: auto 1fr; /* Columna para el botón y otra para el texto */
+    align-items: center;
+    gap: 15px;
+    color: #ccc;
+    grid-row-gap: 10px; /* Espacio vertical entre filas */
+}
+
+/* Le decimos al primer botón que ocupe las dos columnas */
+.file-upload-group .audio-btn:first-child {
+    grid-column: 1 / -1;
+}
+
+/* Grupo de checkboxes extra (CORREGIDO) */
+.extra-options-group {
+    display: flex; /* Volvemos a flex */
+    flex-direction: column; /* Lo ponemos en columna */
+    gap: 15px; /* Espacio entre cada checkbox */
+    margin-top: 10px; /* Espacio extra arriba */
+}
+
+.audio-btn {
+    background-color: #252526;
+    color: #ccc;
+    border: 1px solid #505050;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.extra-options-group .checkbox-item {
+    margin-bottom: 0;
+    flex-direction: row; /* Para que el texto esté al lado */
+}
+/* === ESTILOS PARA EL MODAL DE LISTA DE AUDIOS === */
+
+.modal-content.audio-list-content {
+    width: 800px;
+    background-color: #252526;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.audio-list-tabs {
+    display: flex;
+    padding: 0 20px;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.audio-tab {
+    padding: 15px 20px;
+    cursor: pointer;
+    color: #888;
+    font-weight: bold;
+    border-bottom: 2px solid transparent;
+}
+
+.audio-tab.active {
+    color: #8a2be2; /* Verde como la referencia */
+    border-bottom-color: #8a2be2;
+}
+
+.audio-list-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.local-audios-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 6px;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.local-audios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.audio-item-card {
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    color: #eee;
+}
+
+.audio-item-name {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.audio-item-duration {
+    font-size: 12px;
+    color: #888;
+    background-color: #252526;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.audio-item-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.audio-control-btn {
+    background-color: #4f4f4f;
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+.audio-control-btn.delete { background-color: #a4262c; }
+.audio-control-btn.select { background-color: #10c35b; }
+/* Estilo para mostrar el nombre del archivo de audio seleccionado */
+.selected-audio-file {
+    background-color: #252526;
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.remove-selected-audio {
+    background: none;
+    border: none;
+    color: #a4262c;
+    font-size: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+/* === ESTILOS PARA EL DESCARGADOR DE MYINSTANTS === */
+
+.myinstants-downloader {
+    padding: 15px 20px;
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #3c3c3c;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.myinstants-search, .myinstants-add {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.myinstants-downloader input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #505050;
+    background-color: #252526;
+    color: white;
+    font-size: 14px;
+}
+
+.myinstants-search span {
+    color: #888;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.myinstants-search a {
+    color: #10c35b;
+    text-decoration: none;
+}
+.myinstants-search a:hover {
+    text-decoration: underline;
+}
+
+#add-myinstants-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #10c35b;
+    color: white;
+    font-weight: bold;
+    border: none;
+}
+/* === NUEVO: ESTILOS PARA LA TABLA DE ALERTAS === */
+
+.alert-header, .alert-row {
+    grid-template-columns: 40px 80px 120px 2fr 1fr 2fr;
+}
+
+.alert-header > div:first-of-type {
+    visibility: hidden;
+}
+
+.alert-row {
+    grid-template-columns: 40px 80px 120px 2fr 1fr 2fr;
+}
+
+.alert-row > div:nth-child(n+4) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+/* Estilo visual, Scroll y Espaciado para el Modal de Alertas */
+#create-alert-modal .modal-content {
+    background-color: #202020;       /* Fondo oscuro */
+    border: 1px solid #333;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+    
+    /* ESTO ES LO NUEVO PARA EL ESPACIO */
+    padding: 30px;         /* Da espacio por todos lados (arriba, abajo, lados) */
+    border-radius: 5px;   /* Redondea las esquinas del fondo */
+
+    /* Scroll */
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}

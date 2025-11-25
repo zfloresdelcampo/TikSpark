@@ -2,6 +2,175 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
+    // === NUEVO: Constantes para Alertas ===
+    const createAlertButton = document.getElementById('create-alert-button');
+    const alertModalOverlay = document.getElementById('create-alert-modal');
+    const closeAlertButton = document.getElementById('close-alert-modal-button');
+    const discardAlertButton = document.getElementById('discard-alert-button');
+    const applyAlertButton = document.getElementById('apply-alert-button');
+    const alertsListContainer = document.getElementById('alerts-list-container');
+
+    // Al principio de script.js
+    const openAudioListBtn = document.querySelector('#audio-config .file-upload-group .audio-btn:nth-of-type(1)'); // Abrir Lista
+    const uploadAudioBtn = document.querySelector('#audio-config .file-upload-group .audio-btn:nth-of-type(2)');   // Subir Archivo
+    const openSoundsFolderBtn = document.querySelector('#audio-list-modal .local-audios-header .audio-btn'); // Abrir Carpeta
+    const audioListModal = document.getElementById('audio-list-modal');
+    const closeAudioListBtn = document.getElementById('close-audio-list-modal');
+    const localAudiosGrid = document.getElementById('local-audios-grid');
+    let selectedAudioFile = null; // Guardará el nombre del archivo de audio elegido
+    const audioPlayer = document.getElementById('audio-player');
+    const myInstantsUrlInput = document.getElementById('myinstants-url-input');
+    const addMyInstantsBtn = document.getElementById('add-myinstants-btn');
+
+    // === NUEVO: Función para renderizar Alertas ===
+    function renderAlerts() {
+        const currentProfile = profiles[activeProfileName];
+        if (!currentProfile) {
+            alertsListContainer.innerHTML = '<div class="no-items-message">Selecciona un perfil</div>';
+            return;
+        }
+
+        const alerts = currentProfile.alerts || [];
+        const container = alertsListContainer.parentElement;
+        alertsListContainer.innerHTML = '';
+
+        if (alerts.length === 0) {
+            alertsListContainer.innerHTML = '<div class="no-items-message">Sin alertas</div>';
+            container.classList.add('empty');
+            return;
+        }
+        container.classList.remove('empty');
+
+        alerts.forEach(alert => {
+            let eventString = `${whoLabels[alert.who] || alert.who} - `;
+            if (alert.why === 'gift-specific' && alert.giftId) {
+                eventString += `${alert.giftName || `ID: ${alert.giftId}`}`;
+            } else {
+                eventString += whyLabels[alert.why] || alert.why;
+            }
+
+            let description = '';
+            if (alert.audioAction) {
+                description = `Audio: ${alert.audioAction.file}`;
+            } // ... aquí añadirías para media, etc.
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'list-view-row alert-row';
+            alertDiv.innerHTML = `
+                <div><input type="checkbox"></div>
+                <div class="icon-center"><input type="checkbox" ${alert.enabled ? 'checked' : ''} onchange="toggleAlertStatus(${alert.id})"></div>
+                <div class="row-icons">
+                    <span class="action-icon-bg play" onclick="playAlert(${alert.id})"><i class="fas fa-play"></i></span>
+                    <span class="action-icon-bg edit" onclick="editAlert(${alert.id})"><i class="fas fa-pencil-alt"></i></span>
+                    <span class="action-icon-bg delete" onclick="deleteAlert(${alert.id})"><i class="fas fa-trash-alt"></i></span>
+                </div>
+                <div>${eventString}</div>
+                <div>${alert.duration}</div>
+                <div>${description}</div>
+            `;
+            alertsListContainer.appendChild(alertDiv);
+        });
+    }
+
+
+    async function renderLocalAudios() {
+        if (!window.electronAPI) return;
+        
+        const audioFiles = await window.electronAPI.getLocalAudios();
+        localAudiosGrid.innerHTML = '';
+
+        if (audioFiles.length === 0) {
+            localAudiosGrid.innerHTML = '<p style="color: #888;">No hay audios locales. Sube tu primer archivo.</p>';
+            return;
+        }
+
+        audioFiles.forEach(fileName => {
+            const card = document.createElement('div');
+            card.className = 'audio-item-card';
+            card.innerHTML = `
+                <span class="audio-item-name" title="${fileName}">${fileName}</span>
+                <span class="audio-item-duration">...</span>
+                <div class="audio-item-controls">
+                    <button class="audio-control-btn play" data-filename="${fileName}"><i class="fas fa-play"></i></button>
+                    <button class="audio-control-btn select" data-filename="${fileName}"><i class="fas fa-check"></i></button>
+                    <button class="audio-control-btn delete" data-filename="${fileName}"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            localAudiosGrid.appendChild(card);
+        });
+    }
+
+    function selectAudio(fileName) {
+        selectedAudioFile = fileName; // Guardamos el nombre del archivo
+        
+        // Creamos y mostramos el nombre del archivo seleccionado
+        const audioFileNameDisplay = document.createElement('div');
+        audioFileNameDisplay.className = 'selected-audio-file';
+        audioFileNameDisplay.innerHTML = `
+            <span>${fileName}</span>
+            <button class="remove-selected-audio">&times;</button>
+        `;
+
+        const existingDisplay = audioConfigMenu.querySelector('.selected-audio-file');
+        if (existingDisplay) existingDisplay.remove();
+        
+        audioConfigMenu.appendChild(audioFileNameDisplay);
+        
+        audioFileNameDisplay.querySelector('.remove-selected-audio').addEventListener('click', () => {
+            selectedAudioFile = null;
+            audioFileNameDisplay.remove();
+        });
+    }
+
+    // Manejador de clics para los botones de las tarjetas de audio
+    if (localAudiosGrid) {
+        localAudiosGrid.addEventListener('click', async (e) => {
+            const button = e.target.closest('.audio-control-btn');
+            if (!button || !window.electronAPI) return;
+
+            const fileName = button.dataset.filename;
+
+            if (button.classList.contains('play')) {
+                // --- INICIO DE LA NUEVA LÓGICA DE REPRODUCCIÓN ---
+                (async () => {
+                    const filePath = await window.electronAPI.getAudioFilePath(fileName);
+                    audioPlayer.src = filePath;
+                    audioPlayer.play().catch(e => console.error("Error al reproducir audio:", e));
+                })();
+                // --- FIN DE LA NUEVA LÓGICA ---
+            } else if (button.classList.contains('delete')) {
+                // Acción de Borrar
+                if (confirm(`¿Seguro que quieres eliminar el sonido "${fileName}"?`)) {
+                    await window.electronAPI.deleteLocalAudio(fileName);
+                }
+            } else if (button.classList.contains('select')) {
+                // Acción de Seleccionar
+                selectAudio(fileName); // <--- Usa la nueva función
+                audioListModal.classList.remove('open'); // Cerramos el modal
+                
+                // Mostramos el nombre del archivo seleccionado en el modal de acción
+                const audioFileNameDisplay = document.createElement('div');
+                audioFileNameDisplay.className = 'selected-audio-file';
+                audioFileNameDisplay.innerHTML = `
+                    <span>${fileName}</span>
+                    <button class="remove-selected-audio">&times;</button>
+                `;
+
+                // Limpiamos cualquier selección anterior y añadimos la nueva
+                const existingDisplay = audioConfigMenu.querySelector('.selected-audio-file');
+                if (existingDisplay) existingDisplay.remove();
+                
+                audioConfigMenu.appendChild(audioFileNameDisplay);
+                
+                // Añadimos el listener para el botón de quitar selección
+                audioFileNameDisplay.querySelector('.remove-selected-audio').addEventListener('click', () => {
+                    selectedAudioFile = null;
+                    audioFileNameDisplay.remove();
+                });
+            }
+        });
+    }
+
     // ==========================================================
     // LÓGICA UNIVERSAL PARA MINI-JUEGOS
     // ==========================================================
@@ -463,6 +632,66 @@ if (window.electronAPI) {
         currentPageEvents = 1;
         renderActions();
         renderEvents();
+        renderAlerts(); // <-- AÑADE ESTA LÍNEA
+    }
+
+    // === NUEVO: Lógica del Modal de Alertas ===
+    if (createAlertButton) {
+        createAlertButton.addEventListener('click', () => {
+            // Lógica para abrir el modal de alertas (la crearemos ahora)
+            openAlertModal();
+        });
+    }
+
+    // === NUEVO: Funciones para el modal de Alertas ===
+    function resetAlertModal() {
+        document.getElementById('alert-modal-title').textContent = 'Nueva Alerta';
+        document.getElementById('editing-alert-id').value = '';
+        document.getElementById('alert-name').value = '';
+        // Resetea aquí todos los campos del nuevo modal
+    }
+
+    function openAlertModal(alertData = null) {
+        // Lógica para rellenar y abrir el modal
+        alertModalOverlay.classList.add('open');
+    }
+    
+    const closeAlertModal = () => alertModalOverlay.classList.remove('open');
+    
+    if(closeAlertButton) closeAlertButton.addEventListener('click', closeAlertModal);
+    if(discardAlertButton) discardAlertButton.addEventListener('click', closeAlertModal);
+
+    // === MODIFICACIÓN: En processTikTokEvent ===
+    function processTikTokEvent(triggerType, eventData) {
+        // ... tu bucle `currentProfile.events.forEach` no cambia ...
+
+        // === AÑADE ESTE NUEVO BUCLE ===
+        const alerts = currentProfile.alerts || [];
+        alerts.forEach(alertRule => {
+            if (!alertRule.enabled) return;
+            
+            let match = false;
+            if (alertRule.why === triggerType) {
+                if (triggerType === 'gift-specific') {
+                    if (alertRule.giftId === eventData.giftId) match = true;
+                } else {
+                    match = true;
+                }
+            }
+
+            if (match) {
+                console.log(`[MOTOR] Coincidencia para Alerta "${alertRule.name}"`);
+                // Creamos una "acción" temporal a partir de la alerta
+                const actionToExecute = {
+                    name: alertRule.name,
+                    duration: alertRule.duration,
+                    audioAction: alertRule.audioAction
+                    // ... etc. para otras propiedades de acción
+                };
+                actionQueue.push({ action: actionToExecute, eventData });
+                processQueue();
+            }
+        });
     }
 
     // ==========================================================
@@ -752,6 +981,11 @@ if (window.electronAPI) {
         document.getElementById('action-queue').value = 'Screen 1';
         document.getElementById('action-image').value = '';
         document.getElementById('repeat-with-gift-combo').checked = false;
+        document.getElementById('audio-config').classList.remove('open');
+        // --- AÑADE ESTAS DOS LÍNEAS AQUÍ ---
+        selectedAudioFile = null;
+        const existingDisplay = document.querySelector('.selected-audio-file');
+        if (existingDisplay) existingDisplay.remove();
         
         // KEYSTROKE RESET ADDED
         if (typeof currentKeystrokeSequence !== 'undefined') currentKeystrokeSequence.length = 0;
@@ -764,6 +998,116 @@ if (window.electronAPI) {
     closeActionButton.addEventListener('click', closeActionModal);
     discardActionButton.addEventListener('click', closeActionModal);
     actionModalOverlay.addEventListener('click', (e) => { if (e.target === actionModalOverlay) closeActionModal(); });
+
+    // --- Lógica para mostrar/ocultar el sub-menú de audio ---
+    const playAudioCheckbox = document.getElementById('action-play-audio');
+    const audioConfigMenu = document.getElementById('audio-config');
+    const volumeSlider = document.getElementById('audio-volume');
+    const volumeLabel = document.getElementById('volume-label');
+
+    if (playAudioCheckbox) {
+        playAudioCheckbox.addEventListener('change', (e) => {
+            audioConfigMenu.classList.toggle('open', e.target.checked);
+            // Desmarcar otras opciones si se marca Play Audio
+            if (e.target.checked) {
+                document.getElementById('action-webhook').checked = false;
+                document.getElementById('webhook-config').classList.remove('open');
+                document.getElementById('action-extra').checked = false;
+                document.getElementById('extra-actions-config').classList.remove('open');
+                document.getElementById('action-simulate-keystrokes').checked = false;
+                document.getElementById('keystroke-config').classList.remove('open');
+            }
+        });
+    }
+
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            volumeLabel.textContent = `Volumen: ${value}`;
+            // --- ¡AÑADE ESTA LÍNEA! ---
+            e.target.style.background = `linear-gradient(to right, #5c1d80 ${value}%, #555 ${value}%)`;
+        });
+    }
+
+    // Listeners para el modal de la lista de audios
+    if (openAudioListBtn) {
+        openAudioListBtn.addEventListener('click', () => {
+            renderLocalAudios();
+            audioListModal.classList.add('open');
+        });
+    }
+
+    if (closeAudioListBtn) {
+        closeAudioListBtn.addEventListener('click', () => {
+            audioListModal.classList.remove('open');
+        });
+    }
+
+    if (uploadAudioBtn) {
+        uploadAudioBtn.addEventListener('click', async () => {
+            if (window.electronAPI) {
+                // --- ¡AQUÍ ESTÁ EL CAMBIO! ---
+                // Ahora capturamos el resultado de la función.
+                const result = await window.electronAPI.selectAudioFile();
+
+                // Si se subió un archivo con éxito...
+                if (result.success && result.fileName) {
+                    //... lo seleccionamos automáticamente.
+                    selectAudio(result.fileName);
+                }
+            }
+        });
+    }
+
+    // Escucha para cuando la lista de audios se actualiza desde el backend
+    if (window.electronAPI) {
+        window.electronAPI.onAudioListUpdated((audioList) => {
+            console.log('Lista de audios actualizada:', audioList);
+            renderLocalAudios(); // Re-renderiza la lista con los nuevos archivos
+        });
+    }
+    
+    if (openSoundsFolderBtn) {
+        openSoundsFolderBtn.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.openSoundsFolder();
+            }
+        });
+    }
+
+    if (addMyInstantsBtn) {
+        addMyInstantsBtn.addEventListener('click', async () => {
+            const url = myInstantsUrlInput.value.trim();
+            if (!url) {
+                showToastNotification('⚠️ Pega una URL de MyInstants.');
+                return;
+            }
+
+            if (window.electronAPI) {
+                showToastNotification('📥 Descargando...');
+                const result = await window.electronAPI.downloadMyInstantsAudio(url);
+                showToastNotification(result.message);
+                if (result.success) {
+                    myInstantsUrlInput.value = ''; // Limpiar el input si fue exitoso
+                }
+            }
+        });
+    }
+
+    // Ahora, cada checkbox solo se preocupa de mostrar/ocultar su propio menú.
+    document.getElementById('action-webhook').addEventListener('change', (e) => {
+        document.getElementById('webhook-config').classList.toggle('open', e.target.checked);
+    });
+
+    document.getElementById('action-extra').addEventListener('change', (e) => {
+        document.getElementById('extra-actions-config').classList.toggle('open', e.target.checked);
+    });
+
+    // Tu listener de 'action-play-audio' ya es independiente, así que lo dejamos como está.
+    // El de keystrokes también necesita ser independiente.
+    document.getElementById('action-simulate-keystrokes').addEventListener('change', (e) => {
+        document.getElementById('keystroke-config').classList.toggle('open', e.target.checked);
+    });
 
     applyActionButton.addEventListener('click', async () => {
         const currentProfile = profiles[activeProfileName];
@@ -780,54 +1124,58 @@ if (window.electronAPI) {
         const newActionData = {
             id: id || currentProfile.nextActionId,
             name: name,
-            description: 'Acción Local',
             duration: document.getElementById('display-duration').value,
             queue: document.getElementById('action-queue').value,
             image: document.getElementById('action-image').value,
             repeatCombo: document.getElementById('repeat-with-gift-combo').checked,
-            webhookChecked: false,
-            extraAction: null,
-            keystrokeAction: null // ADDED
         };
 
-        if (webhookChecked) {
+        const descriptions = [];
+
+        // Ahora revisamos cada checkbox de forma independiente
+        if (document.getElementById('action-play-audio').checked) {
+            if (!selectedAudioFile) return showToastNotification('⚠️ Debes seleccionar un archivo de audio.');
+            newActionData.audioAction = {
+                file: selectedAudioFile,
+                volume: document.getElementById('audio-volume').value
+            };
+            descriptions.push('Play Audio');
+        }
+
+        if (document.getElementById('action-webhook').checked) {
             const webhookUrl = document.getElementById('webhook-url').value;
             if (webhookUrl.trim() === '') return showToastNotification('⚠️ La URL del WebHook no puede estar vacía.');
-            newActionData.webhookChecked = true;
-            newActionData.webhookUrl = webhookUrl;
-            newActionData.webhookQuantity = document.getElementById('webhook-quantity').value;
-            newActionData.webhookInterval = document.getElementById('webhook-interval').value;
-            newActionData.description = 'WebHook';
-
-        } else if (isExtraAction) {
-            const widgetId = document.getElementById('extra-action-widget-selector').value;
-            const operation = document.getElementById('extra-action-operation-selector').value;
-            const quantity = parseInt(document.getElementById('extra-action-quantity').value, 10);
-
-            newActionData.extraAction = { type: 'widgetControl', widgetId, operation, quantity };
-
-            let desc = `Extra: ${operation.charAt(0).toUpperCase() + operation.slice(1)}`;
-            if (operation !== 'reset') desc += ` ${quantity}`;
-            desc += ` a ${widgetId}`;
-            newActionData.description = desc;
-
-        } else if (simulateKeystrokes) { // ADDED KEYSTROKE LOGIC
-             if (currentKeystrokeSequence.length === 0) return showToastNotification('⚠️ La secuencia de Keystrokes no puede estar vacía.');
-
-             const repeat = document.getElementById('keystroke-repeat').value;
-             const interval = document.getElementById('keystroke-interval').value;
-             const addToQueue = document.getElementById('keystroke-add-to-queue').checked;
-             const gameCompatibility = document.getElementById('game-compat-check').checked; 
-
-             newActionData.keystrokeAction = {
-                 sequence: [...currentKeystrokeSequence],
-                 repeat: parseInt(repeat),
-                 interval: parseInt(interval),
-                 addToQueue: addToQueue,
-                 gameCompatibility: gameCompatibility 
-             };
-             newActionData.description = 'Keystrokes';
+            newActionData.webhookAction = { // CAMBIO DE NOMBRE: de webhookChecked a webhookAction
+                url: webhookUrl,
+                quantity: document.getElementById('webhook-quantity').value,
+                interval: document.getElementById('webhook-interval').value
+            };
+            descriptions.push('WebHook');
         }
+
+        if (document.getElementById('action-extra').checked) {
+            newActionData.extraAction = {
+                type: 'widgetControl',
+                widgetId: document.getElementById('extra-action-widget-selector').value,
+                operation: document.getElementById('extra-action-operation-selector').value,
+                quantity: parseInt(document.getElementById('extra-action-quantity').value, 10)
+            };
+            descriptions.push('Extra Action');
+        }
+
+        if (document.getElementById('action-simulate-keystrokes').checked) {
+            if (currentKeystrokeSequence.length === 0) return showToastNotification('⚠️ La secuencia de Keystrokes no puede estar vacía.');
+            newActionData.keystrokeAction = {
+                sequence: [...currentKeystrokeSequence],
+                repeat: parseInt(document.getElementById('keystroke-repeat').value),
+                interval: parseInt(document.getElementById('keystroke-interval').value),
+                addToQueue: document.getElementById('keystroke-add-to-queue').checked,
+                gameCompatibility: document.getElementById('game-compat-check').checked 
+            };
+            descriptions.push('Keystrokes');
+        }
+
+        newActionData.description = descriptions.join(' + ') || 'Acción Local';
 
 
         if (id) {
@@ -912,34 +1260,45 @@ if (window.electronAPI) {
             document.getElementById('action-queue').value = action.queue;
             document.getElementById('action-image').value = action.image;
             document.getElementById('repeat-with-gift-combo').checked = action.repeatCombo;
+            document.getElementById('audio-config').classList.remove('open');
 
-            document.getElementById('action-webhook').checked = action.webhookChecked;
-            if (action.webhookChecked) {
-                document.getElementById('webhook-config').classList.add('open');
-                document.getElementById('webhook-url').value = action.webhookUrl;
-                document.getElementById('webhook-quantity').value = action.webhookQuantity;
-                document.getElementById('webhook-interval').value = action.webhookInterval;
+            if (action.audioAction) {
+                const cb = document.getElementById('action-play-audio');
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+                selectAudio(action.audioAction.file);
+                const vs = document.getElementById('audio-volume');
+                vs.value = action.audioAction.volume;
+                vs.dispatchEvent(new Event('input'));
+            }
+            
+            if (action.webhookAction) { // CAMBIO DE NOMBRE
+                const cb = document.getElementById('action-webhook');
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+                document.getElementById('webhook-url').value = action.webhookAction.url;
+                document.getElementById('webhook-quantity').value = action.webhookAction.quantity;
+                document.getElementById('webhook-interval').value = action.webhookAction.interval;
             }
 
-            if (action.extraAction && action.extraAction.type === 'widgetControl') {
-                const actionExtraCheckbox = document.getElementById('action-extra');
-                actionExtraCheckbox.checked = true;
-                actionExtraCheckbox.dispatchEvent(new Event('change'));
-
+            if (action.extraAction) {
+                const cb = document.getElementById('action-extra');
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
                 document.getElementById('extra-action-widget-selector').value = action.extraAction.widgetId;
-                const operationSelector = document.getElementById('extra-action-operation-selector');
-                operationSelector.value = action.extraAction.operation;
-                operationSelector.dispatchEvent(new Event('change'));
+                const opSelector = document.getElementById('extra-action-operation-selector');
+                opSelector.value = action.extraAction.operation;
+                opSelector.dispatchEvent(new Event('change'));
                 document.getElementById('extra-action-quantity').value = action.extraAction.quantity;
-            } else if (action.keystrokeAction) { // ADDED KEYSTROKE EDITING
-                const keystrokeCheckbox = document.getElementById('action-simulate-keystrokes');
-                keystrokeCheckbox.checked = true;
-                keystrokeCheckbox.dispatchEvent(new Event('change'));
+            }
 
+            if (action.keystrokeAction) {
+                const cb = document.getElementById('action-simulate-keystrokes');
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
                 currentKeystrokeSequence.splice(0, currentKeystrokeSequence.length, ...action.keystrokeAction.sequence);
                 updateKeystrokeSummary();
                 renderSequence();
-
                 document.getElementById('keystroke-repeat').value = action.keystrokeAction.repeat;
                 document.getElementById('keystroke-interval').value = action.keystrokeAction.interval;
                 document.getElementById('keystroke-add-to-queue').checked = action.keystrokeAction.addToQueue;
@@ -1451,55 +1810,89 @@ if (window.electronAPI) {
     let isProcessingQueue = false;
 
     function executeAction(action, eventData) {
-        return new Promise(resolve => {
-            // La lógica de repetición ahora está en `processTikTokEvent`,
-            // por lo que esta función solo necesita ejecutar la acción UNA VEZ.
-
-            if (action.extraAction) {
-                executeExtraAction(action.extraAction).then(resolve);
-                return;
-            }
-            if (action.keystrokeAction && window.electronAPI) {
-                window.electronAPI.simulateKeystrokes(action.keystrokeAction);
-                resolve(); // Asumimos que es rápido
-                return;
-            }
-            // Dentro de la función executeAction en script.js
-
-            if (action.webhookChecked) {
-                let url = action.webhookUrl.trim();
-                if (!url) return resolve();
-
-                // Creamos el cuerpo del JSON que enviaremos
-                const eventType = url.substring(url.lastIndexOf('/') + 1); // Extrae 'customer', 'shoplifter', etc.
-                const payload = {
-                    type: eventType,
-                    name: eventData.nickname || "Usuario" // Usamos el nombre del donador
-                };
-
-                const quantity = parseInt(action.webhookQuantity) || 1;
-                const interval = parseInt(action.webhookInterval) || 100;
-                
-                let count = 0;
-                const intervalId = setInterval(() => {
-                    if (count < quantity) {
-                        // ¡AQUÍ ESTÁ EL CAMBIO! Enviamos una petición POST con el JSON
-                        fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        }).catch(error => console.error('Error de WebHook:', error));
-                        count++;
-                    } else {
-                        clearInterval(intervalId);
-                        resolve();
-                    }
-                }, interval);
-                return;
-            }
+        return new Promise(async (resolve) => {
+            const tasks = [];
             
-            // Si es una acción simple sin nada especial
-            setTimeout(resolve, (action.duration || 1) * 1000);
+            // -----------------------------------------------------------------------
+            // CORRECCIÓN DEFINITIVA: 
+            // Toma DIRECTAMENTE el nickname. No mira uniqueId, no mira username.
+            // Si eventData.nickname existe, usa eso. Punto.
+            // -----------------------------------------------------------------------
+            const nickname = (eventData && eventData.nickname) ? eventData.nickname : 'Usuario';
+
+            // Tarea de Audio
+            if (action.audioAction && window.electronAPI) {
+                tasks.push(new Promise(async (res) => {
+                    const audioPlayer = document.getElementById('audio-player');
+                    const filePath = await window.electronAPI.getAudioFilePath(action.audioAction.file);
+                    if (filePath) {
+                        audioPlayer.volume = parseInt(action.audioAction.volume, 10) / 100;
+                        audioPlayer.src = filePath;
+                        audioPlayer.onended = res;
+                        audioPlayer.play().catch(e => {
+                            console.error("Error al reproducir audio:", e);
+                            res();
+                        });
+                    } else {
+                        showToastNotification(`❌ No se encontró el audio: ${action.audioAction.file}`);
+                        res();
+                    }
+                }));
+            }
+
+            // Tarea de WebHook
+            if (action.webhookAction) { 
+                tasks.push(new Promise((res) => {
+                    let url = action.webhookAction.url.trim();
+                    if (!url) return res();
+
+                    // REEMPLAZO STRICTO EN LA URL
+                    url = url.replace(/{nickname}/g, nickname); 
+                    
+                    const quantity = parseInt(action.webhookAction.quantity) || 1;
+                    const interval = parseInt(action.webhookAction.interval) || 100;
+                    let count = 0;
+                    const intervalId = setInterval(() => {
+                        if (count < quantity) {
+                            fetch(url).catch(error => console.error('Error de WebHook:', error));
+                            count++;
+                        } else {
+                            clearInterval(intervalId);
+                            res();
+                        }
+                    }, interval);
+                }));
+            }
+
+            // Tarea de Keystrokes
+            if (action.keystrokeAction && window.electronAPI) {
+                // Copia limpia de la acción
+                const keystrokeData = JSON.parse(JSON.stringify(action.keystrokeAction));
+
+                if (keystrokeData.sequence && Array.isArray(keystrokeData.sequence)) {
+                    keystrokeData.sequence.forEach(item => {
+                        // REEMPLAZO STRICTO EN EL TEXTO DEL TECLADO
+                        if (item.type === 'text' && item.key) {
+                            item.key = item.key.replace(/{nickname}/g, nickname);
+                        }
+                    });
+                }
+                
+                tasks.push(window.electronAPI.simulateKeystrokes(keystrokeData));
+            }
+
+            // Tarea de Extra Action
+            if (action.extraAction) {
+                tasks.push(executeExtraAction(action.extraAction));
+            }
+
+            // Tarea de Duración
+            const visualDuration = (action.duration || 1) * 1000;
+            tasks.push(new Promise(res => setTimeout(res, visualDuration)));
+
+            // Espera a que TODAS las tareas terminen
+            await Promise.all(tasks);
+            resolve(); 
         });
     }
 

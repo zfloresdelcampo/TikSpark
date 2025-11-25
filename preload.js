@@ -5,6 +5,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     selectFolder: () => ipcRenderer.invoke('select-folder'),
     installMod: (data) => ipcRenderer.invoke('install-mod', data),
     deleteMod: (data) => ipcRenderer.invoke('delete-mod', data),
+
+    // --- NUEVAS LÍNEAS PARA MANEJAR AUDIO ---
+    selectAudioFile: () => ipcRenderer.invoke('select-audio-file'),
+    getLocalAudios: () => ipcRenderer.invoke('get-local-audios'),
+    onAudioListUpdated: (callback) => ipcRenderer.on('audio-list-updated', (_event, audioList) => callback(audioList)),
+    // --- NUEVA LÍNEA PARA ABRIR CARPETA DE SONIDOS ---
+    openSoundsFolder: () => ipcRenderer.invoke('open-sounds-folder'),
+    playLocalAudio: (fileName) => ipcRenderer.invoke('play-local-audio', fileName),
+    deleteLocalAudio: (fileName) => ipcRenderer.invoke('delete-local-audio', fileName),
+    getAudioFilePath: (fileName) => ipcRenderer.invoke('get-audio-file-path', fileName),
+    downloadMyInstantsAudio: (url) => ipcRenderer.invoke('download-myinstants-audio', url),
+
     // --- LÍNEAS A AÑADIR PARA TIKFINITY ---
     connectTikFinity: () => ipcRenderer.invoke('connect-tikfinity'),
     disconnectTikFinity: () => ipcRenderer.invoke('disconnect-tikfinity'),

@@ -1,13 +1,20 @@
 // --- START OF FILE main.js ---
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron'); // <-- Añade 'shell'
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
 const WinReg = require('winreg');
 const WebSocket = require('ws');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const { startTikTokDetector } = require('./detector.js');
 const { autoUpdater } = require('electron-updater');
+
+const soundsPath = path.join(app.getPath('userData'), 'sounds');
+if (!fs.existsSync(soundsPath)) {
+    fs.mkdirSync(soundsPath);
+}
 
 // --- DECLARACIÓN DE VARIABLES GLOBALES ---
 let mainWindow = null;
@@ -94,6 +101,152 @@ function createWindow() {
         return true;
     });
 
+
+    ipcMain.handle('select-audio-file', async () => {
+        const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, {
+            title: 'Seleccionar archivo de audio',
+            properties: ['openFile'],
+            filters: [{ name: 'Audios', extensions: ['mp3', 'wav', 'ogg'] }]
+        });
+
+        if (canceled || !filePaths || filePaths.length === 0) {
+            return { success: false, canceled: true };
+        }
+
+        const sourcePath = filePaths[0];
+        const fileName = path.basename(sourcePath);
+        const destPath = path.join(soundsPath, fileName);
+
+        try {
+            fs.copyFileSync(sourcePath, destPath);
+            
+            // Notificamos a la ventana que la lista ha cambiado.
+            const updatedList = fs.readdirSync(soundsPath);
+            mainWindow.webContents.send('audio-list-updated', updatedList);
+            
+            // --- ¡AQUÍ ESTÁ EL CAMBIO! ---
+            // Devolvemos el nombre del archivo para que la interfaz lo pueda usar.
+            return { success: true, fileName: fileName }; 
+
+        } catch (error) {
+            console.error('Error al copiar el archivo de audio:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('get-local-audios', () => {
+        try {
+            return fs.readdirSync(soundsPath);
+        } catch (error) {
+            console.error('Error al leer la carpeta de sonidos:', error);
+            return [];
+        }
+    });
+
+    ipcMain.handle('open-sounds-folder', () => {
+        // 'soundsPath' es la variable que ya definimos al principio de este archivo
+        shell.openPath(soundsPath).catch(err => {
+            console.error("No se pudo abrir la carpeta de sonidos:", err);
+        });
+    });
+
+    ipcMain.handle('play-local-audio', (event, fileName) => {
+        const audioPath = path.join(soundsPath, fileName);
+        // Usamos shell.openPath para que el sistema operativo lo reproduzca con el programa por defecto.
+        shell.openPath(audioPath).catch(err => {
+            console.error("No se pudo reproducir el audio:", err);
+        });
+    });
+
+    ipcMain.handle('delete-local-audio', (event, fileName) => {
+        const audioPath = path.join(soundsPath, fileName);
+        try {
+            if (fs.existsSync(audioPath)) {
+                fs.unlinkSync(audioPath);
+                // Notificamos a la UI que la lista ha cambiado.
+                const updatedList = fs.readdirSync(soundsPath);
+                mainWindow.webContents.send('audio-list-updated', updatedList);
+                return { success: true };
+            }
+            return { success: false, message: 'El archivo no existe.' };
+        } catch (error) {
+            console.error("Error al borrar el audio:", error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('get-audio-file-path', (event, fileName) => {
+        const audioPath = path.join(soundsPath, fileName);
+        return `file://${audioPath.replace(/\\/g, '/')}`; // Asegura formato URL correcto
+    });
+
+    ipcMain.handle('download-myinstants-audio', async (event, url) => {
+        if (!url || !url.includes('myinstants.com')) {
+            return { success: false, message: 'URL de MyInstants no válida.' };
+        }
+
+        try {
+            const pageResponse = await axios.get(url);
+            const $ = cheerio.load(pageResponse.data);
+
+            // --- INICIO DE LA CORRECCIÓN ---
+            // Método robusto para encontrar la URL del MP3
+
+            let mp3Path;
+            
+            // Intento 1: Buscar el botón de play original
+            const onclickAttr = $('#instant-page-button').attr('onclick');
+            if (onclickAttr && onclickAttr.includes('play')) {
+                mp3Path = onclickAttr.split("'")[1];
+            }
+
+            // Intento 2: Si el primero falla, buscar un link de descarga directo
+            if (!mp3Path) {
+                $('a').each((i, elem) => {
+                    const href = $(elem).attr('href');
+                    if (href && href.endsWith('.mp3')) {
+                        mp3Path = href;
+                        return false; // Detiene el bucle en cuanto encuentra el primer mp3
+                    }
+                });
+            }
+            // --- FIN DE LA CORRECCIÓN ---
+            
+            if (!mp3Path) {
+                throw new Error('No se pudo encontrar el link del MP3 en la página.');
+            }
+            
+            // Asegurarse de que la URL sea completa
+            const mp3Url = mp3Path.startsWith('http') ? mp3Path : `https://www.myinstants.com${mp3Path}`;
+            
+            const fileName = path.basename(mp3Url).split('?')[0]; // Limpia parámetros de la URL
+            const destPath = path.join(soundsPath, fileName);
+
+            const audioResponse = await axios({
+                method: 'get',
+                url: mp3Url,
+                responseType: 'stream'
+            });
+
+            const writer = fs.createWriteStream(destPath);
+            audioResponse.data.pipe(writer);
+
+            await new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+
+            const updatedList = fs.readdirSync(soundsPath);
+            mainWindow.webContents.send('audio-list-updated', updatedList);
+
+            return { success: true, message: `✅ Sonido "${fileName}" descargado.` };
+
+        } catch (error) {
+            console.error('Error al descargar desde MyInstants:', error);
+            return { success: false, message: `❌ Error al descargar el sonido.` };
+        }
+    });
+
     ipcMain.handle('export-profile', async (event, profileData) => { const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, { title: 'Exportar Perfil', defaultPath: `${profileData.name}.json`, filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePath) { try { const fileContent = JSON.stringify(profileData.data, null, 2); fs.writeFileSync(filePath, fileContent, 'utf-8'); return { success: true, path: filePath }; } catch (error) { return { success: false, error: error.message }; } } return { success: false, canceled: true }; });
     ipcMain.handle('import-profile', async () => { const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, { title: 'Importar Perfil', properties: ['openFile'], filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePaths.length > 0) { const filePath = filePaths[0]; try { const fileContent = fs.readFileSync(filePath, 'utf-8'); const profileData = JSON.parse(fileContent); return { success: true, data: profileData }; } catch (error) { return { success: false, error: 'El archivo está dañado o no tiene el formato correcto.' }; } } return { success: false, canceled: true }; });
 
@@ -128,7 +281,8 @@ function createWindow() {
 
                 if (message.event === 'follow' || message.event === 'share') {
                     if (message.data.uniqueId) {
-                        const translatedData = { ...message.data, nickname: message.data.uniqueId };
+                        // --- CORRECCIÓN: Usar nickname si existe, si no, uniqueId
+                        const translatedData = { ...message.data, nickname: message.data.nickname || message.data.uniqueId };
                         mainWindow.webContents.send(message.event === 'follow' ? 'new-follow' : 'new-share', translatedData);
                     }
                     return;

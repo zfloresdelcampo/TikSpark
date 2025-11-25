@@ -161,9 +161,9 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
         mainWindow.webContents.send('new-chat', data);
     });
 
-    tiktokLiveConnection.on('like', (data) => mainWindow.webContents.send('new-like', { ...data, nickname: data.uniqueId }));
-    tiktokLiveConnection.on('follow', (data) => mainWindow.webContents.send('new-follow', { ...data, nickname: data.uniqueId }));
-    tiktokLiveConnection.on('share', (data) => mainWindow.webContents.send('new-share', { ...data, nickname: data.uniqueId }));
+    tiktokLiveConnection.on('like', (data) => mainWindow.webContents.send('new-like', { ...data, nickname: data.nickname || data.uniqueId }));
+    tiktokLiveConnection.on('follow', (data) => mainWindow.webContents.send('new-follow', { ...data, nickname: data.nickname || data.uniqueId }));
+    tiktokLiveConnection.on('share', (data) => mainWindow.webContents.send('new-share', { ...data, nickname: data.nickname || data.uniqueId }));
     
     tiktokLiveConnection.on('roomUser', (data) => {
         if (data.topViewers && Array.isArray(data.topViewers)) {

@@ -468,14 +468,36 @@
             </div>
         </div>
     
+        <!-- === NUEVO: SECCIÓN DE ALERTAS === -->
         <div id="alerts-section" class="content-section">
             <div class="section-container">
                 <h2>Alertas</h2>
-                <div class="info-box">
-                    <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
+                <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
+            
+                <div class="list-view-container">
+                    <div class="list-view-controls">
+                        <div class="control-group">
+                            <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
+                        </div>
+                        <div class="search-wrapper">
+                            <span>🔍</span>
+                            <input type="text" placeholder="Buscar alertas...">
+                        </div>
+                    </div>
+                    <div class="list-view-header alert-header">
+                        <input type="checkbox" class="header-checkbox">
+                        <div>Activo</div>
+                        <div>Acciones</div>
+                        <div>Eventos</div>
+                        <div>Duración (seg)</div>
+                        <div>Descripción</div>
+                    </div>
+                    <div id="alerts-list-container"></div>
+                    <div class="list-view-pagination" id="alerts-pagination"></div>
                 </div>
             </div>
         </div>
+        <!-- === FIN DE LA SECCIÓN DE ALERTAS === -->
 
         <div id="minigames-section" class="content-section">
             <div class="section-container">
@@ -694,6 +716,157 @@
 
     <!-- MODALES (VAN AFUERA DE #main-content) -->
 
+    <!-- === NUEVO: MODAL PARA CREAR ALERTAS === -->
+    <div id="create-alert-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="alert-modal-title">Nueva Alerta</h3>
+                <button class="modal-close-button" id="close-alert-modal-button">&times;</button>
+            </div>
+            <input type="hidden" id="editing-alert-id" value="">
+            <div class="form-group">
+                <label for="alert-name">¿Cómo se llama la alerta?</label>
+                <input type="text" id="alert-name" placeholder="ej. Nuevo Seguidor">
+            </div>
+
+            <!-- Acciones Generales Simplificadas -->
+            <div class="accordion">
+                <div class="accordion-header active">Acciones Generales</div>
+                <div class="accordion-content open">
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="alert-action-play-audio" name="alert-action-type" value="audio">
+                            <label for="alert-action-play-audio">Play Audio</label>
+                        </div>
+                        <!-- Aquí irá el submenú de audio que ya creamos, pero con nuevos IDs -->
+                        <!-- BLOQUE DE CONFIGURACIÓN DE AUDIO PARA ALERTAS -->
+                        <div id="alert-audio-config" class="audio-config">
+                            <div class="audio-control-group">
+                                <label id="alert-volume-label">Volumen: 50</label>
+                                <div class="volume-slider-container">
+                                    <i class="fas fa-volume-down"></i>
+                                    <input type="range" id="alert-audio-volume" min="0" max="100" value="50" class="volume-slider">
+                                    <i class="fas fa-volume-up"></i>
+                                </div>
+                            </div>
+                            <div class="audio-control-group file-upload-group">
+                                <button class="audio-btn" id="alert-open-audio-list">Abrir Lista de Audios</button>
+                                <button class="audio-btn" id="alert-upload-audio">Subir Archivo</button>
+                            </div>
+                            <!-- Aquí se mostrará el archivo seleccionado -->
+                            <div id="alert-selected-file-container"></div>
+                        </div>
+                    </div>
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="alert-action-show-media" name="alert-action-type" value="media">
+                            <label for="alert-action-show-media">Mostrar IMG / GIF / VIDEO</label>
+                        </div>
+                    </div>
+                    <div class="checkbox-item">
+                        <div class="checkbox-label-row">
+                            <input type="checkbox" id="alert-action-show-alert" name="alert-action-type" value="alert">
+                            <label for="alert-action-show-alert">Mostrar Alerta</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Duración -->
+            <h4 class="modal-section-title">¿Durante cuánto tiempo debe permanecer visible?</h4>
+            <div class="modal-sub-section">
+                <div class="input-group-row">
+                    <label for="alert-duration">Duración</label>
+                    <input type="number" id="alert-duration" value="5" min="1">
+                    <span class="unit">Segundos</span>
+                </div>
+            </div>
+            <h4 class="modal-section-title">Configuraciones adicionales (opcionales)</h4>
+            <div class="modal-sub-section">
+                <div class="input-group-row">
+                    <label for="action-queue">Cola de Acciones</label>
+                    <select id="action-queue">
+                        <option value="Screen 1" selected>Screen 1</option>
+                        <option value="Screen 2">Screen 2</option>
+                        <option value="Screen 3">Screen 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Eventos Generales (Copia del modal de eventos) -->
+            <div class="accordion">
+                <div class="accordion-header active">Eventos Generales</div>
+                <div class="accordion-content open" style="padding: 0;">
+                    <div class="event-modal-body" style="padding: 20px; gap: 20px;">
+                        <div class="event-section">
+                            <label class="event-section-title">¿Quién puede activar el evento?</label>
+                            <div class="event-radio-group">
+                                <!-- Opciones de "Quién" -->
+                                <div class="radio-item"><input type="radio" id="alert-who-all" name="alert_who" value="all" checked><label for="alert-who-all">Todos</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-who-followers" name="alert_who" value="followers"><label for="alert-who-followers">Seguidores</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-who-subs" name="alert_who" value="subs"><label for="alert-who-subs">Suscriptores</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-who-mods" name="alert_who" value="mods"><label for="alert-who-mods">Moderadores</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-who-top" name="alert_who" value="top"><label for="alert-who-top">Top Gifters Rank</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-who-specific" name="alert_who" value="specific"><label for="alert-who-specific">Usuario específico</label></div>
+                            </div>
+                        </div>
+                        <div class="event-section">
+                            <label class="event-section-title">¿Por qué se activará el evento?</label>
+                            <div class="event-radio-group">
+                                <!-- Opciones de "Por qué" -->
+                                <div class="radio-item"><input type="radio" id="alert-why-join" name="alert_why" value="join" checked><label for="alert-why-join">Join</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-share" name="alert_why" value="share"><label for="alert-why-share">Share</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-follow" name="alert_why" value="follow"><label for="alert-why-follow">Follow</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-superfan" name="alert_why" value="superfan"><label for="alert-why-superfan">Super Fan</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-likes" name="alert_why" value="likes"><label for="alert-why-likes">Likes (taps)</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-chat-global" name="alert_why" value="chat-global"><label for="alert-why-chat-global">Chat (global)</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-chat-comment" name="alert_why" value="chat-comment"><label for="alert-why-chat-comment">Chat (comentario)</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-emote" name="alert_why" value="emote"><label for="alert-why-emote">Emote (Fan Club)</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-gift-specific" name="alert_why" value="gift-specific"><label for="alert-why-gift-specific">Gift (regalo específico)</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-gift-min" name="alert_why" value="gift-min"><label for="alert-why-gift-min">Gift (mínimo coins)</label></div>
+                                <div class="radio-item"><input type="radio" id="alert-why-gift-id" name="alert_why" value="gift-id"><label for="alert-why-gift-id">Gift (id específico)</label></div>
+                            </div>
+                        </div>
+                        <div class="event-section bottom-section" style="padding-top: 20px;">
+                            <div id="dynamic-alert-event-fields">
+                                <!-- Campos dinámicos como el selector de regalos -->
+                                <!-- Campos dinámicos para ALERTAS -->
+                                <div class="event-input-row" id="alert-gift-specific-selector" style="display: none;">
+                                    <label>Elige un regalo</label>
+                                    <div class="custom-gift-selector" id="alert-custom-gift-selector">
+                                        <input type="hidden" id="alert-selected-gift-id">
+                                        <div class="gift-selector-display" id="alert-gift-selector-display">
+                                            <span class="placeholder">Selecciona...</span>
+                                        </div>
+                                        <div class="gift-selector-options" id="alert-gift-selector-options">
+                                            <input type="text" class="gift-search-input" id="alert-gift-search-input" placeholder="Buscar regalo...">
+                                            <div class="gift-options-list" id="alert-gift-options-list"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="event-input-row" id="alert-likes-amount-selector" style="display: none;">
+                                    <label for="alert-likes-amount">Definir una cantidad de likes</label>
+                                    <div class="input-with-unit">
+                                        <input type="number" id="alert-likes-amount" value="20" min="1">
+                                        <span>Likes</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="event-input-row"><label for="event-cooldown">User Cooldown</label><div class="input-with-unit"><input type="number" id="event-cooldown" value="0" min="0"><span>Segundos</span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-modal-buttons">
+                <button id="apply-alert-button">✅ Aplicar</button>
+                <button id="discard-alert-button">❌ Descartar</button>
+            </div>
+        </div>
+    </div>
+    <!-- === FIN DEL MODAL DE ALERTAS === -->
+
     <div id="create-profile-form-container" class="profile-form-overlay">
         <div class="profile-form-content">
             <h3>Nuevo Perfil</h3>
@@ -748,6 +921,30 @@
                     <div class="checkbox-item">
                         <div class="checkbox-label-row">
                             <input type="checkbox" id="action-play-audio"><label for="action-play-audio">Play Audio</label>
+                        </div>
+                        <!-- Pega el nuevo bloque de código aquí debajo -->
+                        <div id="audio-config" class="audio-config">
+                            <!-- Contenedor del Slider de Volumen -->
+                            <div class="audio-control-group">
+                                <label id="volume-label">Volumen: 50</label>
+                                <div class="volume-slider-container">
+                                    <i class="fas fa-volume-down"></i>
+                                    <input type="range" id="audio-volume" min="0" max="100" value="50" class="volume-slider">
+                                    <i class="fas fa-volume-up"></i>
+                                </div>
+                            </div>
+                            <!-- Contenedor de Botones y Texto -->
+                            <div class="audio-control-group file-upload-group">
+                                <button class="audio-btn">Abrir Lista de Audios</button>
+                                <button class="audio-btn">Subir Archivo</button>
+                                <span>o suéltalo aquí</span>
+                            </div>
+                            <!-- Contenedor de Checkboxes Adicionales -->
+                            <div class="audio-control-group extra-options-group">
+                                <div class="checkbox-item"><input type="checkbox" id="audio-oneshot"><label for="audio-oneshot">Audio One-Shot</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="audio-skip"><label for="audio-skip">Skip Audio</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="audio-add-queue"><label for="audio-add-queue">Añadir a la cola</label></div>
+                            </div>
                         </div>
                     </div>
 
@@ -889,6 +1086,45 @@
             <div class="action-modal-buttons"><button id="apply-action-button">✅ Aplicar</button><button id="discard-action-button">❌ Descartar</button></div>
         </div>
     </div>
+
+    <div id="audio-list-modal" class="modal-overlay">
+        <div class="modal-content audio-list-content">
+            <div class="modal-header">
+                <h3>Lista de Audios</h3>
+                <button class="modal-close-button" id="close-audio-list-modal">&times;</button>
+            </div>
+
+            <div class="audio-list-tabs">
+                <!-- Por ahora, solo tenemos la pestaña de Audios Locales -->
+                <div class="audio-tab active">Audios locales</div>
+            </div>
+
+            <!-- === PEGA EL NUEVO CÓDIGO AQUÍ === -->
+            <div class="myinstants-downloader">
+                <div class="myinstants-search">
+                    <input type="text" id="audio-search-input" placeholder="🔍 Buscar audios...">
+                    <span>Descarga más sonidos de <a href="https://www.myinstants.com" target="_blank">Myinstants.com</a></span>
+                </div>
+                <div class="myinstants-add">
+                    <input type="text" id="myinstants-url-input" placeholder="Ingresa URL www.myinstants.com/...">
+                    <button id="add-myinstants-btn" class="audio-btn">
+                        <i class="fas fa-download"></i> Agregar
+                    </button>
+                </div>
+            </div>
+            <!-- === FIN DEL CÓDIGO A AÑADIR === -->
+
+            <div class="audio-list-body">
+                <div class="local-audios-header">
+                    <button class="audio-btn">Abrir Carpeta</button>
+                    <span>Haz una copia de tus archivos locales antes de formatear o cambiar de equipo.</span>
+                </div>
+                <div id="local-audios-grid" class="local-audios-grid">
+                    <!-- Los audios se cargarán aquí con JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div id="keystroke-editor-modal" class="modal-overlay">
         <div class="modal-content keystroke-editor">
@@ -986,5 +1222,7 @@
     <script src="scripts/script.js"></script>
     <script src="scripts/meta-win.js"></script>
     <script src="scripts/subasta.js"></script>
+    <audio id="audio-player" style="display: none;"></audio>
+    <input type="file" id="audio-file-input" accept=".mp3,.wav,.ogg" style="display: none;">
 </body>
 </html>
