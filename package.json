@@ -1,6 +1,6 @@
 {
   "name": "tikspark",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "TikSpark - Detector de Regalos de TikTok",
   "main": "main.js",
   "repository": {
