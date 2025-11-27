@@ -11,11 +11,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inputPause = document.getElementById('social-pause');
     const inputAnimation = document.getElementById('social-animation');
 
-    // --- CAMBIO: CARGAR DATOS LOCALES ---
+    // --- CARGAR DATOS ---
     async function loadData() {
         if (!window.electronAPI) return;
 
-        // Pedimos los datos al Main.js
         const data = await window.electronAPI.getWidgetData('socialRotator') || {};
         
         inputDuration.value = data.duration || 5;
@@ -40,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(btnClose) btnClose.addEventListener('click', () => modal.style.display = 'none');
     if(btnAdd) btnAdd.addEventListener('click', () => createRow());
 
-    // --- CAMBIO: GUARDAR DATOS LOCALES ---
+    // --- GUARDAR DATOS ---
     if(btnSave) {
         btnSave.addEventListener('click', async () => {
             const rows = listContainer.children;
@@ -49,13 +48,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             for(let row of rows) {
                 const select = row.querySelector('select');
                 const inputs = row.querySelectorAll('input');
-                const userIn = inputs[0];
-                const countIn = inputs[1];
+                const userIn = inputs[0]; // Este es el input del nombre
+                const countIn = inputs[1]; // Este es el input del contador
 
-                if(userIn.value.trim() !== "") {
+                let rawName = userIn.value.trim();
+
+                if(rawName !== "") {
+                    // Si el usuario escribió "@pepe", le quitamos el @ para no duplicarlo
+                    rawName = rawName.replace(/^@/, '');
+                    
+                    // Y ahora le agregamos el @ obligatorio para guardarlo
+                    const finalUsername = '@' + rawName;
+
                     accounts.push({
                         platform: select.value,
-                        username: userIn.value.trim(),
+                        username: finalUsername,
                         count: countIn.value.trim()
                     });
                 }
@@ -68,7 +75,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 accounts: accounts
             };
 
-            // Enviamos al Main.js -> Socket.io
             if(window.electronAPI) {
                 await window.electronAPI.updateWidget('socialRotator', data);
                 alert('Configuración guardada (Local).');
@@ -84,13 +90,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         row.style.marginBottom = '10px';
         row.style.alignItems = 'center';
         
+        // 1. SELECTOR DE RED
         const select = document.createElement('select');
         select.style.padding = '8px';
         select.style.background = '#333';
         select.style.color = 'white';
         select.style.border = '1px solid #555';
         select.style.borderRadius = '5px';
-        select.style.width = '100px'; 
+        select.style.width = '110px'; 
         
         const platforms = ['instagram', 'tiktok', 'twitter', 'kick', 'youtube', 'twitch', 'discord', 'facebook', 'spotify'];
         platforms.forEach(p => {
@@ -101,10 +108,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             select.appendChild(opt);
         });
 
+        // 2. CUADRO FIJO DEL ARROBA (@) - NO EDITABLE
+        const atBox = document.createElement('div');
+        atBox.textContent = '@';
+        atBox.style.background = '#222'; // Fondo más oscuro
+        atBox.style.color = '#aaa';      // Texto grisáceo
+        atBox.style.padding = '8px 10px';
+        atBox.style.border = '1px solid #555';
+        atBox.style.borderRadius = '5px';
+        atBox.style.fontWeight = 'bold';
+        atBox.style.display = 'flex';
+        atBox.style.alignItems = 'center';
+        atBox.style.justifyContent = 'center';
+        atBox.style.userSelect = 'none'; // Para que no se sienta como texto seleccionable
+
+        // 3. INPUT USUARIO (LIMPIO)
+        // Si el dato guardado ya tiene @, se lo quitamos para mostrarlo limpio en el input
+        let displayUserVal = userVal;
+        if (displayUserVal && displayUserVal.startsWith('@')) {
+            displayUserVal = displayUserVal.substring(1);
+        }
+
         const inputUser = document.createElement('input');
         inputUser.type = 'text';
-        inputUser.value = userVal;
-        inputUser.placeholder = '@usuario';
+        inputUser.value = displayUserVal;
+        inputUser.placeholder = 'usuario'; // Sin @ en el placeholder
         inputUser.style.padding = '8px';
         inputUser.style.flex = '1'; 
         inputUser.style.background = '#333';
@@ -112,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputUser.style.border = '1px solid #555';
         inputUser.style.borderRadius = '5px';
 
+        // 4. INPUT CONTADOR
         const inputCount = document.createElement('input');
         inputCount.type = 'text';
         inputCount.value = countVal;
@@ -123,6 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputCount.style.border = '1px solid #555';
         inputCount.style.borderRadius = '5px';
 
+        // 5. BOTÓN ELIMINAR
         const btnDelete = document.createElement('button');
         btnDelete.innerHTML = '<i class="fas fa-trash"></i>';
         btnDelete.style.background = '#ff4444';
@@ -134,8 +164,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         btnDelete.addEventListener('click', () => row.remove());
 
+        // AGREGAR AL DOM EN ORDEN
         row.appendChild(select);
-        row.appendChild(inputUser);
+        row.appendChild(atBox);      // El cuadro fijo del @
+        row.appendChild(inputUser);  // El input limpio
         row.appendChild(inputCount);
         row.appendChild(btnDelete);
         listContainer.appendChild(row);

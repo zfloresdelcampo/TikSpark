@@ -33,7 +33,7 @@
             color: white; font-size: 30px;
             flex-shrink: 0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            overflow: hidden; /* Para que nada se salga del círculo */
+            overflow: hidden; 
         }
 
         /* Columna de Texto */
@@ -85,7 +85,6 @@
 <body>
 
     <div id="social-pill">
-        <!-- Icono vacío al inicio (quitamos el fa-question) -->
         <div id="social-icon-box"><i></i></div>
         
         <div id="info-col">
@@ -111,7 +110,16 @@
             'instagram': { color: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', icon: 'fab fa-instagram', action: 'Follow' },
             'tiktok':    { color: '#000000', icon: 'fab fa-tiktok', action: 'Follow' },
             'twitter':   { color: '#1DA1F2', icon: 'fab fa-twitter', action: 'Follow' },
-            'kick':      { color: '#53FC18', icon: '<svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:black; margin-top:4px;"><path d="M3.86 0 0 3.89v16.22l3.86 3.89h16.22l3.89-3.89V3.89L20.08 0H3.86zm3.37 6.61h3.72l1.35 2.84 4.66-2.84h4.22l-5.41 3.34 5.72 7.43h-4.35l-4.07-5.29-1.48 1.32v3.97H7.23V6.61z"/></svg>', action: 'Follow' },
+            
+            // --- KICK: USANDO TU IMAGEN LOCAL ---
+            'kick': { 
+                color: '#53FC18', 
+                // Asegúrate de que "images/kick-logo.png" exista en tu carpeta
+                icon: '<img src="./images/kick-logo.png" style="width:100%; height:100%; object-fit:contain;">', 
+                action: 'Follow' 
+            },
+            // ------------------------------------
+
             'youtube':   { color: '#FF0000', icon: 'fab fa-youtube', action: 'Subscribe' },
             'twitch':    { color: '#9146FF', icon: 'fab fa-twitch', action: 'Follow' },
             'discord':   { color: '#5865F2', icon: 'fab fa-discord', action: 'Join' },
@@ -150,14 +158,23 @@
             const account = config.accounts[currentIndex];
             const netInfo = networks[account.platform] || networks['instagram'];
 
-            usernameEl.textContent = account.username;
+            // --- FIX: ASEGURAR QUE SE VEA EL @ SIEMPRE ---
+            let displayName = account.username;
+            if (displayName && !displayName.startsWith('@')) {
+                displayName = '@' + displayName;
+            }
+            usernameEl.textContent = displayName;
+            // ---------------------------------------------
+
             counterEl.textContent = account.count || netInfo.action; 
 
+            // Lógica para detectar si es IMAGEN, SVG o FontAwesome
             if (netInfo.icon.startsWith('<svg') || netInfo.icon.startsWith('<img')) {
                 iconBox.innerHTML = netInfo.icon; 
             } else {
                 iconBox.innerHTML = `<i class="${netInfo.icon}"></i>`;
             }
+            
             iconBox.style.background = netInfo.color;
             ctaText.textContent = netInfo.action;
             ctaEl.style.background = (account.platform === 'instagram') ? '#d62976' : netInfo.color;
