@@ -814,6 +814,21 @@
                             <input type="checkbox" id="alert-action-show-media" name="alert-action-type" value="media">
                             <label for="alert-action-show-media">Mostrar IMG / GIF / VIDEO</label>
                         </div>
+
+                        <!-- NUEVO: Configuración de Media (PARA ALERTAS) -->
+                        <div id="alert-media-config" class="media-config" style="display:none; margin-left: 28px; margin-top: 10px;">
+                            <div class="input-group-row">
+                                <!-- ID cambiado a alert-selected-media-url -->
+                                <input type="text" id="alert-selected-media-url" placeholder="URL del archivo o ruta local..." readonly>
+                            </div>
+                            <div class="audio-control-group file-upload-group">
+                                <!-- IDs cambiados a alert-... -->
+                                <button class="audio-btn" id="alert-open-media-list-btn">Abrir Lista de Archivos</button>
+                                <button class="audio-btn" id="alert-upload-media-btn">Subir Archivo</button>
+                                <span>o suéltalo aquí</span>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="checkbox-item">
                         <div class="checkbox-label-row">
@@ -1319,6 +1334,31 @@
 
             <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
                 <button id="save-social-rotator-btn" class="btn">Guardar y Aplicar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === MODAL LISTA DE ARCHIVOS MULTIMEDIA (FOTOS/VIDEOS) === -->
+    <div id="media-list-modal" class="modal-overlay">
+        <div class="modal-content media-list-content" style="width: 850px; background-color: #252526;">
+            <div class="modal-header">
+                <h3>Lista de Archivos</h3>
+                <button class="modal-close-button" id="close-media-list-modal">&times;</button>
+            </div>
+
+            <div class="audio-list-tabs">
+                <div class="audio-tab" id="tab-media-local">Archivos Locales</div>
+                <div class="audio-tab active" id="tab-media-web">Archivos Web</div>
+            </div>
+
+            <div class="media-input-area" style="padding: 20px; border-bottom: 1px solid #3c3c3c; display: flex; gap: 10px;">
+                <input type="text" id="new-media-url" placeholder="https://imgur.com/video.mp4" style="flex: 2;">
+                <input type="text" id="new-media-name" placeholder="Nombre archivo" style="flex: 1;">
+                <button id="add-new-media-btn" class="btn" style="background-color: #3c3c3c; width: 40px;">+</button>
+            </div>
+
+            <div class="media-grid-container" id="media-grid" style="padding: 20px; max-height: 400px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
+                <!-- Aquí se generarán las tarjetas con JS -->
             </div>
         </div>
     </div>

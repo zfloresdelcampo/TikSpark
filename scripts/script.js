@@ -22,6 +22,125 @@ document.addEventListener('DOMContentLoaded', async function() {
     const myInstantsUrlInput = document.getElementById('myinstants-url-input');
     const addMyInstantsBtn = document.getElementById('add-myinstants-btn');
     
+    // --- LOGICA PARA GESTOR DE MEDIA (IMG/VIDEO) - MODIFICADA PARA ALERTAS ---
+
+    // 1. Referencias (Actualizadas para Alertas)
+    const checkAlertShowMedia = document.getElementById('alert-action-show-media'); // Checkbox de Alerta
+    const divAlertMediaConfig = document.getElementById('alert-media-config');      // Div contenedor
+    const btnAlertOpenMediaList = document.getElementById('alert-open-media-list-btn'); // Botón abrir lista
+    const inputAlertTargetMedia = document.getElementById('alert-selected-media-url');  // Input donde va la URL
+
+    // Referencias del Modal Grande (Estas son globales)
+    const modalMedia = document.getElementById('media-list-modal');
+    const btnCloseMedia = document.getElementById('close-media-list-modal');
+    
+    const inputMediaUrl = document.getElementById('new-media-url');
+    const inputMediaName = document.getElementById('new-media-name');
+    const btnAddMedia = document.getElementById('add-new-media-btn');
+    const gridMedia = document.getElementById('media-grid');
+
+    // Simulación de Base de Datos de Medios
+    let mediaLibrary = [
+        { name: 'Baile.mp4', url: 'https://i.imgur.com/WDWKJOT.mp4', type: 'video' },
+        { name: 'Gato.jpg', url: 'https://i.imgur.com/Example.jpg', type: 'image' }
+    ];
+
+    // 2. Mostrar/Ocultar config al dar check (Alertas)
+    if(checkAlertShowMedia) {
+        checkAlertShowMedia.addEventListener('change', (e) => {
+            if(divAlertMediaConfig) {
+                divAlertMediaConfig.style.display = e.target.checked ? 'block' : 'none';
+            }
+        });
+    }
+
+    // 3. Abrir Modal desde Alerta
+    if(btnAlertOpenMediaList) {
+        btnAlertOpenMediaList.addEventListener('click', () => {
+            modalMedia.style.display = 'flex';
+            renderMediaGrid();
+        });
+    }
+
+    // Cerrar Modal
+    if(btnCloseMedia) {
+        btnCloseMedia.addEventListener('click', () => modalMedia.style.display = 'none');
+    }
+
+    // 4. Agregar Nuevo Archivo a la Biblioteca
+    if(btnAddMedia) {
+        btnAddMedia.addEventListener('click', () => {
+            const url = inputMediaUrl.value.trim();
+            const name = inputMediaName.value.trim() || 'Sin nombre';
+
+            if(!url) return alert('Ingresa una URL válida');
+
+            // Detectar tipo simple por extensión
+            const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
+            
+            mediaLibrary.push({
+                name: name,
+                url: url,
+                type: isVideo ? 'video' : 'image'
+            });
+
+            inputMediaUrl.value = '';
+            inputMediaName.value = '';
+            renderMediaGrid();
+        });
+    }
+
+    // 5. Renderizar la Cuadrícula de Medios
+    function renderMediaGrid() {
+        if(!gridMedia) return;
+        gridMedia.innerHTML = ''; // Limpiar
+
+        mediaLibrary.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'media-card';
+
+            // Crear Preview (Video o Imagen)
+            let previewHTML = '';
+            if(item.type === 'video') {
+                previewHTML = `<video src="${item.url}" muted></video>`; 
+            } else {
+                previewHTML = `<img src="${item.url}">`;
+            }
+
+            card.innerHTML = `
+                <button class="btn-delete-media" onclick="deleteMedia(${index})"><i class="fas fa-times"></i></button>
+                <div class="media-preview-container">
+                    ${previewHTML}
+                    <div class="media-title-overlay">${item.name}</div>
+                </div>
+                <div class="media-controls-row">
+                    <button class="btn-media-action play" onclick="previewMedia('${item.url}')"><i class="fas fa-play"></i></button>
+                    <button class="btn-media-action select" onclick="selectMedia('${item.url}')"><i class="fas fa-check"></i></button>
+                </div>
+            `;
+            gridMedia.appendChild(card);
+        });
+    }
+
+    // 6. Funciones Globales (para que el onclick del HTML las encuentre)
+    window.deleteMedia = (index) => {
+        if(confirm('¿Borrar este archivo?')) {
+            mediaLibrary.splice(index, 1);
+            renderMediaGrid();
+        }
+    };
+
+    window.previewMedia = (url) => {
+        window.open(url, '_blank');
+    };
+
+    // CAMBIO CLAVE: Seleccionar para Alerta
+    window.selectMedia = (url) => {
+        // Pone la URL en el input DE ALERTA
+        if(inputAlertTargetMedia) inputAlertTargetMedia.value = url;
+        modalMedia.style.display = 'none';
+    };
+
     // === AGREGA ESTA LÍNEA AQUÍ ===
     let audioSelectionContext = 'action'; // Valores: 'action' o 'alert'
 
@@ -52,10 +171,30 @@ document.addEventListener('DOMContentLoaded', async function() {
                 eventString += whyLabels[alert.why] || alert.why;
             }
 
-            let description = '';
+            // --- LÓGICA DE DESCRIPCIÓN MEJORADA ---
+            let descriptionParts = [];
+
+            // 1. Audio
             if (alert.audioAction) {
-                description = `Audio: ${alert.audioAction.file}`;
-            } // ... aquí añadirías para media, etc.
+                // Muestra el nombre del archivo de audio
+                descriptionParts.push(`🔊 Audio: ${alert.audioAction.file}`);
+            }
+
+            // 2. Video / Media (Lo que pediste)
+            if (alert.mediaAction) {
+                // Sacamos solo el nombre del archivo del link (lo que está después del último /)
+                // Ej: https://imgur.com/video.mp4 -> video.mp4
+                let fileName = 'Archivo desconocido';
+                try {
+                    fileName = alert.mediaAction.url.split('/').pop();
+                } catch (e) {}
+                
+                descriptionParts.push(`🎬 Video: ${fileName}`);
+            }
+
+            // Unimos las partes con un separador (ej: "🔊 Audio.mp3 | 🎬 Video.mp4")
+            let description = descriptionParts.join(' | ');
+            // ---------------------------------------
 
             const alertDiv = document.createElement('div');
             alertDiv.className = 'list-view-row alert-row';
@@ -1059,6 +1198,24 @@ if (window.electronAPI) {
                 if (alertData.audioAction.skip) document.getElementById('alert-audio-skip').checked = true;
                 if (alertData.audioAction.queue) document.getElementById('alert-audio-add-queue').checked = true;
             }
+
+            // --- RECUPERAR DATOS DE MEDIA (FOTOS/VIDEOS) ---
+            if (alertData.mediaAction) {
+                const mediaCheck = document.getElementById('alert-action-show-media');
+                const mediaDiv = document.getElementById('alert-media-config');
+                const mediaInput = document.getElementById('alert-selected-media-url');
+
+                // 1. Marcar el checkbox
+                if (mediaCheck) mediaCheck.checked = true;
+                
+                // 2. Mostrar el menú (importante)
+                if (mediaDiv) mediaDiv.style.display = 'block';
+
+                // 3. Rellenar el texto con el link guardado
+                if (mediaInput) mediaInput.value = alertData.mediaAction.url;
+            }
+            // -----------------------------------------------
+
         }
         
         alertModalOverlay.classList.add('open');
@@ -1111,6 +1268,21 @@ if (window.electronAPI) {
             }
         }
         // =================================================
+
+        // Lógica de Media para ALERTAS
+        const showMediaCheck = document.getElementById('alert-action-show-media');
+        if (showMediaCheck && showMediaCheck.checked) {
+            const mediaUrl = document.getElementById('alert-selected-media-url').value;
+            if (mediaUrl) {
+                // Guardamos la acción de media dentro de la alerta
+                newAlertData.mediaAction = {
+                    url: mediaUrl,
+                    volume: 100
+                };
+            } else {
+                 return showToastNotification('⚠️ Selecciona una imagen o video.');
+            }
+        }
 
         // Lógica para Regalos Específicos
         if (why === 'gift-specific') {
@@ -1606,6 +1778,19 @@ if (window.electronAPI) {
             };
             descriptions.push('Play Audio');
         }
+
+        // --- AGREGA ESTO ---
+        if (document.getElementById('action-show-media').checked) {
+            const mediaUrl = document.getElementById('selected-media-url').value;
+            if (!mediaUrl) return showToastNotification('⚠️ Debes seleccionar una imagen o video.');
+            
+            newActionData.mediaAction = {
+                url: mediaUrl,
+                volume: 100 // Podrías agregar un slider de volumen para video si quieres
+            };
+            descriptions.push('Media');
+        }
+        // -------------------
 
         if (document.getElementById('action-webhook').checked) {
             const webhookUrl = document.getElementById('webhook-url').value;
@@ -2265,7 +2450,8 @@ if (window.electronAPI) {
             const testAction = {
                 name: alert.name,
                 duration: alert.duration,
-                audioAction: alert.audioAction
+                audioAction: alert.audioAction,
+                mediaAction: alert.mediaAction // <--- ¡AÑADE ESTA LÍNEA!
             };
             actionQueue.push({ action: testAction, eventData: { nickname: 'TEST' } });
             processQueue();
@@ -2353,6 +2539,22 @@ if (window.electronAPI) {
                         showToastNotification(`❌ No se encontró el audio: ${action.audioAction.file}`);
                         res();
                     }
+                }));
+            }
+
+            // --- TAREA DE MEDIA (NUEVO) ---
+            if (action.mediaAction) {
+                tasks.push(new Promise((res) => {
+                    const dbRef = firebase.database().ref('widgets/mediaOverlay');
+                    dbRef.set({
+                        url: action.mediaAction.url,
+                        volume: action.mediaAction.volume || 100,
+                        duration: action.duration || 5, // Usamos la duración general de la acción
+                        timestamp: Date.now() // <--- CORRECCIÓN: Usamos la hora de tu PC
+                    }).then(() => {
+                        // Esperamos la duración visual antes de continuar la cola
+                        setTimeout(res, (action.duration || 5) * 1000);
+                    });
                 }));
             }
 
@@ -2524,6 +2726,7 @@ if (window.electronAPI) {
                     name: alertRule.name,
                     duration: alertRule.duration || 5,
                     audioAction: alertRule.audioAction,
+                    mediaAction: alertRule.mediaAction, // <--- ¡AÑADE ESTA LÍNEA TAMBIÉN!
                     image: alertRule.image,
                     // Si guardaste algo más en la alerta, úsalo aquí
                 };
