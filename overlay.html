@@ -21,39 +21,28 @@
          <span class="preview-number" id="overlay-meta">5</span>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <!-- Configuración de Firebase -->
-    <script>
-      var firebaseConfig = {
-        databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/", // <-- ¡REEMPLAZA ESTO TAMBIÉN!
-      };
-      firebase.initializeApp(firebaseConfig);
-    </script>
-
-    <!-- Lógica del Overlay -->
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const conteoElement = document.getElementById('overlay-conteo');
         const metaElement = document.getElementById('overlay-meta');
-        
-        // La misma "dirección" que en el panel de control
-        const databaseRef = firebase.database().ref('widgets/metaWin1');
+        const socket = io();
 
-        // ¡LA MAGIA! .on() escucha cambios EN TIEMPO REAL
-        databaseRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            console.log('Datos recibidos de Firebase:', data); // Para depurar
-            if (data) {
-                conteoElement.textContent = data.conteo;
-                metaElement.textContent = data.meta;
-            } else {
-                // Valores por defecto si no hay nada en la base de datos
-                conteoElement.textContent = 0;
-                metaElement.textContent = 5;
+        // 1. Cargar datos iniciales al abrir
+        socket.on('init-data', (db) => {
+            if (db && db.metaWin1) updateDisplay(db.metaWin1);
+        });
+
+        // 2. Escuchar actualizaciones en vivo
+        socket.on('widget-update', (msg) => {
+            if (msg.widgetId === 'metaWin1') {
+                updateDisplay(msg.data);
             }
         });
+
+        function updateDisplay(data) {
+            conteoElement.textContent = data.conteo || 0;
+            metaElement.textContent = data.meta || 5;
+        }
     </script>
 
 </body>

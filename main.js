@@ -11,20 +11,65 @@ const cheerio = require('cheerio');
 const { startTikTokDetector , fetchProfileViaHTML } = require('./detector.js');
 const { autoUpdater } = require('electron-updater');
 
-// --- INICIO: SERVIDOR INTERNO PARA OBS ---
-const express = require('express'); 
-const localServer = express();
-const SERVER_PORT = 5500; // Puerto fijo: http://localhost:3333/social-rotator.html
-let serverInstance;
+// --- MANEJO DE DATOS DE WIDGETS (PERSISTENCIA) ---
+const widgetsPath = path.join(app.getPath('userData'), 'widgets.json');
 
-// Esto permite que OBS acceda a tus archivos html/css/js
-localServer.use(express.static(path.join(__dirname)));
+// Valores por defecto por si el archivo no existe
+const defaultWidgetsDB = {
+    mediaOverlay: {},
+    metaWin1: { conteo: 0, meta: 5 },
+    subasta: { isRunning: false },
+    socialRotator: { accounts: [] }
+};
 
-// Arrancamos el servidor
-serverInstance = localServer.listen(SERVER_PORT, () => {
-    console.log(`✅ Servidor interno para OBS listo en: http://localhost:${SERVER_PORT}`);
+function loadWidgetsData() {
+    try {
+        if (fs.existsSync(widgetsPath)) {
+            const savedData = JSON.parse(fs.readFileSync(widgetsPath));
+            // Mezclamos con los defaults para asegurar que no falten claves nuevas
+            return { ...defaultWidgetsDB, ...savedData };
+        }
+    } catch (error) {
+        console.error('Error al cargar widgets.json:', error);
+    }
+    return JSON.parse(JSON.stringify(defaultWidgetsDB)); // Copia limpia de defaults
+}
+
+function saveWidgetsData(data) {
+    try {
+        fs.writeFileSync(widgetsPath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error al guardar widgets.json:', error);
+    }
+}
+
+// --- INICIO: SERVIDOR LOCAL + SOCKET.IO ---
+const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
+
+const expressApp = express();
+const httpServer = http.createServer(expressApp);
+const io = new Server(httpServer); // Creamos el servidor de WebSockets
+
+const SERVER_PORT = 5500;
+
+// Servir archivos estáticos (Tus overlays)
+expressApp.use(express.static(path.join(__dirname)));
+
+// BASE DE DATOS LOCAL
+// Ahora cargamos desde el archivo al iniciar
+let localWidgetsDB = loadWidgetsData();
+
+io.on('connection', (socket) => {
+    // Cuando un overlay se conecta, le enviamos todo lo que hay guardado
+    socket.emit('init-data', localWidgetsDB);
 });
-// --- FIN: SERVIDOR INTERNO PARA OBS ---
+
+serverInstance = httpServer.listen(SERVER_PORT, () => {
+    console.log(`✅ Servidor Local (Socket.io) listo en: http://localhost:${SERVER_PORT}`);
+});
+// --- FIN: SERVIDOR LOCAL ---
 
 const soundsPath = path.join(app.getPath('userData'), 'sounds');
 if (!fs.existsSync(soundsPath)) {
@@ -714,6 +759,26 @@ function createWindow() {
             console.error(error);
             return { success: false, message: `❌ Error al borrar: ${error.message}` };
         }
+    });
+
+    // --- MANEJADOR GENÉRICO PARA ACTUALIZAR WIDGETS ---
+    ipcMain.handle('update-widget', (event, { widgetId, data }) => {
+        // 1. Guardar en memoria
+        if (!localWidgetsDB[widgetId]) localWidgetsDB[widgetId] = {};
+        // Mezclar datos nuevos con los viejos
+        localWidgetsDB[widgetId] = { ...localWidgetsDB[widgetId], ...data };
+        
+        // --- NUEVO: GUARDAR EN DISCO DURO ---
+        saveWidgetsData(localWidgetsDB); 
+        // ------------------------------------
+
+        // 2. Avisar a todos los overlays (OBS/Chrome)
+        io.emit('widget-update', { widgetId, data: localWidgetsDB[widgetId] });
+        return true;
+    });
+
+    ipcMain.handle('get-widget-data', (event, widgetId) => {
+        return localWidgetsDB[widgetId] || null;
     });
 
     mainWindow.webContents.on('did-finish-load', () => { mainWindow.webContents.send('connection-status', 'Desconectado. Introduce un usuario.'); });

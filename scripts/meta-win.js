@@ -1,21 +1,10 @@
 // scripts/meta-win.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    // ESTA ES LA LÍNEA MÁS IMPORTANTE:
-    // Solo ejecutamos el código si encontramos el widget en la página actual.
+document.addEventListener('DOMContentLoaded', async () => {
     const metaWinWidget = document.getElementById('meta-win-widget-1');
-    if (!metaWinWidget) {
-        return; // Si no lo encontramos, detenemos la ejecución de este script.
-    }
+    if (!metaWinWidget) return;
 
-    // El resto de tu código ahora está seguro.
-    if (typeof firebase === 'undefined') {
-        console.error("Firebase no está cargado.");
-        return;
-    }
-
-    const databaseRef = firebase.database().ref('widgets/metaWin1');
-
+    // Referencias a elementos del DOM
     const metaInput = metaWinWidget.querySelector('#meta-win-meta-input');
     const conteoInput = metaWinWidget.querySelector('#meta-win-conteo-input');
     const previewMeta = metaWinWidget.querySelector('#preview-win-meta');
@@ -23,32 +12,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const plusButtons = metaWinWidget.querySelectorAll('.btn-win.plus');
     const minusButtons = metaWinWidget.querySelectorAll('.btn-win.minus');
 
-    databaseRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        console.log('[Meta-Win Panel] Datos recibidos de Firebase:', data);
-        
-        let conteo = 0;
-        let meta = 5;
-
-        if (data) {
-            conteo = data.conteo;
-            meta = data.meta;
+    // 1. Cargar datos iniciales desde el Backend Local
+    if (window.electronAPI) {
+        try {
+            const initialData = await window.electronAPI.getWidgetData('metaWin1');
+            if (initialData) updateUI(initialData);
+        } catch (e) {
+            console.error("Error cargando MetaWin:", e);
         }
+    }
 
-        conteoInput.value = conteo;
-        metaInput.value = meta;
-        previewConteo.textContent = conteo;
-        previewMeta.textContent = meta;
-    });
+    // Función para actualizar la interfaz de la app
+    function updateUI(data) {
+        if (!data) return;
+        conteoInput.value = data.conteo || 0;
+        metaInput.value = data.meta || 5;
+        previewConteo.textContent = data.conteo || 0;
+        previewMeta.textContent = data.meta || 5;
+    }
 
-    function saveData() {
+    // Función para guardar y enviar cambios al overlay
+    async function saveData() {
         const data = {
             conteo: parseInt(conteoInput.value, 10) || 0,
             meta: parseInt(metaInput.value, 10) || 0
         };
-        databaseRef.set(data);
+
+        // Actualizar UI local inmediatamente
+        previewConteo.textContent = data.conteo;
+        previewMeta.textContent = data.meta;
+
+        // Enviar al Backend (Main.js) -> Socket.io -> Overlay
+        if (window.electronAPI) {
+            await window.electronAPI.updateWidget('metaWin1', data);
+        }
     }
 
+    // Listeners para botones
     plusButtons.forEach(button => {
         button.addEventListener('click', () => {
             const targetInput = metaWinWidget.querySelector('#' + button.dataset.target);
@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
+    // Listeners para escritura directa
     metaInput.addEventListener('input', saveData);
     conteoInput.addEventListener('input', saveData);
 });

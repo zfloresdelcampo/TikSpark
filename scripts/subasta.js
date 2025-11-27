@@ -1,17 +1,9 @@
 // scripts/subasta.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ESTA ES LA LÍNEA MÁS IMPORTANTE:
-    // Solo ejecutamos el resto del código si encontramos el panel de control de la subasta en la página actual.
     const subastaControlPanel = document.querySelector('.subasta-controls-panel');
-    if (!subastaControlPanel) {
-        return; // Si no lo encontramos, detenemos la ejecución de este script.
-    }
+    if (!subastaControlPanel) return;
 
-    // El resto de tu código ahora está seguro dentro de esta comprobación.
-    if (typeof firebase === 'undefined') return;
-
-    const dbRef = firebase.database().ref('widgets/subasta');
     const startBtn = document.querySelector('.subasta-actions-group button[title="Iniciar Subasta"]');
     const pauseBtn = document.querySelector('.subasta-actions-group button[title="Pausar Subasta"]');
     const resetTimerBtn = document.querySelector('.subasta-actions-group button[title="Reiniciar"]');
@@ -20,195 +12,177 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationInput = document.getElementById('subasta-duration');
     const snipeInput = document.getElementById('subasta-snipe');
     const participantsList = document.querySelector('.participants-list');
-    const winnerOverlay = document.getElementById('winner-overlay');
-    const winnerPfp = document.getElementById('winner-pfp');
-    const winnerName = document.getElementById('winner-name');
-    const winnerCoinAmount = document.getElementById('winner-coin-amount');
     const timerDisplay = document.getElementById('subasta-timer-display');
     
-    const noParticipantsMessage = document.createElement('p');
-    noParticipantsMessage.className = 'no-participants';
-    noParticipantsMessage.textContent = 'Aún no hay participantes.';
-    
     let timerInterval = null;
+    let isRunning = false;
+    let localState = { timeLeft: 300, inSnipeMode: false, participants: {} };
 
-    function formatTime(seconds) {
-        if (typeof seconds !== 'number' || seconds < 0) { seconds = 0; }
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-    }
-
-    function startLocalTimer() {
-        if (timerInterval) return;
-        timerInterval = setInterval(() => {
-            dbRef.transaction(currentData => {
-                if (!currentData || !currentData.isRunning) return;
-                if (currentData.timeLeft > 0) {
-                    currentData.timeLeft--;
-                } else {
-                    if (!currentData.inSnipeMode) {
-                        currentData.inSnipeMode = true;
-                        currentData.timeLeft = parseInt(snipeInput.value, 10);
-                    } else {
-                        currentData.isRunning = false;
-                        const participants = currentData.participants || {};
-                        const sortedParticipants = Object.values(participants).sort((a, b) => b.coins - a.coins);
-                        const winner = sortedParticipants[0];
-                        if (winner) {
-                            currentData.winnerInfo = {
-                                nickname: winner.nickname,
-                                profilePictureUrl: winner.profilePictureUrl,
-                                coins: winner.coins
-                            };
-                        }
-                    }
-                }
-                return currentData;
-            });
-        }, 900);
-    }
-
-    function stopLocalTimer() {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-
-    startBtn.addEventListener('click', () => {
-        dbRef.child('isRunning').set(true);
-        dbRef.get().then(snapshot => {
-            const data = snapshot.val();
-            if (!data || data.timeLeft <= 0) {
-                dbRef.update({
-                    timeLeft: parseInt(durationInput.value, 10),
-                    inSnipeMode: false
-                });
-            }
-        });
-    });
-    pauseBtn.addEventListener('click', () => dbRef.child('isRunning').set(false));
-    resetTimerBtn.addEventListener('click', () => {
-        dbRef.update({
-            isRunning: false,
-            timeLeft: parseInt(durationInput.value, 10),
-            inSnipeMode: false
-        });
-    });
-    resetAllBtn.addEventListener('click', () => {
-        if (confirm('¿Seguro que quieres resetear la subasta por completo?')) {
-            dbRef.set({
-                isRunning: false,
-                timeLeft: parseInt(durationInput.value, 10),
-                inSnipeMode: false,
-                participants: {},
-                winnerInfo: null
-            });
-        }
-    });
+    // --- LÓGICA DE ACTUALIZACIÓN LOCAL ---
     
-    dbRef.child('isRunning').on('value', snapshot => {
-        if (snapshot.val()) {
-            startLocalTimer();
-        } else {
-            stopLocalTimer();
+    async function syncState() {
+        if(window.electronAPI) {
+            // Enviamos el estado completo al backend para que el overlay lo vea
+            await window.electronAPI.updateWidget('subasta', {
+                isRunning: isRunning,
+                timeLeft: localState.timeLeft,
+                inSnipeMode: localState.inSnipeMode,
+                // Nota: participants se actualiza en script.js cuando entran regalos,
+                // pero aquí lo leemos para mostrarlo en la lista.
+            });
         }
-    });
+        updateDashboardUI();
+    }
 
-    dbRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
+    function updateDashboardUI() {
         if (timerDisplay) {
-            if (data.inSnipeMode) {
-                timerDisplay.textContent = data.timeLeft;
+            if (localState.inSnipeMode) {
+                timerDisplay.textContent = localState.timeLeft;
                 timerDisplay.classList.add('snipe-mode');
             } else {
-                timerDisplay.textContent = formatTime(data.timeLeft);
+                const m = Math.floor(localState.timeLeft / 60);
+                const s = localState.timeLeft % 60;
+                timerDisplay.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
                 timerDisplay.classList.remove('snipe-mode');
             }
         }
+    }
+
+    // Timer Principal (Corre en el Dashboard)
+    function startTimer() {
+        if (timerInterval) return;
+        isRunning = true;
+        
+        timerInterval = setInterval(() => {
+            if (localState.timeLeft > 0) {
+                localState.timeLeft--;
+            } else {
+                // Fin del tiempo
+                if (!localState.inSnipeMode) {
+                    // Entrar en Snipe
+                    localState.inSnipeMode = true;
+                    localState.timeLeft = parseInt(snipeInput.value, 10);
+                } else {
+                    // Fin total (Ganador)
+                    stopTimer();
+                    calculateWinner();
+                }
+            }
+            syncState();
+        }, 1000);
+        syncState();
+    }
+
+    function stopTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        syncState();
+    }
+
+    async function calculateWinner() {
+        // Pedimos los participantes más recientes al backend
+        const currentData = await window.electronAPI.getWidgetData('subasta');
+        const parts = currentData?.participants || {};
+        const sorted = Object.values(parts).sort((a, b) => b.coins - a.coins);
+        const winner = sorted[0];
+
+        if (winner) {
+            // Enviamos la info del ganador al overlay
+            await window.electronAPI.updateWidget('subasta', {
+                isRunning: false,
+                winnerInfo: {
+                    nickname: winner.nickname,
+                    profilePictureUrl: winner.profilePictureUrl,
+                    coins: winner.coins
+                }
+            });
+        }
+    }
+
+    // Listeners de Botones
+    startBtn.addEventListener('click', () => {
+        // Si estaba en 0 o detenido, reiniciamos si es necesario
+        if (localState.timeLeft <= 0 && !localState.inSnipeMode) {
+             localState.timeLeft = parseInt(durationInput.value, 10);
+        }
+        startTimer();
     });
 
-    const participantsRef = dbRef.child('participants');
-    
-    const checkEmptyList = () => {
-        const hasParticipants = participantsList.querySelector('.participant-row-panel');
-        const messageExists = participantsList.querySelector('.no-participants');
-        if (hasParticipants && messageExists) {
-            participantsList.removeChild(messageExists);
-        } else if (!hasParticipants && !messageExists) {
-            participantsList.appendChild(noParticipantsMessage);
-        }
-    };
+    pauseBtn.addEventListener('click', stopTimer);
 
-    participantsRef.on('child_added', (snapshot) => {
-        const p = snapshot.val();
-        const userId = snapshot.key;
-        const row = document.createElement('div');
-        row.className = 'participant-row-panel';
-        row.dataset.userid = userId;
-        row.innerHTML = `
-            <div>-</div> 
-            <div class="player-info-container">
-                <div class="participant-pfp" style="background-image: url('${p.profilePictureUrl || ''}')"></div>
-                <div class="player-info">
-                    <span class="nickname">${p.nickname}</span>
-                    <span class="username">@${p.uniqueId || 'unknown'}</span>
+    resetTimerBtn.addEventListener('click', () => {
+        stopTimer();
+        localState.timeLeft = parseInt(durationInput.value, 10);
+        localState.inSnipeMode = false;
+        // Limpiar ganador
+        window.electronAPI.updateWidget('subasta', { winnerInfo: null });
+        syncState();
+    });
+
+    resetAllBtn.addEventListener('click', async () => {
+        if (confirm('¿Resetear TOTALMENTE la subasta (borrar participantes)?')) {
+            stopTimer();
+            localState = { timeLeft: parseInt(durationInput.value, 10), inSnipeMode: false, participants: {} };
+            // Borramos todo en el backend
+            await window.electronAPI.updateWidget('subasta', { // Sobrescribimos con null para borrar
+                participants: null, 
+                winnerInfo: null,
+                isRunning: false,
+                timeLeft: localState.timeLeft,
+                inSnipeMode: false
+            });
+            renderParticipantsList({}); // Limpiar lista visual
+            syncState();
+        }
+    });
+
+    // --- POLLING: Actualizar lista de participantes ---
+    // Como script.js mete los regalos, necesitamos leerlos aquí periódicamente
+    setInterval(async () => {
+        if (!window.electronAPI) return;
+        const data = await window.electronAPI.getWidgetData('subasta');
+        if (data && data.participants) {
+            renderParticipantsList(data.participants);
+        }
+    }, 1000); // Actualizar lista cada segundo
+
+    function renderParticipantsList(participantsObj) {
+        participantsList.innerHTML = '';
+        if (!participantsObj || Object.keys(participantsObj).length === 0) {
+            participantsList.innerHTML = '<p class="no-participants">Aún no hay participantes.</p>';
+            return;
+        }
+
+        const sorted = Object.values(participantsObj).sort((a, b) => b.coins - a.coins);
+
+        sorted.forEach((p, index) => {
+            const row = document.createElement('div');
+            row.className = 'participant-row-panel';
+            row.innerHTML = `
+                <div>${index + 1}</div> 
+                <div class="player-info-container">
+                    <div class="participant-pfp" style="background-image: url('${p.profilePictureUrl || ''}')"></div>
+                    <div class="player-info">
+                        <span class="nickname">${p.nickname}</span>
+                        <span class="username">@${p.uniqueId || 'unknown'}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="coins">${p.coins || 0}</div>
-            <div><button class="kick-btn">Expulsar</button></div>
-        `;
-        participantsList.appendChild(row);
-        checkEmptyList();
-        sortParticipantList();
-    });
-
-    participantsRef.on('child_changed', (snapshot) => {
-        const p = snapshot.val();
-        const userId = snapshot.key;
-        const rowToUpdate = participantsList.querySelector(`[data-userid="${userId}"]`);
-        if (rowToUpdate) {
-            rowToUpdate.querySelector('.participant-pfp').style.backgroundImage = `url('${p.profilePictureUrl || ''}')`;
-            rowToUpdate.querySelector('.nickname').textContent = p.nickname;
-            rowToUpdate.querySelector('.username').textContent = `@${p.uniqueId || 'unknown'}`;
-            rowToUpdate.querySelector('.coins').textContent = p.coins || 0;
-        }
-        sortParticipantList();
-    });
-
-    participantsRef.on('child_removed', (snapshot) => {
-        const userId = snapshot.key;
-        const rowToRemove = participantsList.querySelector(`[data-userid="${userId}"]`);
-        if (rowToRemove) {
-            participantsList.removeChild(rowToRemove);
-        }
-        checkEmptyList();
-        sortParticipantList();
-    });
-
-    function sortParticipantList() {
-        const rows = Array.from(participantsList.querySelectorAll('.participant-row-panel'));
-        rows.sort((a, b) => {
-            const coinsA = parseInt(a.querySelector('.coins').textContent, 10);
-            const coinsB = parseInt(b.querySelector('.coins').textContent, 10);
-            return coinsB - coinsA;
-        });
-        rows.forEach((row, index) => {
-            row.firstElementChild.textContent = index + 1;
+                <div class="coins">${p.coins}</div>
+                <div><button class="kick-btn" onclick="kickUser('${p.userId}')">X</button></div>
+            `;
             participantsList.appendChild(row);
         });
     }
 
-    participantsList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('kick-btn')) {
-            const userRow = e.target.closest('.participant-row-panel');
-            const userId = userRow.dataset.userid;
-            if (userId && confirm(`¿Seguro que quieres expulsar a este participante de la subasta?`)) {
-                participantsRef.child(userId).remove();
+    // Función global para el botón de expulsar
+    window.kickUser = async (userId) => {
+        if(confirm("¿Expulsar participante?")) {
+            const data = await window.electronAPI.getWidgetData('subasta');
+            if(data && data.participants && data.participants[userId]) {
+                delete data.participants[userId];
+                await window.electronAPI.updateWidget('subasta', { participants: data.participants });
             }
         }
-    });
-    
-    checkEmptyList();
+    };
 });

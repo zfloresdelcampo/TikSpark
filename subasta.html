@@ -289,29 +289,18 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.js"></script>
 
     <script>
-      var firebaseConfig = {
-        databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/", // ¡TU URL!
-      };
-      firebase.initializeApp(firebaseConfig);
-
-      const dbRef = firebase.database().ref('widgets/subasta');
       const timerElement = document.querySelector('.timer-box');
       const participantsList = document.querySelector('.participants-list');
-      
       const winnerOverlay = document.getElementById('winner-overlay');
       const winnerPfp = document.getElementById('winner-pfp');
       const winnerName = document.getElementById('winner-name');
       const winnerCoinAmount = document.getElementById('winner-coin-amount');
 
-      const medalImages = {
-          gold: 'images/primero.png',
-          silver: 'images/segundo.png',
-          bronze: 'images/tercero.png'
-      };
+      const medalImages = { gold: 'images/primero.png', silver: 'images/segundo.png', bronze: 'images/tercero.png' };
 
       function formatTime(seconds) {
         if (typeof seconds !== 'number' || seconds < 0) { seconds = 0; }
@@ -321,23 +310,18 @@
       }
 
       function createPlaceholderRow(medal) {
-          return `
-            <div class="participant-row ${medal}">
-                <img class="medal-icon" src="${medalImages[medal]}">
-                <div class="profile-icon default-avatar-icon"></div>
-                <div class="info-container">
-                    <div style="height: 12px; width: 150px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div>
-                    <div style="height: 12px; width: 100px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div>
-                </div>
-            </div>
-          `;
+          return `<div class="participant-row ${medal}"><img class="medal-icon" src="${medalImages[medal]}"><div class="profile-icon default-avatar-icon"></div><div class="info-container"><div style="height: 12px; width: 150px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div><div style="height: 12px; width: 100px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div></div></div>`;
       }
       
-      dbRef.on('value', (snapshot) => {
-            const data = snapshot.val();
+      const socket = io();
+
+      socket.on('init-data', (db) => { if (db && db.subasta) updateSubasta(db.subasta); });
+      socket.on('widget-update', (msg) => { if (msg.widgetId === 'subasta') updateSubasta(msg.data); });
+
+      function updateSubasta(data) {
             if (!data) return;
 
-            // Lógica del temporizador y snipe
+            // Temporizador
             if (data.inSnipeMode) {
                 timerElement.textContent = data.timeLeft;
                 timerElement.classList.add('snipe-mode');
@@ -346,71 +330,42 @@
                 timerElement.classList.remove('snipe-mode');
             }
 
-            // Lógica de renderizado de la lista de participantes
+            // Participantes
             const participants = data.participants || {};
             const sortedParticipants = Object.values(participants).sort((a, b) => b.coins - a.coins);
             
-            participantsList.innerHTML = ''; // Limpiamos la lista
-
+            participantsList.innerHTML = ''; 
             const medals = ['gold', 'silver', 'bronze'];
 
-            // Creamos las 3 filas del ranking
             for (let i = 0; i < 3; i++) {
                 const participant = sortedParticipants[i];
-                
                 if (participant) {
-                    // Si existe un participante real, creamos su fila
                     const row = document.createElement('div');
                     row.className = `participant-row ${medals[i]}`;
-                    row.innerHTML = `
-                        <img class="medal-icon" src="${medalImages[medals[i]]}">
-                        <div class="profile-icon" style="background-image: url('${participant.profilePictureUrl || ''}')"></div>
-                        <div class="info-container">
-                            <div class="text-bar name">${participant.nickname}</div>
-                            <div class="bid-container">
-                                <span class="coin-icon"></span>
-                                <span class="text-bar bid">${participant.coins}</span>
-                            </div>
-                        </div>
-                    `;
+                    row.innerHTML = `<img class="medal-icon" src="${medalImages[medals[i]]}"><div class="profile-icon" style="background-image: url('${participant.profilePictureUrl || ''}')"></div><div class="info-container"><div class="text-bar name">${participant.nickname}</div><div class="bid-container"><span class="coin-icon"></span><span class="text-bar bid">${participant.coins}</span></div></div>`;
                     participantsList.appendChild(row);
                 } else {
-                    // Si no hay participante, añadimos un placeholder
                     participantsList.innerHTML += createPlaceholderRow(medals[i]);
                 }
             }
 
-            // Lógica del ganador
+            // Ganador
             if (data.winnerInfo && !data.isRunning) {
-                // Hay un ganador y la subasta ha terminado, ¡mostramos la pantalla!
-                
-                // Llenamos los datos en la tarjeta del ganador
                 winnerPfp.style.backgroundImage = `url('${data.winnerInfo.profilePictureUrl || ''}')`;
                 winnerName.textContent = data.winnerInfo.nickname;
                 winnerCoinAmount.textContent = data.winnerInfo.coins;
-
-                // Mostramos el overlay del ganador
                 winnerOverlay.style.display = 'flex';
 
-                // Lanzamos el confeti, pero solo una vez
                 if (!winnerOverlay.dataset.confettiFired) {
-                    confetti({
-                        particleCount: 150,
-                        spread: 90,
-                        origin: { y: 0.6 }
-                    });
+                    confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
                     winnerOverlay.dataset.confettiFired = 'true';
                 }
-
             } else {
-                // Si no hay ganador o la subasta está activa, nos aseguramos de que el overlay esté oculto
                 winnerOverlay.style.display = 'none';
                 delete winnerOverlay.dataset.confettiFired;
             }
-        });
+        }
     </script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.js"></script>
 
 </body>
 </html>

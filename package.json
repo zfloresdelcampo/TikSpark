@@ -1,6 +1,6 @@
 {
   "name": "tikspark",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "TikSpark - Detector de Regalos de TikTok",
   "main": "main.js",
   "repository": {
@@ -23,6 +23,7 @@
     "cheerio": "^1.1.2",
     "electron-updater": "^6.2.1",
     "express": "^5.1.0",
+    "socket.io": "^4.8.1",
     "tiktok-live-connector": "^2.1.0",
     "winreg": "^1.2.5",
     "ws": "^8.18.3"

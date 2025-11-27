@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     
     const btnOpen = document.getElementById('btn-config-social-rotator');
     const modal = document.getElementById('social-rotator-modal');
@@ -11,8 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputPause = document.getElementById('social-pause');
     const inputAnimation = document.getElementById('social-animation');
 
-    if (typeof firebase === 'undefined') return;
-    const dbRef = firebase.database().ref('widgets/socialRotator');
+    // --- CAMBIO: CARGAR DATOS LOCALES ---
+    async function loadData() {
+        if (!window.electronAPI) return;
+
+        // Pedimos los datos al Main.js
+        const data = await window.electronAPI.getWidgetData('socialRotator') || {};
+        
+        inputDuration.value = data.duration || 5;
+        inputPause.value = data.pause || 2;
+        inputAnimation.value = data.animation || 'fade';
+        
+        listContainer.innerHTML = '';
+        if(data.accounts && data.accounts.length > 0) {
+            data.accounts.forEach(acc => createRow(acc.platform, acc.username, acc.count));
+        } else {
+            createRow('instagram', '', '');
+        }
+    }
 
     if(btnOpen) {
         btnOpen.addEventListener('click', () => {
@@ -21,28 +37,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if(btnClose) {
-        btnClose.addEventListener('click', () => modal.style.display = 'none');
-    }
+    if(btnClose) btnClose.addEventListener('click', () => modal.style.display = 'none');
+    if(btnAdd) btnAdd.addEventListener('click', () => createRow());
 
-    function loadData() {
-        dbRef.once('value').then(snapshot => {
-            const data = snapshot.val() || {};
-            inputDuration.value = data.duration || 5;
-            inputPause.value = data.pause || 2;
-            inputAnimation.value = data.animation || 'fade';
-            
-            listContainer.innerHTML = '';
-            if(data.accounts && data.accounts.length > 0) {
-                // Pasamos también el campo 'count'
-                data.accounts.forEach(acc => createRow(acc.platform, acc.username, acc.count));
-            } else {
-                createRow('instagram', '', '');
+    // --- CAMBIO: GUARDAR DATOS LOCALES ---
+    if(btnSave) {
+        btnSave.addEventListener('click', async () => {
+            const rows = listContainer.children;
+            const accounts = [];
+
+            for(let row of rows) {
+                const select = row.querySelector('select');
+                const inputs = row.querySelectorAll('input');
+                const userIn = inputs[0];
+                const countIn = inputs[1];
+
+                if(userIn.value.trim() !== "") {
+                    accounts.push({
+                        platform: select.value,
+                        username: userIn.value.trim(),
+                        count: countIn.value.trim()
+                    });
+                }
+            }
+
+            const data = {
+                duration: parseInt(inputDuration.value),
+                pause: parseInt(inputPause.value),
+                animation: inputAnimation.value,
+                accounts: accounts
+            };
+
+            // Enviamos al Main.js -> Socket.io
+            if(window.electronAPI) {
+                await window.electronAPI.updateWidget('socialRotator', data);
+                alert('Configuración guardada (Local).');
+                modal.style.display = 'none';
             }
         });
     }
 
-    // Modificamos esta función para aceptar un tercer parámetro: countVal
     function createRow(platformVal = 'instagram', userVal = '', countVal = '') {
         const row = document.createElement('div');
         row.style.display = 'flex';
@@ -50,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         row.style.marginBottom = '10px';
         row.style.alignItems = 'center';
         
-        // 1. Selector Plataforma
         const select = document.createElement('select');
         select.style.padding = '8px';
         select.style.background = '#333';
@@ -68,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
             select.appendChild(opt);
         });
 
-        // 2. Input Usuario
         const inputUser = document.createElement('input');
         inputUser.type = 'text';
         inputUser.value = userVal;
@@ -80,19 +112,17 @@ document.addEventListener('DOMContentLoaded', () => {
         inputUser.style.border = '1px solid #555';
         inputUser.style.borderRadius = '5px';
 
-        // 3. NUEVO: Input Contador
         const inputCount = document.createElement('input');
         inputCount.type = 'text';
         inputCount.value = countVal;
-        inputCount.placeholder = '10.5K Subs'; // Texto de ejemplo
+        inputCount.placeholder = '10k Subs';
         inputCount.style.padding = '8px';
-        inputCount.style.width = '80px'; // Más pequeño
+        inputCount.style.width = '80px';
         inputCount.style.background = '#333';
-        inputCount.style.color = '#aaa'; // Color un poco diferente
+        inputCount.style.color = '#aaa';
         inputCount.style.border = '1px solid #555';
         inputCount.style.borderRadius = '5px';
 
-        // 4. Botón Eliminar
         const btnDelete = document.createElement('button');
         btnDelete.innerHTML = '<i class="fas fa-trash"></i>';
         btnDelete.style.background = '#ff4444';
@@ -106,46 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         row.appendChild(select);
         row.appendChild(inputUser);
-        row.appendChild(inputCount); // Agregamos el nuevo input
+        row.appendChild(inputCount);
         row.appendChild(btnDelete);
         listContainer.appendChild(row);
-    }
-
-    if(btnAdd) {
-        btnAdd.addEventListener('click', () => createRow());
-    }
-
-    if(btnSave) {
-        btnSave.addEventListener('click', () => {
-            const rows = listContainer.children;
-            const accounts = [];
-
-            for(let row of rows) {
-                const select = row.querySelector('select');
-                const inputs = row.querySelectorAll('input'); // Obtenemos todos los inputs
-                const userIn = inputs[0];
-                const countIn = inputs[1]; // El segundo input es el contador
-
-                if(userIn.value.trim() !== "") {
-                    accounts.push({
-                        platform: select.value,
-                        username: userIn.value.trim(),
-                        count: countIn.value.trim() // Guardamos el contador
-                    });
-                }
-            }
-
-            const data = {
-                duration: parseInt(inputDuration.value),
-                pause: parseInt(inputPause.value),
-                animation: inputAnimation.value,
-                accounts: accounts
-            };
-
-            dbRef.set(data).then(() => {
-                alert('Configuración guardada!');
-                modal.style.display = 'none';
-            }).catch(e => console.error(e));
-        });
     }
 });

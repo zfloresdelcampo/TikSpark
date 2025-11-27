@@ -31,44 +31,37 @@
 
     <div id="media-container"></div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <!-- 1. ESTO ES NUEVO: Carga Socket.io desde tu propia PC -->
+    <script src="/socket.io/socket.io.js"></script>
     
     <script>
-        var firebaseConfig = {
-            databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/"
-        };
-        try { firebase.initializeApp(firebaseConfig); } catch (e) { console.error("Error Firebase:", e); }
-
-        const dbRef = firebase.database().ref('widgets/mediaOverlay');
         const container = document.getElementById('media-container');
+        
+        // 2. Conectar al servidor local (Tu PC)
+        const socket = io();
 
-        console.log("✅ Media Overlay cargado y esperando...");
+        console.log("✅ Conectado al sistema local");
 
-        dbRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            console.log("📩 Datos recibidos:", data);
-            
-            if (!data || !data.url) return;
-
-            // Calculamos hace cuánto se envió el comando
-            const timeDiff = Date.now() - data.timestamp;
-
-            // Aumentamos el margen a 15 segundos por si acaso, para pruebas
-            if (timeDiff < 15000) { 
-                showMedia(data);
-            } else {
-                console.log("⚠️ El evento es antiguo (hace " + (timeDiff/1000) + "s). Ignorando.");
+        // 3. Escuchar cuando la app mande un video
+        socket.on('widget-update', (msg) => {
+            // Verificamos si el mensaje es para este overlay ('mediaOverlay')
+            if (msg.widgetId === 'mediaOverlay' && msg.data.url) {
+                
+                // Validamos que no sea un mensaje viejo (10 segundos de margen)
+                const timeDiff = Date.now() - (msg.data.timestamp || 0);
+                if (timeDiff < 10000) { 
+                    showMedia(msg.data);
+                }
             }
         });
 
         function showMedia(data) {
-            console.log("▶️ Mostrando:", data.url);
+            console.log("▶️ Reproduciendo:", data.url);
             container.innerHTML = ''; 
             
-            // Limpieza de clases para reiniciar animación
+            // Reiniciar animación
             container.className = '';
-            void container.offsetWidth; // Forzar reflow
+            void container.offsetWidth; 
 
             let element;
             const isVideo = data.url.includes('.mp4') || data.url.includes('.webm');
@@ -79,10 +72,9 @@
                 element.autoplay = true;
                 element.volume = (data.volume || 100) / 100;
                 
-                // Importante: A veces los navegadores bloquean el audio si no hay click.
-                // Intentamos reproducir con sonido:
+                // Intentar reproducir con sonido
                 element.play().catch(e => {
-                    console.warn("Autoplay bloqueado, intentando muteado:", e);
+                    console.warn("Autoplay bloqueado, intentando muteado");
                     element.muted = true;
                     element.play();
                 });
@@ -98,7 +90,7 @@
             
             setTimeout(() => container.classList.add('show'), 50);
 
-            // Si es imagen, usar el timer. Si es video, esperamos al onended.
+            // Si es imagen, quitarla tras el tiempo configurado
             if (!isVideo) {
                 const duration = (data.duration || 5) * 1000;
                 setTimeout(hideMedia, duration);
@@ -106,7 +98,6 @@
         }
 
         function hideMedia() {
-            console.log("⏹️ Ocultando media");
             container.classList.remove('show');
             setTimeout(() => {
                 container.style.display = 'none';

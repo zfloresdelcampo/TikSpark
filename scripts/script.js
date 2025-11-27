@@ -2739,49 +2739,39 @@ if (window.electronAPI) {
 
     // --- INICIO DEL CAMBIO ---
     // FUNCIÓN MODIFICADA PARA USAR UNA TRANSACCIÓN ATÓMICA
-    function updateAuction(giftData) {
-        // 1. Validaciones iniciales (igual que antes)
-        if (typeof firebase === 'undefined' || !isAuctionRunning) return;
+    async function updateAuction(giftData) {
+        if (!isAuctionRunning) return;
 
         const newCoins = (giftData.diamondCount || 0);
         const userId = giftData.userId;
-
         if (newCoins <= 0 || !userId) return;
 
-        // 2. Referencia al participante (igual que antes)
-        const participantRef = firebase.database().ref(`widgets/subasta/participants/${userId}`);
+        // 1. Pedir el estado actual al backend local
+        let subastaState = await window.electronAPI.getWidgetData('subasta');
+        if (!subastaState) subastaState = { participants: {} };
+        if (!subastaState.participants) subastaState.participants = {};
 
-        // 3. Ejecutar la transacción
-        participantRef.transaction((currentData) => {
-            if (currentData === null) {
-                // Si el participante NO existe, lo creamos desde cero con todos sus datos.
-                return {
-                    userId: userId,
-                    nickname: giftData.nickname,
-                    uniqueId: giftData.uniqueId,
-                    profilePictureUrl: giftData.profilePictureUrl,
-                    coins: newCoins
-                };
-            } else {
-                // Si el participante YA existe, actualizamos sus datos y sumamos las monedas.
-                currentData.nickname = giftData.nickname; // Actualizamos siempre por si cambia de nombre
-                currentData.uniqueId = giftData.uniqueId;
-                currentData.profilePictureUrl = giftData.profilePictureUrl;
-                currentData.coins = (currentData.coins || 0) + newCoins; // Suma segura
-                return currentData; // Devolvemos el objeto modificado para que Firebase lo guarde
-            }
-        }, (error, committed, snapshot) => {
-            // 4. (Opcional pero recomendado) Manejar el resultado de la transacción
-            if (error) {
-                console.error('Error en la transacción de la subasta:', error);
-            } else if (committed) {
-                // La transacción fue exitosa
-                console.log(`[Subasta] Participante ${snapshot.val().nickname} actualizado. Monedas totales: ${snapshot.val().coins}`);
-            } else {
-                // La transacción fue abortada (no es un error, pero no se guardaron datos)
-                console.log('[Subasta] La transacción de monedas fue abortada.');
-            }
-        });
+        // 2. Modificar los datos (Sumar monedas)
+        let participant = subastaState.participants[userId];
+        if (!participant) {
+            participant = {
+                userId: userId,
+                nickname: giftData.nickname,
+                uniqueId: giftData.uniqueId,
+                profilePictureUrl: giftData.profilePictureUrl,
+                coins: 0
+            };
+        }
+        participant.coins += newCoins;
+        // Actualizar nombre/foto por si cambiaron
+        participant.nickname = giftData.nickname;
+        participant.profilePictureUrl = giftData.profilePictureUrl;
+
+        subastaState.participants[userId] = participant;
+
+        // 3. Guardar de nuevo (Enviar al backend)
+        await window.electronAPI.updateWidget('subasta', subastaState);
+        console.log(`[Subasta Local] ${giftData.nickname} +${newCoins} monedas.`);
     }
     // --- FIN DEL CAMBIO ---
 
