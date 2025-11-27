@@ -4,7 +4,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 #sidebar { background-color: #252526; padding: 0 0 15px 0; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
 .nav-item { padding: 15px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.1s, border-left 0.1s; border-left: 3px solid transparent; text-align: center; }
 .nav-item:hover { background-color: #2d2d2d; }
-.nav-item.active { background-color: #1e1e1e; border-left: 3px solid #0078d4; font-weight: bold; }
+.nav-item.active { 
+    background-color: #5c1d80; 
+    border-left: 4px solid #8A2BE2; 
+    font-weight: bold; 
+    color: #ffffff;
+    border-radius: 8px; /* Bordes redondeados */
+}
 /* CONTENIDO PRINCIPAL */
 #main-content { padding: 20px 40px; display: flex; flex-direction: column; overflow-y: auto; gap: 20px; align-items: left; }
 .content-section { display: none; flex-direction: column; width: 100%; max-width: 1200px; gap: 20px; }
@@ -2654,4 +2660,67 @@ input[type="range"].volume-slider::-moz-range-thumb {
     color: white;
     padding: 10px;
     border-radius: 4px;
+}
+/* --- ESTILOS DEL SUB-MENÚ LATERAL --- */
+.sidebar-submenu {
+    display: none; /* Oculto por defecto */
+    background-color: #1a1a1a;
+    border-left: 3px solid transparent;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-radius: 8px; /* Bordes redondeados */
+}
+
+.sidebar-submenu.open {
+    display: block; /* Mostrar al abrir */
+}
+
+.sub-nav-item {
+    padding: 10px 15px 10px 35px; /* Sangría a la izquierda */
+    font-size: 15px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sub-nav-item:hover {
+    color: #ffffff;
+    background-color: #2d2d2d;
+}
+
+.sub-nav-item i {
+    width: 15px;
+    text-align: center;
+    color: #5c1d80;
+}
+
+/* Rotación de la flecha del menú principal */
+.nav-item.menu-open .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* --- ANIMACIÓN DE TEMBLOR (SHAKE) --- */
+@keyframes shake-focus {
+    0% { transform: translate(1px, 1px) rotate(0deg); border-color: #8A2BE2; }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); border-color: #5c1d80; }
+}
+
+/* Clase que activa la animación */
+.shake-active {
+    animation: shake-focus 0.5s ease-in-out;
+    border: 2px solid #8A2BE2 !important; /* Resaltar borde */
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+    transition: border 0.3s;
 }

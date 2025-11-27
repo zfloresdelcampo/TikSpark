@@ -53,11 +53,44 @@
         <div class="nav-item active" data-target="home-section">
             Inicio
         </div>
-        <div class="nav-item" data-target="actions-events-section">
-            Acciones y Eventos
+        <!-- Botón Principal con flecha -->
+        <div class="nav-item" id="btn-actions-main" data-target="actions-events-section">
+            <span>Acciones y Eventos</span>
         </div>
-        <div class="nav-item" data-target="overlay-gallery">
-            Galería de Overlays
+
+        <!-- Sub-menú oculto -->
+        <div id="submenu-actions" class="sidebar-submenu">
+            <div class="sub-nav-item" onclick="scrollToSection('profiles-section', 'btn-actions-main')">
+                <i class="fas fa-user-circle"></i> Perfiles
+            </div>
+            <div class="sub-nav-item" onclick="scrollToSection('actions-list-container', 'btn-actions-main')">
+                <i class="fas fa-bolt"></i> Acciones
+            </div>
+            <div class="sub-nav-item" onclick="scrollToSection('events-list-container', 'btn-actions-main')">
+                <i class="fas fa-calendar-alt"></i> Eventos
+            </div>
+        </div>
+        <div class="nav-item" id="btn-gallery-main" data-target="overlay-gallery">
+            <span>Galería de Overlays</span>
+        </div>
+
+        <!-- Sub-menú Galería Actualizado -->
+        <div id="submenu-gallery" class="sidebar-submenu">
+            <div class="sub-nav-item" onclick="scrollToSection('card-top-gifters', 'btn-gallery-main')">
+                <i class="fas fa-gift"></i> Top Gifters
+            </div>
+            <div class="sub-nav-item" onclick="scrollToSection('card-top-likes', 'btn-gallery-main')">
+                <i class="fas fa-thumbs-up"></i> Top Likes
+            </div>
+            <div class="sub-nav-item" onclick="scrollToSection('card-subasta', 'btn-gallery-main')">
+                <i class="fas fa-gavel"></i> Subasta
+            </div>
+            <div class="sub-nav-item" onclick="scrollToSection('card-meta-win', 'btn-gallery-main')">
+                <i class="fas fa-trophy"></i> Meta Win
+            </div>
+            <div class="sub-nav-item" onclick="scrollToSection('card-social-rotator', 'btn-gallery-main')">
+                <i class="fas fa-share-alt"></i> Social Rotator
+            </div>
         </div>
         <div class="nav-item" data-target="alerts-section">
             Alertas
@@ -224,7 +257,7 @@
                 
             </div>
             
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-top-gifters">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Top Gifters</h3>
                     </div>
@@ -267,7 +300,7 @@
                 </div>
             </div>
 
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-top-likes">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Top Likes</h3>
                     </div>
@@ -310,7 +343,7 @@
                 </div>
             </div>
             
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-subasta">
                 <div class="overlay-header">
                     <h3 class="overlay-title" style="color: #38c172;">Subasta</h3>
                     <div class="premium-tag">SOLO PREMIUM</div>
@@ -423,7 +456,7 @@
                 </div>
             </div>
 
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-meta-win">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Meta Win General 1</h3>
                 </div>
@@ -469,7 +502,7 @@
                 </div>
             </div>
 
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-social-rotator">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Social Media Rotator</h3>
                 </div>

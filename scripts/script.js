@@ -655,11 +655,35 @@ let currentConnectionMode = 'api-server'; // 'api-server' o 'api-tikfinity'
 
 navItems.forEach(item => {
     item.addEventListener('click', () => {
+        // 1. Limpieza visual estándar
         navItems.forEach(i => i.classList.remove('active'));
         contentSections.forEach(s => s.classList.remove('active'));
+        
         item.classList.add('active');
         const targetId = item.getAttribute('data-target');
-        document.getElementById(targetId)?.classList.add('active');
+        const targetSection = document.getElementById(targetId);
+        
+        if(targetSection) {
+            targetSection.classList.add('active');
+            document.getElementById('main-content').scrollTop = 0;
+        }
+
+        // 2. LÓGICA NUEVA: Cerrar sub-menús si vamos a una sección simple
+        // Si el botón presionado NO es el de Acciones NI el de Galería...
+        if (item.id !== 'btn-actions-main' && item.id !== 'btn-gallery-main') {
+            
+            // Cerrar menú Acciones
+            const smActions = document.getElementById('submenu-actions');
+            const btnActions = document.getElementById('btn-actions-main');
+            if (smActions) smActions.classList.remove('open');
+            if (btnActions) btnActions.classList.remove('menu-open'); // Quita rotación flecha
+
+            // Cerrar menú Galería
+            const smGallery = document.getElementById('submenu-gallery');
+            const btnGallery = document.getElementById('btn-gallery-main');
+            if (smGallery) smGallery.classList.remove('open');
+            // Si galería tuviera flecha, aquí también se quitaría la clase menu-open
+        }
     });
 });
 
@@ -3057,6 +3081,71 @@ if (window.electronAPI) {
     // Ejecutar una vez para inicializar el teclado
     renderVirtualKeyboard();
 
+    // ==========================================================
+    // LÓGICA DEL SUB-MENÚ Y DESPLAZAMIENTO (CORREGIDO)
+    // ==========================================================
+    
+    const btnActionsMain = document.getElementById('btn-actions-main');
+    const submenuActions = document.getElementById('submenu-actions');
+    const btnGalleryMain = document.getElementById('btn-gallery-main');
+    const submenuGallery = document.getElementById('submenu-gallery');
+
+    // 1. Toggle del Menú Acciones
+    if(btnActionsMain) {
+        btnActionsMain.addEventListener('click', () => {
+            submenuActions.classList.toggle('open');
+            // Cerramos el de galería si estaba abierto para que no se amontonen
+            if(submenuGallery) submenuGallery.classList.remove('open');
+        });
+    }
+
+    // 2. Toggle del Menú Galería
+    if(btnGalleryMain) {
+        btnGalleryMain.addEventListener('click', () => {
+            submenuGallery.classList.toggle('open');
+            // Cerramos el de acciones si estaba abierto
+            if(submenuActions) submenuActions.classList.remove('open');
+        });
+    }
+
+    // 3. Función Global de Scroll y Temblor (OPTIMIZADA)
+    window.scrollToSection = (targetId, tabId) => {
+        // A. Cambiar a la pestaña correcta
+        const mainTab = document.getElementById(tabId);
+        if(mainTab && !mainTab.classList.contains('active')) {
+            mainTab.click();
+        }
+        
+        // B. Asegurar que el submenú correspondiente esté abierto
+        if (tabId === 'btn-actions-main' && submenuActions) submenuActions.classList.add('open');
+        if (tabId === 'btn-gallery-main' && submenuGallery) submenuGallery.classList.add('open');
+
+        // C. Scroll y Animación
+        setTimeout(() => {
+            // Ahora targetId apunta directamente a la TARJETA GRANDE
+            let targetElement = document.getElementById(targetId);
+            
+            // Solo mantenemos este fix para las listas de acciones/eventos
+            if(targetId.includes('list-container')) {
+                targetElement = targetElement.closest('.list-view-container');
+            }
+
+            if (targetElement) {
+                // Scroll al centro
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Efecto Temblor
+                targetElement.classList.remove('shake-active');
+                void targetElement.offsetWidth; // Reiniciar animación
+                targetElement.classList.add('shake-active');
+
+                // Quitar clase al terminar
+                setTimeout(() => {
+                    targetElement.classList.remove('shake-active');
+                }, 1000);
+            }
+        }, 50); // Pequeño delay para dar tiempo al cambio de pestaña
+    };
 
     // ==========================================================
     // INICIALIZACIÓN FINAL
