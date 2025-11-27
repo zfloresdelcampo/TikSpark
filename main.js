@@ -8,7 +8,7 @@ const WinReg = require('winreg');
 const WebSocket = require('ws');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { startTikTokDetector } = require('./detector.js');
+const { startTikTokDetector , fetchProfileViaHTML } = require('./detector.js');
 const { autoUpdater } = require('electron-updater');
 
 const soundsPath = path.join(app.getPath('userData'), 'sounds');
@@ -250,12 +250,34 @@ function createWindow() {
     ipcMain.handle('export-profile', async (event, profileData) => { const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, { title: 'Exportar Perfil', defaultPath: `${profileData.name}.json`, filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePath) { try { const fileContent = JSON.stringify(profileData.data, null, 2); fs.writeFileSync(filePath, fileContent, 'utf-8'); return { success: true, path: filePath }; } catch (error) { return { success: false, error: error.message }; } } return { success: false, canceled: true }; });
     ipcMain.handle('import-profile', async () => { const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, { title: 'Importar Perfil', properties: ['openFile'], filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePaths.length > 0) { const filePath = filePaths[0]; try { const fileContent = fs.readFileSync(filePath, 'utf-8'); const profileData = JSON.parse(fileContent); return { success: true, data: profileData }; } catch (error) { return { success: false, error: 'El archivo está dañado o no tiene el formato correcto.' }; } } return { success: false, canceled: true }; });
 
-    // -- Conexión a TikFinity --
-    ipcMain.handle('connect-tikfinity', () => {
+    // -- Conexión a TikFinity (MEJORADA CON FOTO) --
+    ipcMain.handle('connect-tikfinity', async () => { // <--- Ahora es async
         if (tikfinitySocket) return;
-        if (currentDetector) { currentDetector.stop(); currentDetector = null; }
+        
+        // Si había un detector nativo corriendo, lo paramos
+        if (currentDetector) { 
+            currentDetector.stop(); 
+            currentDetector = null; 
+        }
 
         mainWindow.webContents.send('connection-status', 'Conectando a TikFinity...');
+        
+        // 1. NUEVO: Intentar obtener la foto de perfil inmediatamente
+        if (currentUsername) {
+            console.log(`[TIKFINITY] Buscando foto de perfil para: ${currentUsername}`);
+            // Usamos la función que importamos de detector.js
+            fetchProfileViaHTML(currentUsername).then(data => {
+                if (data && data.avatar) {
+                    // Enviamos la foto al Frontend (script.js)
+                    mainWindow.webContents.send('update-user-profile', { 
+                        nickname: data.nickname || currentUsername,
+                        avatar: data.avatar
+                    });
+                }
+            });
+        }
+
+        // 2. Conexión WebSocket normal (tu código original intacto)
         tikfinitySocket = new WebSocket('ws://localhost:21213/');
 
         tikfinitySocket.on('open', () => {
@@ -265,7 +287,7 @@ function createWindow() {
         tikfinitySocket.on('message', (data) => {
             try {
                 const message = JSON.parse(data.toString());
-                console.log('[TIKFINITY RAW EVENT]', JSON.stringify(message, null, 2));
+                // console.log('[TIKFINITY RAW]', JSON.stringify(message, null, 2)); // Descomentar para debug
                 
                 if (message.event === 'gift' && message.data) {
                     mainWindow.webContents.send('new-gift', message.data);
@@ -281,7 +303,6 @@ function createWindow() {
 
                 if (message.event === 'follow' || message.event === 'share') {
                     if (message.data.uniqueId) {
-                        // --- CORRECCIÓN: Usar nickname si existe, si no, uniqueId
                         const translatedData = { ...message.data, nickname: message.data.nickname || message.data.uniqueId };
                         mainWindow.webContents.send(message.event === 'follow' ? 'new-follow' : 'new-share', translatedData);
                     }
@@ -307,9 +328,8 @@ function createWindow() {
         });
 
         tikfinitySocket.on('error', (err) => {
-            console.error('[TIKFINITY WEBSOCKET ERROR]', err.message);
-            mainWindow.webContents.send('show-toast', '❌ Error: No se pudo conectar a TikFinity. ¿Está abierto y conectado?');
-            mainWindow.webContents.send('connection-status', '❌ Error de conexión con TikFinity');
+            console.error('[TIKFINITY ERROR]', err.message);
+            mainWindow.webContents.send('connection-status', '❌ Error TikFinity (¿Está abierta la app?)');
             if (tikfinitySocket) {
                 tikfinitySocket.close();
                 tikfinitySocket = null;
@@ -376,26 +396,30 @@ function createWindow() {
     });
     ipcMain.handle('get-available-gifts', async () => { const savedGifts = loadGifts(); if (savedGifts && savedGifts.length > 0) return savedGifts; if (currentDetector && currentDetector.getGifts) { const liveGifts = currentDetector.getGifts(); if (liveGifts && liveGifts.length > 0) { saveGifts(liveGifts); return liveGifts; } } return []; });
     
-    // --- LOGIN Y OBTENCIÓN DE EMOTES (MODO ATAQUE DOBLE + RECURSIVO) ---
+    // --- LOGIN Y OBTENCIÓN DE EMOTES (MODO MAESTRO: SIN LIVE + LOGIN FANTASMA) ---
     ipcMain.handle('login-and-fetch-emotes', async () => {
-        if (!currentDetector || !currentDetector.getRoomData) {
-            return { success: false, message: '⚠️ Conéctate primero a un directo.' };
+        
+        // 1. Validar que hay un usuario escrito en la configuración
+        const targetUsername = currentUsername;
+        if (!targetUsername) {
+            return { success: false, message: '⚠️ Configura un nombre de usuario primero en Inicio.' };
         }
 
-        const roomInfo = currentDetector.getRoomData();
-        let roomData = null;
-        if (roomInfo) {
-            if (roomInfo.owner) roomData = roomInfo;
-            else if (roomInfo.data && roomInfo.data.owner) roomData = roomInfo.data;
+        // Variables para guardar los IDs necesarios
+        let secUid = '';
+        let roomId = '';
+
+        // ESTRATEGIA 1: Si ya estamos conectados al Live, usamos esos datos (es lo más rápido)
+        if (currentDetector && currentDetector.getRoomData) {
+            const roomInfo = currentDetector.getRoomData();
+            if (roomInfo && roomInfo.owner) {
+                secUid = roomInfo.owner.sec_uid;
+                roomId = roomInfo.id;
+                console.log("[EMOTES] IDs obtenidos del Detector activo.");
+            }
         }
 
-        if (!roomData || !roomData.owner) {
-            return { success: false, message: '⚠️ No se pudo obtener información del canal.' };
-        }
-
-        const secUid = roomData.owner.sec_uid;
-        const roomId = roomData.id;
-
+        // Configuración de la ventana de Login
         const loginWindow = new BrowserWindow({
             width: 500,
             height: 700,
@@ -403,78 +427,58 @@ function createWindow() {
             modal: true,
             title: 'Inicia sesión en TikTok',
             autoHideMenuBar: true,
+            show: false, // <--- TRUCO: Nace oculta para no molestar si ya estás logueado
             webPreferences: { 
-                partition: 'persist:tiktok_session',
+                partition: 'persist:tiktok_session', // Usa la sesión guardada
                 nodeIntegration: false,
                 contextIsolation: true
             }
         });
 
+        // Cargar URL base
         loginWindow.loadURL('https://www.tiktok.com/login');
 
-        // --- FUNCIÓN HELPER: BUSCADOR RECURSIVO MEJORADO ---
-        // Ahora busca también 'static_url' que a veces usan los emotes de Fan Club
+        // Función Helper de Búsqueda Recursiva (La misma que ya te funcionaba)
         function findAllEmotes(obj, found = []) {
             if (!obj || typeof obj !== 'object') return found;
-
-            // Detectamos si es un objeto tipo Emote
             if ((obj.emote_id || obj.id) && (obj.image || obj.icon || obj.sticker_url || obj.static_url)) {
-                
                 let imageUrl = '';
-                
-                // Prioridad 1: image.url_list (Estándar)
-                if (obj.image && Array.isArray(obj.image.url_list) && obj.image.url_list.length > 0) {
-                    imageUrl = obj.image.url_list[0];
-                }
-                // Prioridad 2: sticker_url (Común en Fan Club)
-                else if (obj.sticker_url && typeof obj.sticker_url === 'string') {
-                    imageUrl = obj.sticker_url;
-                }
-                 // Prioridad 3: static_url (A veces los locked vienen así)
-                 else if (obj.static_url && typeof obj.static_url === 'string') {
-                    imageUrl = obj.static_url;
-                }
-                // Prioridad 4: icon.url_list
-                else if (obj.icon && Array.isArray(obj.icon.url_list) && obj.icon.url_list.length > 0) {
-                    imageUrl = obj.icon.url_list[0];
-                }
+                if (obj.image && Array.isArray(obj.image.url_list) && obj.image.url_list.length > 0) imageUrl = obj.image.url_list[0];
+                else if (obj.sticker_url && typeof obj.sticker_url === 'string') imageUrl = obj.sticker_url;
+                else if (obj.static_url && typeof obj.static_url === 'string') imageUrl = obj.static_url;
+                else if (obj.icon && Array.isArray(obj.icon.url_list) && obj.icon.url_list.length > 0) imageUrl = obj.icon.url_list[0];
 
-                // Si encontramos imagen y tiene ID, guardamos
                 if (imageUrl) {
                     found.push({
-                        id: obj.emote_id || obj.id,
+                        id: String(obj.emote_id || obj.id),
                         name: obj.text || obj.name || 'Emote',
                         image_url: imageUrl,
                         type: 'detected_emote'
                     });
                 }
             }
-
-            // Recursión profunda
-            if (Array.isArray(obj)) {
-                for (let item of obj) findAllEmotes(item, found);
-            } else {
-                for (let key in obj) {
-                    if (obj.hasOwnProperty(key)) findAllEmotes(obj[key], found);
-                }
-            }
+            if (Array.isArray(obj)) for (let item of obj) findAllEmotes(item, found);
+            else for (let key in obj) if (obj.hasOwnProperty(key)) findAllEmotes(obj[key], found);
             return found;
         }
 
         return new Promise((resolve) => {
             let isResolved = false;
+            let scraperInterval = null;
 
             const finish = (result) => {
                 if (isResolved) return;
                 isResolved = true;
                 clearInterval(checkInterval);
+                if(scraperInterval) clearInterval(scraperInterval);
                 if (!loginWindow.isDestroyed()) loginWindow.close();
                 resolve(result);
             };
 
+            // --- BUCLE PRINCIPAL: ESPERAR COOKIES ---
             let checkInterval = setInterval(async () => {
                 if (loginWindow.isDestroyed()) {
-                    finish({ success: false, message: '⚠️ Ventana cerrada manualmente.' });
+                    finish({ success: false, message: '⚠️ Ventana cerrada.' });
                     return;
                 }
 
@@ -482,77 +486,138 @@ function createWindow() {
                     const cookies = await loginWindow.webContents.session.cookies.get({ name: 'sessionid' });
                     
                     if (cookies.length > 0) {
+                        // ¡HAY COOKIE! El usuario está logueado.
                         const sessionCookie = cookies[0].value;
-                        loginWindow.hide(); 
                         
-                        const headers = {
-                            'Cookie': `sessionid=${sessionCookie}`,
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            'Referer': 'https://www.tiktok.com/',
-                        };
+                        // Si la ventana se abrió, la ocultamos porque ya tenemos la cookie
+                        if (loginWindow.isVisible()) loginWindow.hide();
 
-                        try {
-                            // 1. URL COMPETENCIA (Catálogo de Emotes)
-                            const urlCompetencia = `https://webcast.tiktok.com/webcast/sub/privilege/get_sub_emote_detail/?aid=1988&sec_anchor_id=${secUid}&room_id=${roomId}`;
+                        // --- FASE DE OBTENCIÓN DE IDs (Si no tenemos el secUid del Live) ---
+                        if (!secUid || !roomId) {
+                            console.log(`[EMOTES] Faltan IDs. Navegando al perfil de @${targetUsername} en segundo plano...`);
                             
-                            // 2. URL RESPALDO (Privilegios / Paquetes)
-                            const urlRespaldo = `https://webcast.tiktok.com/webcast/sub/privilege/get_sub_privilege_detail/?aid=1988&sec_anchor_id=${secUid}&room_id=${roomId}`;
-
-                            console.log("[DEBUG] Lanzando petición doble (Competencia + Respaldo)...");
-
-                            // Hacemos ambas peticiones en paralelo
-                            const [resCompetencia, resRespaldo] = await Promise.allSettled([
-                                axios.get(urlCompetencia, { headers }),
-                                axios.get(urlRespaldo, { headers })
-                            ]);
-
-                            let combinedData = [];
-
-                            // Procesar resultado Competencia
-                            if (resCompetencia.status === 'fulfilled') {
-                                console.log("[DEBUG] API Competencia recibida.");
-                                combinedData.push(resCompetencia.value.data);
-                            }
-
-                            // Procesar resultado Respaldo
-                            if (resRespaldo.status === 'fulfilled') {
-                                console.log("[DEBUG] API Respaldo recibida.");
-                                combinedData.push(resRespaldo.value.data);
-                            }
-
-                            // APLICAR FUERZA BRUTA A TODO LO RECIBIDO
-                            console.log("[DEBUG] Iniciando escaneo recursivo en datos combinados...");
-                            const allEmotesFound = findAllEmotes(combinedData);
-
-                            // FILTRAR Y LIMPIAR DUPLICADOS
-                            const uniqueEmotes = [];
-                            const seenIds = new Set();
-
-                            allEmotesFound.forEach(emote => {
-                                // Filtro extra: A veces los del Fan Club tienen IDs negativos o extraños, los aceptamos igual
-                                if (!seenIds.has(emote.id)) {
-                                    seenIds.add(emote.id);
-                                    uniqueEmotes.push(emote);
+                            // Navegamos al perfil del usuario para leer el código fuente
+                            loginWindow.loadURL(`https://www.tiktok.com/@${targetUsername}`);
+                            
+                            // Esperamos a que cargue y ejecutamos un script para leer los datos internos de TikTok
+                            let attempts = 0;
+                            scraperInterval = setInterval(async () => {
+                                attempts++;
+                                if(attempts > 20) { // 10 segundos de intento máximo
+                                    clearInterval(scraperInterval);
+                                    // Si falla el scrapeo, mostramos error pero no cerramos todo
+                                    finish({ success: false, message: '❌ No se pudieron obtener los IDs del canal (Perfil no carga).' });
+                                    return;
                                 }
-                            });
 
-                            console.log(`[DEBUG] TOTAL FINAL: ${uniqueEmotes.length} emotes únicos.`);
+                                try {
+                                    // Inyectamos JS en la ventana oculta para buscar la variable SIGI_STATE o Universal Data
+                                    const result = await loginWindow.webContents.executeJavaScript(`
+                                        (() => {
+                                            // Método 1: SIGI_STATE (Clásico)
+                                            const state = window.SIGI_STATE;
+                                            if (state && state.UserModule && state.UserModule.users) {
+                                                const users = Object.values(state.UserModule.users);
+                                                if(users.length > 0) {
+                                                    return { secUid: users[0].secUid, roomId: users[0].roomId };
+                                                }
+                                            }
+                                            // Método 2: Universal Data (Nuevo TikTok)
+                                            const universalScript = document.getElementById('__UNIVERSAL_DATA_FOR_REHYDRATION__');
+                                            if(universalScript) {
+                                                try {
+                                                    const json = JSON.parse(universalScript.textContent);
+                                                    const user = json?.__DEFAULT_SCOPE__?.['webapp.user-detail']?.userInfo?.user;
+                                                    if(user) return { secUid: user.secUid, roomId: user.roomId };
+                                                } catch(e) {}
+                                            }
+                                            return null;
+                                        })()
+                                    `);
 
-                            if (uniqueEmotes.length > 0) {
-                                finish({ success: true, emotes: uniqueEmotes, message: `✅ ${uniqueEmotes.length} emotes obtenidos (Subs + Club de Fans).` });
-                            } else {
-                                finish({ success: true, emotes: [], message: 'ℹ️ No se encontraron emotes (Lista vacía).' });
-                            }
+                                    if (result && result.secUid) {
+                                        clearInterval(scraperInterval);
+                                        secUid = result.secUid;
+                                        roomId = result.roomId || '0'; // Si no hay live, roomId puede ser 0, pero secUid sirve para emotes
+                                        console.log(`[EMOTES] IDs obtenidos: ${secUid} / ${roomId}`);
+                                        
+                                        // ¡TENEMOS TODO! Lanzamos la petición a la API
+                                        fetchEmotesFromApi(sessionCookie, secUid, roomId);
+                                    }
+                                } catch (jsErr) { console.log("Esperando carga de perfil..."); }
+                            }, 500);
+                            
+                            // Detenemos el checkInterval principal para que no interfiera con el scraper
+                            clearInterval(checkInterval);
+                            return; 
 
-                        } catch (apiError) {
-                            console.error(apiError);
-                            finish({ success: false, message: '❌ Error de conexión con TikTok.' });
+                        } else {
+                            // Si ya teníamos los IDs (porque estábamos conectados al Live), vamos directo
+                            fetchEmotesFromApi(sessionCookie, secUid, roomId);
+                            clearInterval(checkInterval);
+                        }
+
+                    } else {
+                        // NO HAY COOKIE: El usuario no ha iniciado sesión.
+                        // Mostramos la ventana para que el usuario pueda escribir su contraseña.
+                        if (!loginWindow.isVisible()) {
+                            loginWindow.show();
                         }
                     }
-                } catch (err) {
-                    // Esperando login...
+                } catch (err) { }
+            }, 1000);
+
+            // --- FUNCIÓN FINAL: PETICIÓN A LA API DE TIKTOK ---
+            async function fetchEmotesFromApi(sessionCookie, secUid, roomId) {
+                const headers = {
+                    'Cookie': `sessionid=${sessionCookie}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Referer': 'https://www.tiktok.com/',
+                };
+
+                try {
+                    // URL 1: Catálogo de Emotes (La que usan los bots)
+                    const urlCompetencia = `https://webcast.tiktok.com/webcast/sub/privilege/get_sub_emote_detail/?aid=1988&sec_anchor_id=${secUid}&room_id=${roomId}`;
+                    // URL 2: Respaldo (Privilegios generales)
+                    const urlRespaldo = `https://webcast.tiktok.com/webcast/sub/privilege/get_sub_privilege_detail/?aid=1988&sec_anchor_id=${secUid}&room_id=${roomId}`;
+
+                    console.log("[EMOTES] Solicitando datos a TikTok API (Ataque Doble)...");
+
+                    // Hacemos las dos peticiones a la vez
+                    const [resCompetencia, resRespaldo] = await Promise.allSettled([
+                        axios.get(urlCompetencia, { headers }),
+                        axios.get(urlRespaldo, { headers })
+                    ]);
+
+                    let combinedData = [];
+                    if (resCompetencia.status === 'fulfilled') combinedData.push(resCompetencia.value.data);
+                    if (resRespaldo.status === 'fulfilled') combinedData.push(resRespaldo.value.data);
+
+                    // Usamos tu buscador recursivo sobre toda la data
+                    const allEmotesFound = findAllEmotes(combinedData);
+                    
+                    // Limpiamos duplicados
+                    const uniqueEmotes = [];
+                    const seenIds = new Set();
+
+                    allEmotesFound.forEach(emote => {
+                        if (!seenIds.has(emote.id)) {
+                            seenIds.add(emote.id);
+                            uniqueEmotes.push(emote);
+                        }
+                    });
+
+                    if (uniqueEmotes.length > 0) {
+                        finish({ success: true, emotes: uniqueEmotes, message: `✅ ${uniqueEmotes.length} emotes obtenidos (Subs + Fan Club).` });
+                    } else {
+                        finish({ success: true, emotes: [], message: 'ℹ️ No se encontraron emotes públicos (Lista vacía).' });
+                    }
+
+                } catch (apiError) {
+                    console.error(apiError);
+                    finish({ success: false, message: '❌ Error de conexión con la API de TikTok.' });
                 }
-            }, 1500);
+            }
 
             loginWindow.on('closed', () => {
                 finish({ success: false, message: '⚠️ Cancelado.' });

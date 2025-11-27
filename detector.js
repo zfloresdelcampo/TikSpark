@@ -234,4 +234,7 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
     };
 }
 
-module.exports = { startTikTokDetector };
+module.exports = { 
+    startTikTokDetector,
+    fetchProfileViaHTML // <--- AGREGAMOS ESTO PARA PODER USARLO EN MAIN.JS
+};

@@ -526,20 +526,37 @@ navItems.forEach(item => {
 
 toggleButtons.forEach(button => {
     button.addEventListener('click', () => {
+        // 1. Gestión de clases visuales (Botones)
         toggleButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
+        
+        // 2. Determinar modo
         currentConnectionMode = button.dataset.target.includes('server') ? 'api-server' : 'api-tikfinity';
 
-        // === PEGAR ESTO AQUÍ ===
+        // 3. Gestión de Cabeceras (Headers) y Herencia de Foto
         if (currentConnectionMode === 'api-server') {
             sidebarHeaderServer.classList.remove('hidden');
             sidebarHeaderTikfinity.classList.add('hidden');
         } else {
+            // Modo TikFinity
             sidebarHeaderServer.classList.add('hidden');
             sidebarHeaderTikfinity.classList.remove('hidden');
+
+            // --- LÓGICA DE HERENCIA DE FOTO ---
+            const serverImg = document.getElementById('sidebar-profile-img');
+            const tikfinityImg = document.getElementById('tikfinity-profile-img');
+            const tikfinityIcon = document.getElementById('tikfinity-default-icon');
+
+            // Si el usuario ya tiene foto cargada en el modo Server, la copiamos
+            if (serverImg && tikfinityImg && serverImg.style.display !== 'none' && serverImg.src) {
+                tikfinityImg.src = serverImg.src;
+                tikfinityImg.style.display = 'block';
+                if(tikfinityIcon) tikfinityIcon.style.display = 'none';
+            }
+            // ----------------------------------
         }
-        // ========================
         
+        // 4. Gestión de Paneles
         connectionPanels.forEach(panel => {
             if (panel.id === button.dataset.target) {
                 panel.classList.add('active');
@@ -632,29 +649,26 @@ if (window.electronAPI) {
         window.electronAPI.disconnect(); 
         usernameInput.value = ''; 
     });
-    // --- Lógica Botón Obtener Emotes (Con Login) ---
+    // --- Lógica Botón Obtener Emotes (MEJORADA) ---
     emotesButton.addEventListener('click', async () => {
-        // Deshabilitamos temporalmente para evitar doble clic
-        emotesButton.disabled = true;
-        
-        if (!window.electronAPI) {
-             showToastNotification('⚠️ Error: API no disponible.');
-             emotesButton.disabled = false;
-             return;
+        // 1. Guardar el usuario escrito en el input antes de nada
+        const username = usernameInput.value.trim();
+        if (!username) {
+            showToastNotification('⚠️ Escribe un usuario primero.');
+            return;
         }
+        await window.electronAPI.saveUsername(username);
 
-        showToastNotification('🔑 Abriendo ventana de login... Por favor inicia sesión.');
+        // 2. Proceder con la lógica original
+        emotesButton.disabled = true;
+        showToastNotification('🔑 Abriendo ventana de login... Por favor espera.');
         
         try {
             const result = await window.electronAPI.loginAndFetchEmotes();
-            
+            // ... resto de tu código igual ...
             if (result.success) {
                 showToastNotification(result.message);
-                // Guardamos los emotes en la variable global
                 availableEmotesCache = result.emotes || [];
-                console.log("Emotes guardados en caché:", availableEmotesCache);
-                
-                // Refrescar el selector si estaba abierto (opcional)
                 if(typeof renderAlertEmoteOptions === 'function') {
                     renderAlertEmoteOptions(availableEmotesCache);
                 }
@@ -663,7 +677,7 @@ if (window.electronAPI) {
             }
         } catch (error) {
             console.error(error);
-            showToastNotification('❌ Error desconocido al obtener emotes.');
+            showToastNotification('❌ Error al obtener emotes.');
         } finally {
             emotesButton.disabled = false;
         }
@@ -682,6 +696,7 @@ if (window.electronAPI) {
     });
 
     // --- Lógica de Estado (Compartida) ---
+    // --- Lógica de Estado (Compartida) ---
     window.electronAPI.onStatus(statusMessage => {
         statusDiv.textContent = statusMessage;
         const isConnected = statusMessage.includes('✅');
@@ -691,8 +706,12 @@ if (window.electronAPI) {
         if (currentConnectionMode === 'api-server') {
             connectButton.disabled = isConnected || isConnecting;
             disconnectButton.disabled = !isConnected;
-            emotesButton.disabled = !isConnected;
-            updateGiftsButton.disabled = !isConnected; // <-- AÑADE ESTA LÍNEA
+            
+            // LÍNEA BORRADA: emotesButton.disabled = !isConnected; 
+            // Ahora el botón siempre está activo para que puedas pulsarlo cuando quieras
+            emotesButton.disabled = false; 
+            
+            updateGiftsButton.disabled = !isConnected; 
             statusDiv.style.borderLeftColor = isConnected ? '#108038' : (statusMessage.includes('❌') ? '#a4262c' : '#0078d4');
         } else { // api-tikfinity
             connectTikFinityBtn.disabled = isConnected || isConnecting;
