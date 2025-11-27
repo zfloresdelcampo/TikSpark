@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Social Media Rotator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; display: flex; justify-content: center; align-items: center; font-family: 'Poppins', sans-serif; }
+           
+        /* Contenedor Principal */
+        #social-pill {
+            background: white;
+            padding: 8px 10px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            
+            /* Estado inicial: Oculto */
+            opacity: 0;
+            transform: translateY(50px) scale(0.9);
+            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            max-width: 95%;
+        }
+
+        /* Círculo del Icono */
+        #social-icon-box {
+            width: 55px; height: 55px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 30px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            overflow: hidden; /* Para que nada se salga del círculo */
+        }
+
+        /* Columna de Texto */
+        #info-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 5px;
+        }
+
+        /* Usuario */
+        #social-username {
+            font-size: 24px;
+            font-weight: 900;
+            color: #222;
+            line-height: 1;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            letter-spacing: -1px;
+        }
+
+        /* Contador / Subtítulo */
+        #social-counter {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* Botón CTA */
+        #social-cta {
+            padding: 8px 18px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            display: flex; align-items: center; gap: 8px;
+            white-space: nowrap;
+            margin-right: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Animación */
+        .show { opacity: 1 !important; transform: translateY(0) scale(1) !important; }
+    </style>
+</head>
+<body>
+
+    <div id="social-pill">
+        <!-- Icono vacío al inicio (quitamos el fa-question) -->
+        <div id="social-icon-box"><i></i></div>
+        
+        <div id="info-col">
+            <span id="social-username">...</span>
+            <span id="social-counter">...</span> 
+        </div>
+
+        <div id="social-cta">
+            <i class="fas fa-heart"></i> <span>Follow</span>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <script>
+        // --- TU CONFIGURACIÓN DE FIREBASE ---
+        var firebaseConfig = {
+            databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/"
+        };
+        try { firebase.initializeApp(firebaseConfig); } catch (e) {}
+
+        const dbRef = firebase.database().ref('widgets/socialRotator');
+
+        const pill = document.getElementById('social-pill');
+        const iconBox = document.getElementById('social-icon-box');
+        const usernameEl = document.getElementById('social-username');
+        const counterEl = document.getElementById('social-counter');
+        const ctaEl = document.getElementById('social-cta');
+        const ctaText = ctaEl.querySelector('span');
+        const mainIcon = iconBox.querySelector('i'); // Seleccionamos la etiqueta i
+
+        const networks = {
+            'instagram': { color: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', icon: 'fab fa-instagram', action: 'Follow' },
+            'tiktok':    { color: '#000000', icon: 'fab fa-tiktok', action: 'Follow' },
+            'twitter':   { color: '#1DA1F2', icon: 'fab fa-twitter', action: 'Follow' },
+            
+            // --- KICK ARREGLADO (Icono más grande y centrado) ---
+            'kick': { 
+                color: '#53FC18', 
+                // Usamos etiqueta <img>. "object-fit: contain" asegura que se vea entero.
+                icon: '<img src="./images/kick-logo.png" style="width:100%; height:100%; object-fit:contain;">', 
+                action: 'Follow' 
+            },
+            // ----------------------------------------------------
+
+            'youtube':   { color: '#FF0000', icon: 'fab fa-youtube', action: 'Subscribe' },
+            'twitch':    { color: '#9146FF', icon: 'fab fa-twitch', action: 'Follow' },
+            'discord':   { color: '#5865F2', icon: 'fab fa-discord', action: 'Join' },
+            'facebook':  { color: '#1877F2', icon: 'fab fa-facebook', action: 'Follow' },
+            'spotify':   { color: '#1DB954', icon: 'fab fa-spotify', action: 'Listen' }
+        };
+
+        let config = { accounts: [], duration: 5000, pause: 2000 };
+        let currentIndex = 0;
+        let cycleTimeout;
+
+        dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                config.duration = (parseInt(data.duration) || 5) * 1000;
+                config.pause = (parseInt(data.pause) || 2) * 1000;
+                config.accounts = data.accounts || [];
+                resetCycle();
+            }
+        });
+
+        function resetCycle() {
+            clearTimeout(cycleTimeout);
+            pill.classList.remove('show');
+            currentIndex = 0;
+            if (config.accounts.length > 0) setTimeout(showNextSlide, 500); 
+        }
+
+        function showNextSlide() {
+            if (config.accounts.length === 0) return;
+
+            const account = config.accounts[currentIndex];
+            const netInfo = networks[account.platform] || networks['instagram'];
+
+            // Texto
+            usernameEl.textContent = account.username;
+            counterEl.textContent = account.count || netInfo.action; 
+
+            // Icono (Lógica para SVG vs FontAwesome)
+            const iconContainer = document.getElementById('social-icon-box');
+            
+            if (netInfo.icon.startsWith('<svg') || netInfo.icon.startsWith('<img')) {
+                // Es un SVG (Kick)
+                iconContainer.innerHTML = netInfo.icon; 
+            } else {
+                // Es FontAwesome (Resto)
+                iconContainer.innerHTML = `<i class="${netInfo.icon}"></i>`;
+            }
+
+            // Colores
+            iconContainer.style.background = netInfo.color;
+            ctaText.textContent = netInfo.action;
+            
+            if(account.platform === 'instagram') ctaEl.style.background = '#d62976';
+            else ctaEl.style.background = netInfo.color;
+
+            // Mostrar
+            pill.classList.add('show');
+
+            // Ciclo
+            cycleTimeout = setTimeout(() => {
+                pill.classList.remove('show');
+                cycleTimeout = setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % config.accounts.length;
+                    showNextSlide();
+                }, config.pause);
+            }, config.duration);
+        }
+    </script>
+</body>
+</html>

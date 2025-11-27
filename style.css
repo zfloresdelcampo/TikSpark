@@ -2451,3 +2451,112 @@ input[type="range"].volume-slider::-moz-range-thumb {
     overflow-y: auto;
     overflow-x: hidden;
 }
+/* ======================================================= */
+/* --- ESTILOS "PREMIUM" PARA EL MODAL DE ROTADOR SOCIAL --- */
+/* ======================================================= */
+
+/* 1. El Contenedor Principal (La caja del modal) */
+#social-rotator-modal .modal-content {
+    background-color: #252526; /* Gris oscuro sólido (estilo VS Code) */
+    border: 1px solid #454545; /* Borde sutil */
+    border-radius: 8px;        /* Bordes redondeados */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8); /* Sombra fuerte para profundidad */
+    padding: 0;                /* Quitamos padding global para controlar header/body */
+    width: 650px;              /* Ancho fijo consistente */
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;          /* Que no se salga de la pantalla */
+    color: #e0e0e0;
+}
+
+/* 2. La Cabecera (Título y botón cerrar) */
+#social-rotator-modal .modal-header {
+    background-color: #252526;
+    padding: 15px 20px;
+    border-bottom: 1px solid #3c3c3c; /* Línea separadora */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: 0;
+}
+
+#social-rotator-modal .modal-header h3 {
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+}
+
+/* 3. El Cuerpo con Scroll (Donde están los inputs) */
+#social-rotator-modal .modal-body-scroll {
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #1e1e1e; /* Un tono ligeramente más oscuro para el contenido */
+}
+
+/* Títulos de sección internos */
+#social-rotator-modal .modal-section-title {
+    border-bottom: 1px solid #3c3c3c;
+    color: #8A2BE2; /* Morado TikSpark */
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+}
+
+/* 4. Inputs y Selects Específicos de este modal */
+/* Esto sobreescribe los estilos en línea del JS para asegurar uniformidad */
+#social-rotator-modal input[type="text"],
+#social-rotator-modal input[type="number"],
+#social-rotator-modal select {
+    background-color: #333333 !important;
+    border: 1px solid #555 !important;
+    color: white !important;
+    border-radius: 4px;
+    padding: 10px !important;
+    height: 38px; /* Altura uniforme */
+}
+
+#social-rotator-modal input:focus,
+#social-rotator-modal select:focus {
+    border-color: #8A2BE2 !important; /* Borde morado al escribir */
+    outline: none;
+}
+
+/* 5. Botón "Añadir Nueva Red" */
+#add-social-field-btn {
+    background-color: #2d2d2d;
+    color: #b0b0b0;
+    border: 1px dashed #555;
+    transition: all 0.2s;
+}
+#add-social-field-btn:hover {
+    background-color: #3a3a3a;
+    color: white;
+    border-color: #8A2BE2;
+}
+
+/* 6. Pie de página (Botón Guardar) */
+#social-rotator-modal .modal-footer {
+    background-color: #252526;
+    border-top: 1px solid #3c3c3c;
+    padding: 15px 20px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Botón Guardar */
+#save-social-rotator-btn {
+    background-color: #5c1d80; /* Morado Principal */
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#save-social-rotator-btn:hover {
+    background-color: #7a29aa;
+}

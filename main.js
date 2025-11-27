@@ -11,6 +11,21 @@ const cheerio = require('cheerio');
 const { startTikTokDetector , fetchProfileViaHTML } = require('./detector.js');
 const { autoUpdater } = require('electron-updater');
 
+// --- INICIO: SERVIDOR INTERNO PARA OBS ---
+const express = require('express'); 
+const localServer = express();
+const SERVER_PORT = 5500; // Puerto fijo: http://localhost:3333/social-rotator.html
+let serverInstance;
+
+// Esto permite que OBS acceda a tus archivos html/css/js
+localServer.use(express.static(path.join(__dirname)));
+
+// Arrancamos el servidor
+serverInstance = localServer.listen(SERVER_PORT, () => {
+    console.log(`✅ Servidor interno para OBS listo en: http://localhost:${SERVER_PORT}`);
+});
+// --- FIN: SERVIDOR INTERNO PARA OBS ---
+
 const soundsPath = path.join(app.getPath('userData'), 'sounds');
 if (!fs.existsSync(soundsPath)) {
     fs.mkdirSync(soundsPath);
@@ -707,3 +722,10 @@ function createWindow() {
 app.whenReady().then(createWindow);
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+// --- ESTE ES EL CÓDIGO NUEVO (COLOCADO CORRECTAMENTE FUERA) ---
+app.on('will-quit', () => {
+    if (serverInstance) {
+        serverInstance.close();
+        console.log('🛑 Servidor interno detenido.');
+    }
+});

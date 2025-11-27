@@ -426,7 +426,7 @@
             <div class="overlay-card-container">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Meta Win General 1</h3>
-                    </div>
+                </div>
 
                 <div class="overlay-url-actions">
                     <input type="text" value="http://127.0.0.1:5500/overlay.html" readonly class="url-input">
@@ -468,6 +468,35 @@
                     </div>
                 </div>
             </div>
+
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Social Media Rotator</h3>
+                </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/social-rotator.html" readonly class="url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn">Copiar URL</button>
+                        <button class="action-btn">Testear</button>
+                        <button class="action-btn personalize-btn" id="btn-config-social-rotator">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Previsualización REAL en el Dashboard -->
+            <div class="overlay-content-layout">
+                <!-- Usamos un IFRAME para cargar el archivo real dentro de la app -->
+                <div class="overlay-preview" style="background: #1a1a1a; height: 180px; position: relative; overflow: hidden; border-radius: 8px;">
+                    <iframe 
+                        src="social-rotator.html" 
+                        style="width: 100%; height: 100%; border: none; transform: scale(0.8); pointer-events: none;"
+                    ></iframe>
+                </div>
+            </div>
+
         </div>
     
         <!-- === NUEVO: SECCIÓN DE ALERTAS === -->
@@ -1246,6 +1275,54 @@
     </div>
     
     <div id="toast-notification"></div>
+    
+    <!-- === MODAL SOCIAL ROTATOR SETTINGS === -->
+    <div id="social-rotator-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Configurar Rotador Social</h3>
+                <button class="modal-close-button" id="close-social-rotator-modal">&times;</button>
+            </div>
+            
+            <div class="modal-body-scroll" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                
+                <!-- Ajustes Generales -->
+                <h4 class="modal-section-title">Ajustes Generales</h4>
+                <div class="form-group">
+                    <label>Tiempo en pantalla (segundos)</label>
+                    <input type="number" id="social-duration" value="5" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Tiempo de pausa entre redes (segundos)</label>
+                    <input type="number" id="social-pause" value="2" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Animación</label>
+                    <select id="social-animation">
+                        <option value="fade">Desvanecer (Fade)</option>
+                        <option value="slide-up">Deslizar Arriba</option>
+                        <option value="scale">Zoom / Pop</option>
+                    </select>
+                </div>
+
+                <!-- Lista de Redes -->
+                <h4 class="modal-section-title" style="margin-top: 20px;">Lista de Redes</h4>
+                <div id="social-list-container">
+                    <!-- Aquí se generarán los inputs dinámicamente con JS -->
+                </div>
+
+                <button id="add-social-field-btn" class="action-btn" style="width: 100%; margin-top: 10px; border: 1px dashed #555;">
+                    <i class="fas fa-plus"></i> Añadir Nueva Red
+                </button>
+
+            </div>
+
+            <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="save-social-rotator-btn" class="btn">Guardar y Aplicar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
@@ -1259,6 +1336,7 @@
     <script src="scripts/script.js"></script>
     <script src="scripts/meta-win.js"></script>
     <script src="scripts/subasta.js"></script>
+    <script src="scripts/social-rotator.js"></script>
     <audio id="audio-player" style="display: none;"></audio>
     <input type="file" id="audio-file-input" accept=".mp3,.wav,.ogg" style="display: none;">
 </body>
