@@ -375,6 +375,191 @@ function createWindow() {
         return { success: true };
     });
     ipcMain.handle('get-available-gifts', async () => { const savedGifts = loadGifts(); if (savedGifts && savedGifts.length > 0) return savedGifts; if (currentDetector && currentDetector.getGifts) { const liveGifts = currentDetector.getGifts(); if (liveGifts && liveGifts.length > 0) { saveGifts(liveGifts); return liveGifts; } } return []; });
+    
+    // --- LOGIN Y OBTENCIÓN DE EMOTES (MODO ATAQUE DOBLE + RECURSIVO) ---
+    ipcMain.handle('login-and-fetch-emotes', async () => {
+        if (!currentDetector || !currentDetector.getRoomData) {
+            return { success: false, message: '⚠️ Conéctate primero a un directo.' };
+        }
+
+        const roomInfo = currentDetector.getRoomData();
+        let roomData = null;
+        if (roomInfo) {
+            if (roomInfo.owner) roomData = roomInfo;
+            else if (roomInfo.data && roomInfo.data.owner) roomData = roomInfo.data;
+        }
+
+        if (!roomData || !roomData.owner) {
+            return { success: false, message: '⚠️ No se pudo obtener información del canal.' };
+        }
+
+        const secUid = roomData.owner.sec_uid;
+        const roomId = roomData.id;
+
+        const loginWindow = new BrowserWindow({
+            width: 500,
+            height: 700,
+            parent: mainWindow,
+            modal: true,
+            title: 'Inicia sesión en TikTok',
+            autoHideMenuBar: true,
+            webPreferences: { 
+                partition: 'persist:tiktok_session',
+                nodeIntegration: false,
+                contextIsolation: true
+            }
+        });
+
+        loginWindow.loadURL('https://www.tiktok.com/login');
+
+        // --- FUNCIÓN HELPER: BUSCADOR RECURSIVO MEJORADO ---
+        // Ahora busca también 'static_url' que a veces usan los emotes de Fan Club
+        function findAllEmotes(obj, found = []) {
+            if (!obj || typeof obj !== 'object') return found;
+
+            // Detectamos si es un objeto tipo Emote
+            if ((obj.emote_id || obj.id) && (obj.image || obj.icon || obj.sticker_url || obj.static_url)) {
+                
+                let imageUrl = '';
+                
+                // Prioridad 1: image.url_list (Estándar)
+                if (obj.image && Array.isArray(obj.image.url_list) && obj.image.url_list.length > 0) {
+                    imageUrl = obj.image.url_list[0];
+                }
+                // Prioridad 2: sticker_url (Común en Fan Club)
+                else if (obj.sticker_url && typeof obj.sticker_url === 'string') {
+                    imageUrl = obj.sticker_url;
+                }
+                 // Prioridad 3: static_url (A veces los locked vienen así)
+                 else if (obj.static_url && typeof obj.static_url === 'string') {
+                    imageUrl = obj.static_url;
+                }
+                // Prioridad 4: icon.url_list
+                else if (obj.icon && Array.isArray(obj.icon.url_list) && obj.icon.url_list.length > 0) {
+                    imageUrl = obj.icon.url_list[0];
+                }
+
+                // Si encontramos imagen y tiene ID, guardamos
+                if (imageUrl) {
+                    found.push({
+                        id: obj.emote_id || obj.id,
+                        name: obj.text || obj.name || 'Emote',
+                        image_url: imageUrl,
+                        type: 'detected_emote'
+                    });
+                }
+            }
+
+            // Recursión profunda
+            if (Array.isArray(obj)) {
+                for (let item of obj) findAllEmotes(item, found);
+            } else {
+                for (let key in obj) {
+                    if (obj.hasOwnProperty(key)) findAllEmotes(obj[key], found);
+                }
+            }
+            return found;
+        }
+
+        return new Promise((resolve) => {
+            let isResolved = false;
+
+            const finish = (result) => {
+                if (isResolved) return;
+                isResolved = true;
+                clearInterval(checkInterval);
+                if (!loginWindow.isDestroyed()) loginWindow.close();
+                resolve(result);
+            };
+
+            let checkInterval = setInterval(async () => {
+                if (loginWindow.isDestroyed()) {
+                    finish({ success: false, message: '⚠️ Ventana cerrada manualmente.' });
+                    return;
+                }
+
+                try {
+                    const cookies = await loginWindow.webContents.session.cookies.get({ name: 'sessionid' });
+                    
+                    if (cookies.length > 0) {
+                        const sessionCookie = cookies[0].value;
+                        loginWindow.hide(); 
+                        
+                        const headers = {
+                            'Cookie': `sessionid=${sessionCookie}`,
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Referer': 'https://www.tiktok.com/',
+                        };
+
+                        try {
+                            // 1. URL COMPETENCIA (Catálogo de Emotes)
+                            const urlCompetencia = `https://webcast.tiktok.com/webcast/sub/privilege/get_sub_emote_detail/?aid=1988&sec_anchor_id=${secUid}&room_id=${roomId}`;
+                            
+                            // 2. URL RESPALDO (Privilegios / Paquetes)
+                            const urlRespaldo = `https://webcast.tiktok.com/webcast/sub/privilege/get_sub_privilege_detail/?aid=1988&sec_anchor_id=${secUid}&room_id=${roomId}`;
+
+                            console.log("[DEBUG] Lanzando petición doble (Competencia + Respaldo)...");
+
+                            // Hacemos ambas peticiones en paralelo
+                            const [resCompetencia, resRespaldo] = await Promise.allSettled([
+                                axios.get(urlCompetencia, { headers }),
+                                axios.get(urlRespaldo, { headers })
+                            ]);
+
+                            let combinedData = [];
+
+                            // Procesar resultado Competencia
+                            if (resCompetencia.status === 'fulfilled') {
+                                console.log("[DEBUG] API Competencia recibida.");
+                                combinedData.push(resCompetencia.value.data);
+                            }
+
+                            // Procesar resultado Respaldo
+                            if (resRespaldo.status === 'fulfilled') {
+                                console.log("[DEBUG] API Respaldo recibida.");
+                                combinedData.push(resRespaldo.value.data);
+                            }
+
+                            // APLICAR FUERZA BRUTA A TODO LO RECIBIDO
+                            console.log("[DEBUG] Iniciando escaneo recursivo en datos combinados...");
+                            const allEmotesFound = findAllEmotes(combinedData);
+
+                            // FILTRAR Y LIMPIAR DUPLICADOS
+                            const uniqueEmotes = [];
+                            const seenIds = new Set();
+
+                            allEmotesFound.forEach(emote => {
+                                // Filtro extra: A veces los del Fan Club tienen IDs negativos o extraños, los aceptamos igual
+                                if (!seenIds.has(emote.id)) {
+                                    seenIds.add(emote.id);
+                                    uniqueEmotes.push(emote);
+                                }
+                            });
+
+                            console.log(`[DEBUG] TOTAL FINAL: ${uniqueEmotes.length} emotes únicos.`);
+
+                            if (uniqueEmotes.length > 0) {
+                                finish({ success: true, emotes: uniqueEmotes, message: `✅ ${uniqueEmotes.length} emotes obtenidos (Subs + Club de Fans).` });
+                            } else {
+                                finish({ success: true, emotes: [], message: 'ℹ️ No se encontraron emotes (Lista vacía).' });
+                            }
+
+                        } catch (apiError) {
+                            console.error(apiError);
+                            finish({ success: false, message: '❌ Error de conexión con TikTok.' });
+                        }
+                    }
+                } catch (err) {
+                    // Esperando login...
+                }
+            }, 1500);
+
+            loginWindow.on('closed', () => {
+                finish({ success: false, message: '⚠️ Cancelado.' });
+            });
+        });
+    });
+    
     ipcMain.handle('force-fetch-gifts', async () => { if (!currentUsername) { mainWindow.webContents.send('show-toast', '⚠️ Introduce un usuario para poder actualizar la lista.'); return false; } startDetector(true); return true; });
 
     ipcMain.handle('select-folder', async () => { 

@@ -95,11 +95,27 @@ function fetchProfileViaHTML(username) {
 }
 
 function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGiftsFetched = () => {}) {
+    
+    // Configuración de la conexión
     let tiktokLiveConnection = new WebcastPushConnection(username, {
-        processInitialData: true,
+        processInitialData: false, // false para que cargue más rápido al inicio
         enableExtendedGiftInfo: true,
-        requestPollingIntervalMs: 2000
+        requestPollingIntervalMs: 1000, // Déjalo en 1000 (1 seg) para que sea estable con la Key
+        
+        // === AQUÍ RECUPERAMOS TU LLAVE EULER ===
+        requestOptions: {
+            apiKey: "euler_NGRjMDcyZDA1MDVlZTJjODU0YjRlNjI4YWEzYTg1Nzc1ZTY1ZTdmOTJkMmZjYzhlODBmNTQ0"
+        },
+        // =======================================
+
+        clientParams: {
+            appLanguage: 'es',
+            devicePlatform: 'web'
+        }
     });
+
+    // Variable para guardar info básica de la sala (para el login externo)
+    let currentRoomInfo = null; // <--- NUEVO: AQUÍ GUARDAMOS LA DATA
 
     console.log(`[DETECTOR] Iniciando servicio para @${username}`);
     mainWindow.webContents.send('connection-status', `Conectando a @${username}...`);
@@ -118,6 +134,8 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
     tiktokLiveConnection.connect().then(state => {
         console.info(`[DETECTOR] ✅ Conectado al Live de @${username}`);
         mainWindow.webContents.send('connection-status', `✅ Conectado a @${username}`);
+
+        currentRoomInfo = state.roomInfo; // <--- NUEVO: CAPTURAMOS LA DATA
 
         // INTENTO DE RESPALDO OFICIAL
         if (state.roomInfo && state.roomInfo.owner) {
@@ -158,7 +176,33 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
     });
 
     tiktokLiveConnection.on('chat', (data) => {
-        mainWindow.webContents.send('new-chat', data);
+        // Verificamos si hay emotes en el mensaje
+        const isEmote = data.emotes && data.emotes.length > 0;
+        
+        let emoteData = null;
+        
+        if (isEmote) {
+            const emoteObj = data.emotes[0];
+            
+            // --- CORRECCIÓN AQUÍ ---
+            // TikTok envía las imágenes en 'url_list', no en 'url'.
+            // Usamos ?. (optional chaining) para que no crashee si falta algún dato.
+            const imageUrl = emoteObj.image?.url_list?.[0] || emoteObj.image?.url || '';
+            
+            emoteData = {
+                // Aseguramos que el ID sea string para comparar
+                id: String(emoteObj.emoteId || emoteObj.id), 
+                image: imageUrl
+            };
+            
+            console.log(`[DETECTOR] Emote recibido: ${emoteData.id}`);
+        }
+
+        mainWindow.webContents.send('new-chat', {
+            ...data,
+            isEmote: isEmote,
+            emoteData: emoteData
+        });
     });
 
     tiktokLiveConnection.on('like', (data) => mainWindow.webContents.send('new-like', { ...data, nickname: data.nickname || data.uniqueId }));
@@ -184,7 +228,9 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
 
     return {
         stop: () => tiktokLiveConnection.disconnect(),
-        getGifts: () => tiktokLiveConnection.availableGifts || []
+        getGifts: () => tiktokLiveConnection.availableGifts || [],
+        // Exponemos la info para que main.js la use en el login
+        getRoomData: () => currentRoomInfo // <--- NUEVO: EXPORTAMOS LA DATA
     };
 }
 

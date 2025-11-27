@@ -213,15 +213,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 1. Ocultar todo primero
             const giftSelector = document.getElementById('alert-gift-specific-selector');
             const likesSelector = document.getElementById('alert-likes-amount-selector');
-            
+            const emoteSelector = document.getElementById('alert-emote-selector-container'); // <--- AGREGADO
+
             if (giftSelector) giftSelector.style.display = 'none';
             if (likesSelector) likesSelector.style.display = 'none';
+            if (emoteSelector) emoteSelector.style.display = 'none'; // <--- AGREGADO
 
             // 2. Mostrar según lo elegido
             if (selectedValue === 'gift-specific') {
-                if (giftSelector) giftSelector.style.display = 'grid'; // O 'flex' según tu CSS
+                if (giftSelector) giftSelector.style.display = 'grid';
             } else if (selectedValue === 'likes') {
                 if (likesSelector) likesSelector.style.display = 'grid';
+            } else if (selectedValue === 'emote') { // <--- AGREGADO
+                if (emoteSelector) emoteSelector.style.display = 'grid';
             }
         });
     });
@@ -232,6 +236,87 @@ document.addEventListener('DOMContentLoaded', async function() {
     const alertGiftSearchInput = document.getElementById('alert-gift-search-input');
     const alertGiftOptionsList = document.getElementById('alert-gift-options-list');
     const alertSelectedGiftIdInput = document.getElementById('alert-selected-gift-id');
+
+    // ==========================================================
+    // LÓGICA PARA EL SELECTOR DE EMOTES (ALERTAS)
+    // ==========================================================
+    const alertEmoteSelectorDisplay = document.getElementById('alert-emote-selector-display');
+    const alertEmoteSelector = document.getElementById('alert-custom-emote-selector');
+    const alertEmoteOptionsList = document.getElementById('alert-emote-options-list');
+    const alertSelectedEmoteIdInput = document.getElementById('alert-selected-emote-id');
+    let availableEmotesCache = [];
+
+    // Función para seleccionar un Emote (CORREGIDA)
+    function selectEmoteForAlert(emote) {
+        // CORRECCIÓN: Usamos image_url directamente porque el backend ya lo limpió
+        const imgUrl = emote.image_url; 
+        
+        alertEmoteSelectorDisplay.innerHTML = `<img src="${imgUrl}" alt="Emote"><span>${emote.id || 'Emote'}</span>`;
+        alertSelectedEmoteIdInput.value = emote.id; // Usamos .id directamente
+        
+        // Guardamos la URL de la imagen en un atributo data
+        alertSelectedEmoteIdInput.dataset.imageUrl = imgUrl; 
+        
+        alertEmoteSelector.classList.remove('open');
+    }
+
+    // Renderizar lista de Emotes (CORREGIDA)
+    function renderAlertEmoteOptions(emotes) {
+        if (!alertEmoteOptionsList) return;
+        alertEmoteOptionsList.innerHTML = '';
+
+        if (!emotes || emotes.length === 0) {
+            alertEmoteOptionsList.innerHTML = '<div class="no-items-message" style="padding:10px; color:#ccc;">No se encontraron emotes o no estás conectado.</div>';
+            return;
+        }
+        
+        emotes.forEach(emote => {
+            // CORRECCIÓN 1: Validamos 'image_url' en lugar de la estructura compleja
+            if (!emote.image_url) return;
+            
+            const optionItem = document.createElement('div');
+            optionItem.className = 'gift-option-item'; 
+            
+            // CORRECCIÓN 2: Usamos la variable directa
+            const imgUrl = emote.image_url;
+            const emoteId = emote.id; 
+            const emoteName = emote.name || 'Emote';
+
+            optionItem.innerHTML = `
+                <img src="${imgUrl}" alt="Emote" style="width: 40px; height: 40px; object-fit: contain;">
+                <div class="gift-details">
+                    <span class="gift-name" style="font-size: 12px; font-weight: bold;">${emoteName}</span>
+                    <span class="gift-cost" style="font-size: 10px; color: #aaa;">ID: ${emoteId}</span>
+                </div>`;
+            
+            optionItem.addEventListener('click', (e) => { 
+                e.stopPropagation(); 
+                selectEmoteForAlert(emote); 
+            });
+            alertEmoteOptionsList.appendChild(optionItem);
+        });
+    }
+
+    // Evento Click para ABRIR el selector de Emotes
+    if (alertEmoteSelectorDisplay) {
+        alertEmoteSelectorDisplay.addEventListener('click', () => {
+            alertEmoteSelector.classList.toggle('open');
+            
+            // Solo mostramos lo que ya tenemos en caché (cargado con el botón de arriba)
+            if (availableEmotesCache.length === 0) {
+                alertEmoteOptionsList.innerHTML = '<div style="padding:10px; color:#ccc; text-align:center;">Lista vacía.<br>Usa el botón "Obtener Emotes" en Inicio.</div>';
+            } else {
+                renderAlertEmoteOptions(availableEmotesCache);
+            }
+        });
+    }
+
+    // Cerrar al hacer clic fuera (Emotes)
+    document.addEventListener('click', (e) => { 
+        if (alertEmoteSelector && !alertEmoteSelector.contains(e.target)) { 
+            alertEmoteSelector.classList.remove('open'); 
+        } 
+    });
 
     // Función auxiliar para seleccionar regalo en Alertas
     function selectGiftForAlert(gift) {
@@ -547,11 +632,41 @@ if (window.electronAPI) {
         window.electronAPI.disconnect(); 
         usernameInput.value = ''; 
     });
-    emotesButton.addEventListener('click', () => { 
-        if (window.electronAPI.sendEmoteRequest) { 
-            const username = usernameInput.value.trim(); 
-            if (username) window.electronAPI.sendEmoteRequest(username); 
-        } 
+    // --- Lógica Botón Obtener Emotes (Con Login) ---
+    emotesButton.addEventListener('click', async () => {
+        // Deshabilitamos temporalmente para evitar doble clic
+        emotesButton.disabled = true;
+        
+        if (!window.electronAPI) {
+             showToastNotification('⚠️ Error: API no disponible.');
+             emotesButton.disabled = false;
+             return;
+        }
+
+        showToastNotification('🔑 Abriendo ventana de login... Por favor inicia sesión.');
+        
+        try {
+            const result = await window.electronAPI.loginAndFetchEmotes();
+            
+            if (result.success) {
+                showToastNotification(result.message);
+                // Guardamos los emotes en la variable global
+                availableEmotesCache = result.emotes || [];
+                console.log("Emotes guardados en caché:", availableEmotesCache);
+                
+                // Refrescar el selector si estaba abierto (opcional)
+                if(typeof renderAlertEmoteOptions === 'function') {
+                    renderAlertEmoteOptions(availableEmotesCache);
+                }
+            } else {
+                showToastNotification(result.message);
+            }
+        } catch (error) {
+            console.error(error);
+            showToastNotification('❌ Error desconocido al obtener emotes.');
+        } finally {
+            emotesButton.disabled = false;
+        }
     });
     updateGiftsButton.addEventListener('click', async () => {
         showToastNotification('🔄 Actualizando lista de regalos...');
@@ -607,12 +722,22 @@ if (window.electronAPI) {
         }
     }
 
-    // Listener de Chat (ya lo tenías)
+    // Listener de Chat (MODIFICADO)
     window.electronAPI.onChat(data => {
-        // Escapamos HTML para seguridad
+        // 1. Log visual (igual que antes)
         const sanitizedComment = data.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         addLogEntry(`<i class="fas fa-comment"></i> <b>${data.nickname}:</b> ${sanitizedComment}`, 'chat');
+        
+        // 2. Procesar como comentario normal (para leer en voz alta, etc.)
         processTikTokEvent('chat-comment', data);
+
+        // 3. (NUEVO) Verificar si el mensaje contiene EMOTES
+        // TikTok envía un array 'emotes' si el mensaje tiene alguno.
+        if (data.emotes && data.emotes.length > 0) {
+            console.log("Emotes detectados en el mensaje:", data.emotes);
+            // Disparamos el evento específico de tipo 'emote'
+            processTikTokEvent('emote', data);
+        }
     });
 
     // Listener de Regalos (ligeramente mejorado)
@@ -867,6 +992,23 @@ if (window.electronAPI) {
                 }
             }
 
+            // Restaurar Emote si es el caso
+            if (alertData.why === 'emote' && alertData.emoteId) {
+                const emoteDisplay = document.getElementById('alert-emote-selector-display');
+                const emoteInput = document.getElementById('alert-selected-emote-id');
+                
+                if (emoteInput) emoteInput.value = alertData.emoteId;
+                if (emoteDisplay) {
+                    // Si guardamos la imagen, úsala. Si no, texto genérico.
+                    const imgSrc = alertData.emoteImage || ''; 
+                    if (imgSrc) {
+                        emoteDisplay.innerHTML = `<img src="${imgSrc}" alt="Emote"><span>Emote</span>`;
+                    } else {
+                        emoteDisplay.innerHTML = `<span>Emote ID: ${alertData.emoteId}</span>`;
+                    }
+                }
+            }
+
             // Audio
             if (alertData.audioAction) {
                 // 1. Marcar el checkbox y mostrar el menú
@@ -961,6 +1103,21 @@ if (window.electronAPI) {
                 if (gift) newAlertData.giftName = gift.name;
             } else {
                 return showToastNotification('⚠️ Selecciona un regalo específico.');
+            }
+        }
+
+        // Lógica para Emotes (AGREGAR ESTO)
+        if (why === 'emote') {
+            const emoteIdInput = document.getElementById('alert-selected-gift-id'); // OJO: Corregiremos esto abajo, usa el ID nuevo
+            // CORRECCIÓN: Usar la variable correcta que definimos arriba
+            const emoteIdVal = document.getElementById('alert-selected-emote-id').value;
+            const emoteImgVal = document.getElementById('alert-selected-emote-id').dataset.imageUrl;
+
+            if (emoteIdVal) {
+                newAlertData.emoteId = emoteIdVal;
+                newAlertData.emoteImage = emoteImgVal; // Guardamos la URL para mostrarla luego
+            } else {
+                return showToastNotification('⚠️ Selecciona un emote de la lista.');
             }
         }
 
@@ -2298,30 +2455,60 @@ if (window.electronAPI) {
             });
         }
 
-        // 2. PROCESAR ALERTAS (Tu nueva lógica fusionada aquí)
+        // 2. PROCESAR ALERTAS (CORREGIDO PARA EMOTES)
         const alerts = currentProfile.alerts || [];
         alerts.forEach(alertRule => {
             if (!alertRule.enabled) return;
             
             let match = false;
+
+            // Verificamos si el tipo de evento coincide
             if (alertRule.why === triggerType) {
+                
+                // CASO 1: Regalo Específico
                 if (triggerType === 'gift-specific') {
-                    if (alertRule.giftId === eventData.giftId) match = true;
-                } else {
+                    // Comparamos IDs como texto para evitar errores de número
+                    if (String(alertRule.giftId) === String(eventData.giftId)) match = true;
+                } 
+                
+                // CASO 2: Emote Específico (AQUÍ ESTABA EL FALTANTE)
+                else if (triggerType === 'emote') {
+                    // eventData.emotes es la lista de emotes que llegaron en el mensaje
+                    if (eventData.emotes && Array.isArray(eventData.emotes)) {
+                        
+                        // Revisamos si ALGUNO de los emotes del mensaje es el que configuramos
+                        const emoteFound = eventData.emotes.some(incomingEmote => {
+                            // TikTok a veces usa 'id' y a veces 'emoteId'. Revisamos ambos.
+                            const incomingId = String(incomingEmote.id || incomingEmote.emoteId || '');
+                            const savedId = String(alertRule.emoteId || '');
+                            return incomingId === savedId;
+                        });
+                        
+                        if (emoteFound) {
+                            console.log(`[MOTOR] ¡Match de Emote! ID: ${alertRule.emoteId}`);
+                            match = true;
+                        }
+                    }
+                } 
+                
+                // CASO 3: Resto de eventos (Follow, Share, etc.)
+                else {
                     match = true;
                 }
             }
 
             if (match) {
-                console.log(`[MOTOR] Coincidencia para Alerta "${alertRule.name}"`);
-                // Construimos la acción 'al vuelo' basada en la alerta
+                console.log(`[MOTOR] Ejecutando Alerta: "${alertRule.name}"`);
+                
+                // Construimos la acción 'al vuelo'
                 const actionToExecute = {
                     name: alertRule.name,
                     duration: alertRule.duration || 5,
                     audioAction: alertRule.audioAction,
                     image: alertRule.image,
-                    // Si tienes webhook o keystrokes en alertas, añádelos aquí
+                    // Si guardaste algo más en la alerta, úsalo aquí
                 };
+                
                 actionQueue.push({ action: actionToExecute, eventData });
                 processQueue();
             }

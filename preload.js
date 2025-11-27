@@ -36,6 +36,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // --- Funciones para la gestión de regalos ---
     getAvailableGifts: () => ipcRenderer.invoke('get-available-gifts'),
+
+    // --- POR ESTO ---
+    loginAndFetchEmotes: () => ipcRenderer.invoke('login-and-fetch-emotes'),
+
     forceFetchGifts: () => ipcRenderer.invoke('force-fetch-gifts'),
 
     // --- Escuchas del Frontend a eventos del Backend ---
