@@ -670,19 +670,23 @@ navItems.forEach(item => {
 
         // 2. LÓGICA NUEVA: Cerrar sub-menús si vamos a una sección simple
         // Si el botón presionado NO es el de Acciones NI el de Galería...
-        if (item.id !== 'btn-actions-main' && item.id !== 'btn-gallery-main') {
+        if (item.id !== 'btn-actions-main' && 
+            item.id !== 'btn-gallery-main' && 
+            item.id !== 'btn-goals-main') { // <--- IMPORTANTE: AGREGAR ESTE ID
             
-            // Cerrar menú Acciones
+            // Entonces cerramos TODOS los menús a la fuerza
             const smActions = document.getElementById('submenu-actions');
-            const btnActions = document.getElementById('btn-actions-main');
             if (smActions) smActions.classList.remove('open');
-            if (btnActions) btnActions.classList.remove('menu-open'); // Quita rotación flecha
-
-            // Cerrar menú Galería
+            
             const smGallery = document.getElementById('submenu-gallery');
-            const btnGallery = document.getElementById('btn-gallery-main');
             if (smGallery) smGallery.classList.remove('open');
-            // Si galería tuviera flecha, aquí también se quitaría la clase menu-open
+
+            const smGoals = document.getElementById('submenu-goals');
+            if (smGoals) smGoals.classList.remove('open');
+
+            // Quitar rotación de flechas si las usas
+            const allBtns = [document.getElementById('btn-actions-main'), document.getElementById('btn-gallery-main'), document.getElementById('btn-alerts-main'), document.getElementById('btn-goals-main')];
+            allBtns.forEach(btn => { if(btn) btn.classList.remove('menu-open'); });
         }
     });
 });
@@ -3082,20 +3086,26 @@ if (window.electronAPI) {
     renderVirtualKeyboard();
 
     // ==========================================================
-    // LÓGICA DEL SUB-MENÚ Y DESPLAZAMIENTO (CORREGIDO)
+    // LÓGICA DEL SUB-MENÚ Y DESPLAZAMIENTO (ACTUALIZADO)
     // ==========================================================
     
     const btnActionsMain = document.getElementById('btn-actions-main');
     const submenuActions = document.getElementById('submenu-actions');
     const btnGalleryMain = document.getElementById('btn-gallery-main');
     const submenuGallery = document.getElementById('submenu-gallery');
+    
+    // NUEVAS VARIABLES PARA METAS
+    const btnGoalsMain = document.getElementById('btn-goals-main');
+    const submenuGoals = document.getElementById('submenu-goals');
 
     // 1. Toggle del Menú Acciones
     if(btnActionsMain) {
         btnActionsMain.addEventListener('click', () => {
             submenuActions.classList.toggle('open');
-            // Cerramos el de galería si estaba abierto para que no se amontonen
+            btnActionsMain.classList.toggle('menu-open');
+            // Cerrar los otros
             if(submenuGallery) submenuGallery.classList.remove('open');
+            if(submenuGoals) submenuGoals.classList.remove('open');
         });
     }
 
@@ -3103,12 +3113,29 @@ if (window.electronAPI) {
     if(btnGalleryMain) {
         btnGalleryMain.addEventListener('click', () => {
             submenuGallery.classList.toggle('open');
-            // Cerramos el de acciones si estaba abierto
-            if(submenuActions) submenuActions.classList.remove('open');
+            // Cerrar los otros
+            if(submenuActions) {
+                submenuActions.classList.remove('open');
+                btnActionsMain.classList.remove('menu-open');
+            }
+            if(submenuGoals) submenuGoals.classList.remove('open');
         });
     }
 
-    // 3. Función Global de Scroll y Temblor (OPTIMIZADA)
+    // 3. Toggle del Menú Metas (NUEVO)
+    if(btnGoalsMain) {
+        btnGoalsMain.addEventListener('click', () => {
+            submenuGoals.classList.toggle('open');
+            // Cerrar los otros
+            if(submenuActions) {
+                submenuActions.classList.remove('open');
+                btnActionsMain.classList.remove('menu-open');
+            }
+            if(submenuGallery) submenuGallery.classList.remove('open');
+        });
+    }
+
+    // 4. Función Global de Scroll y Temblor
     window.scrollToSection = (targetId, tabId) => {
         // A. Cambiar a la pestaña correcta
         const mainTab = document.getElementById(tabId);
@@ -3119,34 +3146,61 @@ if (window.electronAPI) {
         // B. Asegurar que el submenú correspondiente esté abierto
         if (tabId === 'btn-actions-main' && submenuActions) submenuActions.classList.add('open');
         if (tabId === 'btn-gallery-main' && submenuGallery) submenuGallery.classList.add('open');
+        if (tabId === 'btn-goals-main' && submenuGoals) submenuGoals.classList.add('open'); // NUEVO
 
         // C. Scroll y Animación
         setTimeout(() => {
-            // Ahora targetId apunta directamente a la TARJETA GRANDE
             let targetElement = document.getElementById(targetId);
             
-            // Solo mantenemos este fix para las listas de acciones/eventos
             if(targetId.includes('list-container')) {
                 targetElement = targetElement.closest('.list-view-container');
             }
 
             if (targetElement) {
-                // Scroll al centro
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                // Efecto Temblor
                 targetElement.classList.remove('shake-active');
-                void targetElement.offsetWidth; // Reiniciar animación
+                void targetElement.offsetWidth; 
                 targetElement.classList.add('shake-active');
 
-                // Quitar clase al terminar
                 setTimeout(() => {
                     targetElement.classList.remove('shake-active');
                 }, 1000);
             }
-        }, 50); // Pequeño delay para dar tiempo al cambio de pestaña
+        }, 50);
     };
 
+    // ==========================================================
+    // Lógica para Copiar la URL (Acciones y Alertas)
+    // ==========================================================
+    function setupLinkCopy(elementId) {
+        const linkElement = document.getElementById(elementId);
+        if (linkElement) {
+            linkElement.addEventListener('click', function(e) {
+                e.preventDefault();
+                const urlToCopy = this.getAttribute('data-url');
+                
+                if (navigator.clipboard && window.isSecureContext) { 
+                    navigator.clipboard.writeText(urlToCopy).then(() => {
+                        showToastNotification('✅ URL copiada en el portapapeles.'); 
+                    }).catch(err => {
+                        console.error('Error:', err);
+                        showToastNotification('❌ Error al copiar.');
+                    });
+                } else {
+                    alert('Tu navegador no soporta la copia automática.');
+                }
+            });
+        }
+    }
+
+    // Activamos el link del modal de ACCIONES
+    setupLinkCopy('copy-media-overlay-link');
+
+    // Activamos el link del modal de ALERTAS (Nuevo)
+    setupLinkCopy('copy-media-overlay-link-alerts');
+    // ==========================================================
+    
     // ==========================================================
     // INICIALIZACIÓN FINAL
     // ==========================================================

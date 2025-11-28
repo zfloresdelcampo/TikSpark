@@ -7,96 +7,133 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Reemplaza todo tu <div id="sidebar"> con esto: -->
+
     <div id="sidebar">
-        <!-- 1. Primera Línea Separadora -->
-        <div class="sidebar-separator"></div>
+        <!-- === ZONA FIJA (NO SCROLL) === -->
+        <div id="sidebar-fixed-header">
+            <!-- 1. Primera Línea Separadora -->
+            <div class="sidebar-separator"></div>
 
-        <!-- 2. Contenedor Dinámico (Cambia entre Server y TikFinity) -->
-        <div id="sidebar-dynamic-content">
+            <!-- 2. Contenedor Dinámico (Perfil) -->
+            <div id="sidebar-dynamic-content">
+                <!-- OPCIÓN A: Modo API Server -->
+                <div id="header-server" class="sidebar-header-mode">
+                    <div class="sidebar-profile-container">
+                        <div class="sidebar-avatar">
+                            <i id="sidebar-default-icon" class="fas fa-user"></i>
+                            <img id="sidebar-profile-img" src="" alt="PFP" style="display: none;">
+                        </div>
+                        <div class="sidebar-info-col">
+                            <span id="sidebar-username-display" class="sidebar-username-text">Tu Nombre</span>
+                            <button id="sidebar-connect-btn" class="sidebar-small-btn">Conectar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPCIÓN B: Modo API TikFinity -->
+                <div id="header-tikfinity" class="sidebar-header-mode hidden">
+                    <div class="sidebar-profile-container">
+                        <div class="sidebar-avatar">
+                            <i class="fas fa-plug" id="tikfinity-default-icon"></i>
+                            <img id="tikfinity-profile-img" src="" alt="PFP" style="display: none;">
+                        </div>
+                        <div class="sidebar-info-col">
+                            <span class="sidebar-username-text" style="color: #e51351;">API TikFinity</span>
+                            <span id="sidebar-tikfinity-status-text" style="font-size: 11px; color: #888;">Disconnected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <!-- OPCIÓN A: Modo API Server (Visible por defecto) -->
-            <div id="header-server" class="sidebar-header-mode">
-                <div class="sidebar-profile-container">
-                    <div class="sidebar-avatar">
-                        <!-- Icono por defecto -->
-                        <i id="sidebar-default-icon" class="fas fa-user"></i>
-                        <!-- Imagen de perfil (oculta al inicio) -->
-                        <img id="sidebar-profile-img" src="" alt="PFP" style="display: none;">
-                    </div>
-                    <div class="sidebar-info-col">
-                        <span id="sidebar-username-display" class="sidebar-username-text">Tu Nombre</span>
-                        <button id="sidebar-connect-btn" class="sidebar-small-btn">Conectar</button>
-                    </div>
+            <!-- Línea final del header fijo -->
+            <div class="sidebar-separator"></div>
+        </div>
+
+        <!-- === ZONA SCROLLABLE (MENÚ) === -->
+        <div id="sidebar-scroll-area">
+            
+            <div class="nav-item active" data-target="home-section">
+                Inicio
+            </div>
+            <div class="nav-item" data-target="config-section">
+                Configuración
+            </div>
+
+            <!-- SEPARADOR RAYO (Antes de Acciones) -->
+            <div class="menu-separator">
+                <i class="fas fa-bolt"></i>
+            </div>
+
+            <!-- Botón Principal con flecha -->
+            <div class="nav-item" id="btn-actions-main" data-target="actions-events-section">
+                <span>Acciones y Eventos</span>
+            </div>
+
+            <!-- Sub-menú oculto -->
+            <div id="submenu-actions" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('profiles-section', 'btn-actions-main')">
+                    <i class="fas fa-user-circle"></i> Perfiles
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('actions-list-container', 'btn-actions-main')">
+                    <i class="fas fa-bolt"></i> Acciones
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('events-list-container', 'btn-actions-main')">
+                    <i class="fas fa-calendar-alt"></i> Eventos
+                </div>
+            </div>
+            
+            <div class="nav-item" data-target="alerts-section">
+                Alertas
+            </div>
+
+            <!-- SEPARADOR COMPUTADORA (Antes de Galería) -->
+            <div class="menu-separator">
+                <i class="fas fa-desktop"></i>
+            </div>
+
+            <div class="nav-item" id="btn-gallery-main" data-target="overlay-gallery">
+                <span>Galería de Overlays</span>
+            </div>
+
+            <!-- Sub-menú Galería Actualizado -->
+            <div id="submenu-gallery" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('card-top-gifters', 'btn-gallery-main')">
+                    <i class="fas fa-gift"></i> Top Gifters
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-top-likes', 'btn-gallery-main')">
+                    <i class="fas fa-thumbs-up"></i> Top Likes
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-subasta', 'btn-gallery-main')">
+                    <i class="fas fa-gavel"></i> Subasta
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-meta-win', 'btn-gallery-main')">
+                    <i class="fas fa-trophy"></i> Meta Win
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-social-rotator', 'btn-gallery-main')">
+                    <i class="fas fa-share-alt"></i> Social Rotator
                 </div>
             </div>
 
-            <!-- OPCIÓN B: Modo API TikFinity (Oculto por defecto con clase hidden) -->
-            <div id="header-tikfinity" class="sidebar-header-mode hidden">
-                <div class="sidebar-profile-container">
-                    <div class="sidebar-avatar">
-                        <i class="fas fa-plug" id="tikfinity-default-icon"></i> <!-- Añade ID -->
-                        <!-- AÑADE ESTO: -->
-                        <img id="tikfinity-profile-img" src="" alt="PFP" style="display: none;">
-                    </div>
-                    <div class="sidebar-info-col">
-                        <span class="sidebar-username-text" style="color: #e51351;">API TikFinity</span>
-                        <span id="sidebar-tikfinity-status-text" style="font-size: 11px; color: #888;">Disconnected</span>
-                    </div>
+            <div class="nav-item" id="btn-goals-main" data-target="goals-section">
+                <span>Metas Overlays</span>
+            </div>
+
+            <!-- Sub-menú Metas -->
+            <div id="submenu-goals" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('card-goal-likes', 'btn-goals-main')">
+                    <i class="fas fa-heart"></i> Likes
                 </div>
             </div>
 
-        </div>
+            <div class="nav-item" data-target="gift-section">
+                Gifts Overlays
+            </div>
 
-        <!-- 3. Segunda Línea Separadora -->
-        <div class="sidebar-separator"></div>
-        
-        <div class="nav-item active" data-target="home-section">
-            Inicio
-        </div>
-        <!-- Botón Principal con flecha -->
-        <div class="nav-item" id="btn-actions-main" data-target="actions-events-section">
-            <span>Acciones y Eventos</span>
-        </div>
+            <div class="nav-item" data-target="minigames-section">
+                Mini-Juegos
+            </div>
 
-        <!-- Sub-menú oculto -->
-        <div id="submenu-actions" class="sidebar-submenu">
-            <div class="sub-nav-item" onclick="scrollToSection('profiles-section', 'btn-actions-main')">
-                <i class="fas fa-user-circle"></i> Perfiles
-            </div>
-            <div class="sub-nav-item" onclick="scrollToSection('actions-list-container', 'btn-actions-main')">
-                <i class="fas fa-bolt"></i> Acciones
-            </div>
-            <div class="sub-nav-item" onclick="scrollToSection('events-list-container', 'btn-actions-main')">
-                <i class="fas fa-calendar-alt"></i> Eventos
-            </div>
-        </div>
-        <div class="nav-item" id="btn-gallery-main" data-target="overlay-gallery">
-            <span>Galería de Overlays</span>
-        </div>
-
-        <!-- Sub-menú Galería Actualizado -->
-        <div id="submenu-gallery" class="sidebar-submenu">
-            <div class="sub-nav-item" onclick="scrollToSection('card-top-gifters', 'btn-gallery-main')">
-                <i class="fas fa-gift"></i> Top Gifters
-            </div>
-            <div class="sub-nav-item" onclick="scrollToSection('card-top-likes', 'btn-gallery-main')">
-                <i class="fas fa-thumbs-up"></i> Top Likes
-            </div>
-            <div class="sub-nav-item" onclick="scrollToSection('card-subasta', 'btn-gallery-main')">
-                <i class="fas fa-gavel"></i> Subasta
-            </div>
-            <div class="sub-nav-item" onclick="scrollToSection('card-meta-win', 'btn-gallery-main')">
-                <i class="fas fa-trophy"></i> Meta Win
-            </div>
-            <div class="sub-nav-item" onclick="scrollToSection('card-social-rotator', 'btn-gallery-main')">
-                <i class="fas fa-share-alt"></i> Social Rotator
-            </div>
-        </div>
-        <div class="nav-item" data-target="alerts-section">
-            Alertas
-        </div>
-        <div class="nav-item" data-target="minigames-section">
-            Mini-Juegos
         </div>
         <div id="app-version"></div>
     </div>
@@ -564,6 +601,55 @@
         </div>
         <!-- === FIN DE LA SECCIÓN DE ALERTAS === -->
 
+        <div id="goals-section" class="content-section">
+            <div class="section-container" id="goals-info-section">
+                
+                <h2>Metas Overlays</h2>
+                
+                <p>
+                    ¿Qué objetivos tienes en tu transmisión? Define objetivos de "Me gusta", "Compartir", "Seguir", etc., en forma de indicadores de progreso.<br>
+                    Para incluir los objetivos en OBS (Fuente del navegador) o LIVE Studio (Enlace), simplemente copia las URL.<br>
+                    Puedes cambiar los colores haciendo clic en el botón "Personalizar".
+                </p>
+                
+                <div class="info-box">
+                    <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
+                </div>
+                
+            </div>
+
+            <div class="overlay-card-container" id="card-goal-likes">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Likes</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="gift-section" class="content-section">
+            
+            <div class="section-container" id="gift-info-section">
+                
+                <h2>Gifts Overlays</h2>
+                
+                <p>
+                    ¡Convierte tus regalos en una batalla épica entre equipos!<br>
+                    Usa estos overlays para enfrentar a tus espectadores y haz que el equipo más generoso se lleve la gloria en tu stream.                    Puedes cambiar los colores haciendo clic en el botón "Personalizar".
+                </p>
+                
+                <div class="info-box">
+                    <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
+                </div>
+                
+            </div>
+
+            <div class="overlay-card-container" id="card-goal-likes">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Likes</h3>
+                </div>
+            </div>
+
+        </div>
+
         <div id="minigames-section" class="content-section">
             <div class="section-container">
                 <h2>Mini-Juegos</h2>
@@ -969,6 +1055,9 @@
 
                             </div>
                             <div class="event-input-row"><label for="event-cooldown">User Cooldown</label><div class="input-with-unit"><input type="number" id="event-cooldown" value="0" min="0"><span>Segundos</span></div></div>
+                            <!-- LINK IDÉNTICO AL DE ACCIONES (Pero con ID diferente) -->
+                            <a id="copy-media-overlay-link-alerts" data-url="http://127.0.0.1:5500/media.html" class="overlay-link" style="cursor: pointer;">http://127.0.0.1:5500/media.html</a>
+                            <div class="info-message">¡Ten en cuenta que tienes <strong>9 pantallas superpuestas</strong> disponibles y puedes asignar<br>múltiples acciones a cada pantalla! Las acciones en la misma pantalla se agregan a<br>una cola cuya longitud máxima puedes configurar más abajo en esta página.</div>
                         </div>
                     </div>
                 </div>
@@ -1196,8 +1285,8 @@
                     </div>
                 </div>
             </div>
-            <a href="https://interactiveapp.live/#overlays/screen/1" target="_blank" class="overlay-link">https://interactiveapp.live/#overlays/screen/1</a>
-            <div class="info-message">¡Ten en cuenta que tienes <strong>9 pantallas superpuestas</strong> disponibles y puedes asignar múltiples acciones a cada pantalla! Las acciones en la misma pantalla se agregan a una cola cuya longitud máxima puedes configurar más abajo en esta página.</div>
+            <a id="copy-media-overlay-link" data-url="http://127.0.0.1:5500/media.html" class="overlay-link" style="cursor: pointer;">http://127.0.0.1:5500/media.html</a>
+            <div class="info-message">¡Ten en cuenta que tienes <strong>9 pantallas superpuestas</strong> disponibles y puedes asignar<br>múltiples acciones a cada pantalla! Las acciones en la misma pantalla se agregan a<br>una cola cuya longitud máxima puedes configurar más abajo en esta página.</div>
             <div class="action-modal-buttons"><button id="apply-action-button">✅ Aplicar</button><button id="discard-action-button">❌ Descartar</button></div>
         </div>
     </div>

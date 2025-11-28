@@ -1,7 +1,6 @@
 /* ESTRUCTURA PRINCIPAL */
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #ffffff; margin: 0; padding: 0; display: grid; grid-template-columns: 200px 1fr; height: 100vh; overflow: hidden; }
 /* SIDEBAR */
-#sidebar { background-color: #252526; padding: 0 0 15px 0; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
 .nav-item { padding: 15px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.1s, border-left 0.1s; border-left: 3px solid transparent; text-align: center; }
 .nav-item:hover { background-color: #2d2d2d; }
 .nav-item.active { 
@@ -108,7 +107,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 }
 .trigger-content i {
     font-size: 18px; /* Tamaño de los iconos de Font Awesome */
-    color: #a0a0a0;   /* Color grisáceo para los iconos */
+    color: #8a2be2;   /* Color grisáceo para los iconos */
     width: 25px;      /* Ancho fijo para alinear con las imágenes */
     text-align: center;
 }
@@ -179,7 +178,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .modal-section-title { font-weight: 600; color: #ffffff; font-size: 16px; margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid #3c3c3c; padding-bottom: 8px; } .modal-sub-section { background-color: #2d2d2d; border-radius: 4px; padding: 15px; margin-bottom: 20px; }
 .input-group-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; } .input-group-row:last-child { margin-bottom: 0; } .input-group-row label { margin-bottom: 0; white-space: nowrap; color: #cccccc; font-size: 14px; flex-shrink: 0; width: 150px; text-align: right; } .input-group-row input[type="number"], .input-group-row input[type="text"], .input-group-row select { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #333333; color: white; font-size: 15px; box-sizing: border-box; }
 .input-group-row.checkbox-align { align-items: flex-start; } .input-group-row.checkbox-align .checkbox-container { flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; padding-top: 10px; padding-left: 10px; } .input-group-row.checkbox-align input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; margin-top: 0; } .input-group-row.checkbox-align label { width: auto; text-align: left; }
-.overlay-link { display: block; margin-top: 15px; color: #0078d4; text-decoration: none; font-size: 14px; cursor: pointer; text-align: center; font-weight: 500; } .overlay-link:hover { text-decoration: underline; } .info-message { background-color: #108038; color: white; padding: 15px; border-radius: 4px; font-size: 14px; line-height: 1.4; margin: 20px 0; }
+.overlay-link { display: block; margin-top: 15px; color: #0078d4; text-decoration: none; font-size: 14px; cursor: pointer; text-align: center; font-weight: 500; } .overlay-link:hover { text-decoration: underline; } .info-message { color: white; padding: 15px; border-radius: 4px; font-size: 14px; line-height: 1.4; margin: 20px 0; text-align: center; }
 .action-modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; border-top: 1px solid #3c3c3c; padding-top: 20px; } .action-modal-buttons button { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; } #apply-action-button { background-color: #0078d4; color: white; } #discard-action-button { background-color: #4a4a4a; color: white; }
 /* MODAL EVENTO */
 .event-modal .modal-header { padding: 15px 20px; background-color: #252526; border-bottom: 1px solid #3c3c3c; margin-bottom: 0; }
@@ -1764,7 +1763,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .sidebar-separator {
     height: 1px;
     background-color: #3c3c3c; /* Mismo color que tus bordes actuales */
-    margin: 12px 15px; /* Espaciado vertical y horizontal */
+    margin: 8px 15px; /* Espaciado vertical y horizontal */
 }
 
 /* Contenedor del perfil/estado en la barra lateral */
@@ -2723,4 +2722,73 @@ input[type="range"].volume-slider::-moz-range-thumb {
     border: 2px solid #8A2BE2 !important; /* Resaltar borde */
     box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
     transition: border 0.3s;
+}
+/* ACTUALIZAR: Sidebar principal para usar Flexbox */
+#sidebar {
+    background-color: #252526;
+    padding: 0; /* Quitamos padding general, lo manejamos dentro */
+    border-right: 1px solid #3c3c3c;
+    display: flex;
+    flex-direction: column; /* Columna vertical */
+    height: 100vh; /* Altura completa */
+    overflow: hidden; /* Ocultar scroll del contenedor padre */
+}
+
+/* NUEVO: Header fijo (no hace scroll) */
+#sidebar-fixed-header {
+    flex-shrink: 0; /* No se encoge */
+    background-color: #252526;
+    padding-top: 0px;
+    z-index: 10;
+}
+
+/* NUEVO: Área de scroll para el menú */
+#sidebar-scroll-area {
+    flex-grow: 1; /* Ocupa el espacio restante */
+    overflow-y: auto; /* Habilita scroll vertical */
+    padding-bottom: 20px;
+}
+
+/* Personalizar scrollbar del menú lateral (fina y discreta) */
+#sidebar-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+#sidebar-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+#sidebar-scroll-area::-webkit-scrollbar-thumb {
+    background-color: #551878;
+    border-radius: 4px;
+}
+
+/* NUEVO: Estilo del Separador con Icono */
+.menu-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 15px 0; /* Espacio vertical */
+    padding: 0 10px;
+    color: #4a90e2; /* Color base (Azul/Gris) */
+    opacity: 0.7;
+}
+
+/* Líneas a los lados del icono */
+.menu-separator::before,
+.menu-separator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #3c3c3c;
+    margin: 0 10px; /* Espacio entre línea e icono */
+}
+
+/* Colores específicos para los iconos según tu imagen */
+.menu-separator i.fa-bolt {
+    color: #8a2be2; /* Rayo Verde */
+    font-size: 14px;
+}
+
+.menu-separator i.fa-desktop {
+    color: #8a2be2; /* Monitor Verde/Azulado */
+    font-size: 14px;
 }
