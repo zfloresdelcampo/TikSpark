@@ -2792,3 +2792,123 @@ input[type="range"].volume-slider::-moz-range-thumb {
     color: #8a2be2; /* Monitor Verde/Azulado */
     font-size: 14px;
 }
+/* Estilos Panel Metas Likes */
+.goal-inputs-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    align-items: flex-end; /* Alinea abajo para que el checkbox cuadre */
+}
+
+.goal-input-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.goal-input-item.small {
+    flex: 0.5; /* Meta más pequeña */
+}
+
+.goal-input-item.checkbox {
+    flex: 0.3;
+    align-items: center;
+    padding-bottom: 10px; /* Ajuste visual */
+}
+
+.goal-input-item label {
+    font-size: 12px;
+    color: #ccc;
+    font-weight: bold;
+}
+
+.goal-input-item input[type="text"],
+.goal-input-item input[type="number"],
+.goal-input-item select {
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Contenedor de la caja de previsualización */
+.goal-preview-box {
+    margin-top: 0; 
+    border: 1px solid #444;
+    border-top: none; 
+    background-color: #252526; 
+    padding: 10px; /* Un poco de padding */
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    height: 130px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; 
+}
+
+/* Wrapper simplificado */
+.preview-iframe-wrapper {
+    width: 100%; /* Ancho completo del padre */
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Quitamos el transform scale fijo o lo ponemos muy suave si quieres */
+    transform: scale(0.9); 
+}
+
+/* El iframe en sí */
+.goal-iframe-preview {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    pointer-events: none;
+}
+
+.goal-preview-heart {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0; /* Evita que se aplaste */
+    filter: drop-shadow(2px 2px 0px #000);
+}
+
+.goal-preview-bar {
+    flex: 1; /* Ocupa el resto del espacio */
+    height: 50px;
+    background-color: #0078d4;
+    border: 4px solid #000;
+    border-radius: 25px; /* Bordes redondos */
+    position: relative;
+    overflow: hidden;
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+}
+
+.goal-preview-fill {
+    height: 100%;
+    background-color: #00c3ff; /* Azul claro relleno */
+    width: 0%;
+}
+
+.goal-preview-text {
+    /* Asegúrate de tener la fuente cargada en el index.html si quieres verla en la app */
+    font-family: 'Segoe UI', sans-serif; 
+    font-weight: 900;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0; left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Arial Black', sans-serif;
+    font-size: 16px;
+    color: white;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 2;
+}

@@ -115,8 +115,22 @@ function createWindow() {
     mainWindow.loadFile('index.html');
 
     mainWindow.webContents.on('did-finish-load', () => {
-        // Envía la versión de la app (leída desde package.json) a la ventana.
+        // 1. Enviar versión
         mainWindow.webContents.send('set-version', app.getVersion());
+
+        // 2. (NUEVO) Si ya hay un detector corriendo, enviar estado y datos de sala INMEDIATAMENTE
+        if (currentDetector) {
+            mainWindow.webContents.send('connection-status', `✅ Conectado a @${currentUsername}`);
+            
+            // Recuperamos la info guardada en el detector
+            const roomInfo = currentDetector.getRoomData();
+            if (roomInfo) {
+                console.log("Enviando Room Info recuperada al recargar ventana...");
+                mainWindow.webContents.send('room-info', roomInfo);
+            }
+        } else {
+            mainWindow.webContents.send('connection-status', 'Desconectado. Introduce un usuario.');
+        }
     });
     
     // En cuanto la app esté lista, busca una actualización.

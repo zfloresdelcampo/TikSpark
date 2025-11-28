@@ -6,6 +6,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     installMod: (data) => ipcRenderer.invoke('install-mod', data),
     deleteMod: (data) => ipcRenderer.invoke('delete-mod', data),
 
+    // === AÑADE LIKES INICIALES ===
+    onRoomInfo: (callback) => ipcRenderer.on('room-info', (_event, data) => callback(data)),
+
+
     updateWidget: (widgetId, data) => ipcRenderer.invoke('update-widget', { widgetId, data }),
     getWidgetData: (widgetId) => ipcRenderer.invoke('get-widget-data', widgetId),
 

@@ -969,11 +969,34 @@ if (window.electronAPI) {
         processTikTokEvent('share', data);
     });
 
-    // Listener de "Likes" (NUEVO)
+    // Listener de "Likes" (ACTUALIZADO) - ESTE YA LO TIENES
     window.electronAPI.onLike(data => {
         addLogEntry(`<i class="fas fa-heart" style="color: #ff005c;"></i> <b>${data.nickname}</b> ha dado ${data.likeCount} Me gusta.`, 'like');
         processTikTokEvent('likes', data);
+        
+        console.log("DATA LIKES COMPLETA:", data); 
+        
+        // Actualización en tiempo real
+        addLikesToGoal(data.likeCount, data.totalLikeCount); 
     });
+
+    // === PEGA ESTO JUSTO AQUÍ DEBAJO ===
+    
+    // Listener para Datos Iniciales (Carga el total al conectar)
+    if (window.electronAPI.onRoomInfo) {
+        window.electronAPI.onRoomInfo((roomInfo) => {
+            console.log("Datos iniciales de la sala recibidos:", roomInfo);
+            
+            // TikTok a veces usa 'likes_count' o 'like_count' en la info de la sala
+            const totalLikes = roomInfo.likes_count || roomInfo.like_count || 0;
+
+            if (totalLikes > 0) {
+                // Forzamos la actualización de la barra con el total real
+                addLikesToGoal(0, totalLikes);
+                showToastNotification(`Likes sincronizados: ${totalLikes}`);
+            }
+        });
+    }
 
     // === AÑADE ESTO AQUÍ ===
     // === CÓDIGO FINAL Y LIMPIO PARA SCRIPT.JS ===
@@ -3219,6 +3242,212 @@ if (window.electronAPI) {
     // Activamos el link del modal de ALERTAS (Nuevo)
     setupLinkCopy('copy-media-overlay-link-alerts');
     // ==========================================================
+    
+    // ==========================================================
+    // LÓGICA DE META DE LIKES
+    // ==========================================================
+    const glMetaInput = document.getElementById('gl-meta-input');
+    const glTitleInput = document.getElementById('gl-title-input');
+    const glBehaviorSelect = document.getElementById('gl-behavior-select');
+    const glActionSelect = document.getElementById('gl-action-select');
+    const glActiveCheck = document.getElementById('gl-active-check');
+    const glTestBtn = document.getElementById('gl-test-btn');
+    const glResetBtn = document.getElementById('gl-reset-btn');
+    const glCopyBtn = document.getElementById('gl-copy-btn');
+    const glPreviewText = document.getElementById('gl-preview-text');
+
+    // Estado interno
+    let likeGoalState = {
+        current: 0,
+        meta: 1000,
+        initialMeta: 1000, 
+        title: "10 VINDICADORES"
+    };
+
+    // 1. Actualizar dropdown de acciones cuando cambia el perfil
+    function updateGoalActions() {
+        if (!glActionSelect) return;
+        glActionSelect.innerHTML = '<option value="">-- Ninguna --</option>';
+        const profile = profiles[activeProfileName];
+        if (profile && profile.actions) {
+            profile.actions.forEach(act => {
+                const opt = document.createElement('option');
+                opt.value = act.id;
+                opt.textContent = act.name;
+                glActionSelect.appendChild(opt);
+            });
+        }
+    }
+    // Vincular al cambio de perfil
+    profileSelector.addEventListener('change', updateGoalActions);
+    // Ejecutar al inicio (esperamos un poco a que carguen los datos)
+    setTimeout(updateGoalActions, 500);
+
+    // 2. Función para enviar datos al Overlay
+    async function syncGoalOverlay() {
+        // ELIMINADO: Ya no actualizamos glPreviewText manualmente
+        /*
+        if(glPreviewText) {
+            glPreviewText.textContent = ...
+        }
+        */
+        
+        // Enviar a Electron -> Socket.io (Esto actualizará tanto el OBS como el Iframe de la app)
+        if(window.electronAPI) {
+            await window.electronAPI.updateWidget('goalLikes', likeGoalState);
+        }
+    }
+
+    // Variable global al inicio del archivo o cerca de likeGoalState
+    let lastGoalActionTime = 0; 
+    
+    // 4. Lógica de Meta Alcanzada (DEFINICIÓN COMPLETA)
+    function goalReached() {
+        const now = Date.now();
+        // Si hace menos de 5 segundos que se ejecutó, ignorar
+        if (now - lastGoalActionTime < 5000) return; 
+        
+        lastGoalActionTime = now;
+        
+        console.log("¡META ALCANZADA! Ejecutando acción...");
+        
+        // 1. Obtener el ID de la acción seleccionada en el dropdown
+        const actionId = parseInt(glActionSelect.value);
+
+        // 2. Si hay una acción válida seleccionada
+        if (actionId) {
+            const currentProfile = profiles[activeProfileName];
+            
+            // 3. Buscar la acción en el perfil actual
+            const action = currentProfile.actions.find(a => a.id === actionId);
+            
+            if (action) {
+                // 4. Ejecutar la acción (simulamos que la activó "SISTEMA")
+                playAction(action.id, { nickname: 'META LIKES' });
+                showToastNotification(`🎉 Meta alcanzada: Ejecutando "${action.name}"`);
+            } else {
+                console.warn("Acción no encontrada en el perfil.");
+            }
+        } else {
+            console.log("No hay acción configurada para el final de la meta.");
+        }
+    }
+
+    // 3. Procesar Likes (Lógica Híbrida Robusta)
+    function addLikesToGoal(amount, totalLikesFromTikTok = null) {
+        if (!glActiveCheck.checked) return;
+
+        // Convertir a números seguros
+        const incomingAmount = parseInt(amount) || 0;
+        const incomingTotal = parseInt(totalLikesFromTikTok) || 0;
+
+        console.log(`[GOAL] Input: +${incomingAmount} | Total TikTok: ${incomingTotal} | Local: ${likeGoalState.current}`);
+
+        // Lógica de actualización
+        if (incomingTotal > likeGoalState.current) {
+            // CASO A: TikTok nos da un total mayor al que tenemos -> Usamos el de TikTok (Es el más preciso)
+            likeGoalState.current = incomingTotal;
+        } else {
+            // CASO B: No hay total o es menor (bug de TikTok) -> Sumamos manualmente el paquetito
+            likeGoalState.current += incomingAmount;
+        }
+
+        // Lógica de Aumento de Meta (Matemática corregida)
+        if (glBehaviorSelect.value === 'increase') {
+            // Si superamos la meta
+            if (likeGoalState.current >= likeGoalState.meta) {
+                // ESTO ES LO QUE EJECUTA LA ACCIÓN
+                goalReached(); 
+
+                // Calcular siguiente escalón.
+                // Ejemplo: MetaBase 1000. Likes actuales 45300.
+                // (45300 / 1000) = 45.3 -> Techo es 46.
+                // Nueva meta = 46 * 1000 = 46000.
+                const nextStep = Math.ceil((likeGoalState.current + 1) / likeGoalState.initialMeta);
+                // Aseguramos que al menos sea 1 paso más que el actual
+                const multiplier = Math.max(nextStep, (likeGoalState.meta / likeGoalState.initialMeta) + 1);
+                
+                likeGoalState.meta = multiplier * likeGoalState.initialMeta;
+            }
+        } else if (glBehaviorSelect.value === 'stop' && likeGoalState.current >= likeGoalState.meta) {
+            goalReached();
+            glActiveCheck.checked = false;
+        }
+
+        syncGoalOverlay();
+    }
+
+    // Listener de "Likes" (ACTUALIZADO)
+    if (window.electronAPI.onLike) {
+        window.electronAPI.onLike(data => {
+            addLogEntry(`<i class="fas fa-heart" style="color: #ff005c;"></i> <b>${data.nickname}</b> ha dado ${data.likeCount} Me gusta.`, 'like');
+            processTikTokEvent('likes', data);
+            
+            // Aquí enviamos AMBOS datos. El script decidirá cuál usar.
+            addLikesToGoal(data.likeCount, data.totalLikeCount); 
+        });
+    }
+
+    // 4. Listeners
+    // Lógica del botón Testear
+    if(glTestBtn) {
+        glTestBtn.addEventListener('click', () => {
+            // 1. Guardamos el valor actual para no perderlo
+            const previousCurrent = likeGoalState.current;
+
+            // 2. Llenamos la barra visualmente al 100%
+            likeGoalState.current = likeGoalState.meta;
+            syncGoalOverlay(); 
+            showToastNotification("🧪 Testeando animación...");
+
+            // 3. Después de 2.5 segundos, volvemos a 0 (Reset visual)
+            setTimeout(() => {
+                likeGoalState.current = 0; // O puedes poner 'previousCurrent' si prefieres que vuelva a donde estaba
+                syncGoalOverlay();
+            }, 2500);
+        });
+    }
+    
+    if(glResetBtn) glResetBtn.addEventListener('click', () => {
+        // Cortar Meta: Resetea a valores iniciales
+        likeGoalState.current = 0;
+        likeGoalState.meta = parseInt(glMetaInput.value) || 1000;
+        likeGoalState.initialMeta = likeGoalState.meta;
+        syncGoalOverlay();
+        showToastNotification("Meta reseteada");
+    });
+
+    if(glCopyBtn) {
+        glCopyBtn.addEventListener('click', () => {
+            const urlInput = document.getElementById('gl-url-input');
+            navigator.clipboard.writeText(urlInput.value);
+            showToastNotification("URL copiada");
+        });
+    }
+
+    // Actualizar textos al escribir
+    glTitleInput.addEventListener('input', (e) => {
+        likeGoalState.title = e.target.value;
+        syncGoalOverlay();
+    });
+    
+    glMetaInput.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value) || 1000;
+        likeGoalState.meta = val;
+        likeGoalState.initialMeta = val;
+        syncGoalOverlay();
+    });
+
+    // === INTEGRAR CON EL LISTENER DE LIKES EXISTENTE ===
+    // Busca esto en tu código y añade la línea marcada:
+    /*
+    window.electronAPI.onLike(data => {
+        addLogEntry(..., 'like');
+        processTikTokEvent('likes', data);
+        
+        addLikesToGoal(data.likeCount); // <--- ¡AÑADIR ESTO!
+    });
+    */
     
     // ==========================================================
     // INICIALIZACIÓN FINAL

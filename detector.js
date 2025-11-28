@@ -137,6 +137,12 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
 
         currentRoomInfo = state.roomInfo; // <--- NUEVO: CAPTURAMOS LA DATA
 
+        // === NUEVO: ENVIAR DATOS INICIALES DE LA SALA (LIKES, ETC) ===
+        if (state.roomInfo) {
+            mainWindow.webContents.send('room-info', state.roomInfo);
+        }
+        // =============================================================
+
         // INTENTO DE RESPALDO OFICIAL
         if (state.roomInfo && state.roomInfo.owner) {
             const owner = state.roomInfo.owner;
@@ -205,7 +211,13 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
         });
     });
 
-    tiktokLiveConnection.on('like', (data) => mainWindow.webContents.send('new-like', { ...data, nickname: data.nickname || data.uniqueId }));
+    tiktokLiveConnection.on('like', (data) => {
+        // Enviamos TODO el objeto data, que incluye likeCount y totalLikeCount
+        mainWindow.webContents.send('new-like', { 
+            ...data, 
+            nickname: data.nickname || data.uniqueId 
+        });
+    });
     tiktokLiveConnection.on('follow', (data) => mainWindow.webContents.send('new-follow', { ...data, nickname: data.nickname || data.uniqueId }));
     tiktokLiveConnection.on('share', (data) => mainWindow.webContents.send('new-share', { ...data, nickname: data.nickname || data.uniqueId }));
     

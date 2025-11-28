@@ -622,6 +622,61 @@
                 <div class="overlay-header">
                     <h3 class="overlay-title">Likes</h3>
                 </div>
+
+                <!-- 1. NUEVO: Panel de Inputs (Arriba de tus botones) -->
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gl-meta-input" value="1000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Titulo:</label>
+                        <input type="text" id="gl-title-input" value="10 VINDICADORES">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gl-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta (Loop)</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion al finalizar:</label>
+                        <select id="gl-action-select">
+                            <option value="">-- Ninguna --</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gl-active-check" checked>
+                    </div>
+                </div>
+
+                <!-- 2. TUS BOTONES EXISTENTES (Con IDs agregados) -->
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/goal-likes.html" readonly class="url-input" id="gl-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gl-copy-btn">Copiar URL</button>
+                        <button class="action-btn" id="gl-test-btn"><i class="fas fa-chevron-right"></i> Testear</button>
+                        <button class="action-btn short-btn" id="gl-reset-btn">Cortar Meta</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
+                <div class="goal-preview-box">
+                    <div class="preview-iframe-wrapper">
+                        <iframe 
+                            src="http://127.0.0.1:5500/goal-likes.html" 
+                            class="goal-iframe-preview"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -640,12 +695,6 @@
                     <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
                 </div>
                 
-            </div>
-
-            <div class="overlay-card-container" id="card-goal-likes">
-                <div class="overlay-header">
-                    <h3 class="overlay-title">Likes</h3>
-                </div>
             </div>
 
         </div>
