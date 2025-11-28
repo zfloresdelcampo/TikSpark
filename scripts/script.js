@@ -40,10 +40,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const gridMedia = document.getElementById('media-grid');
 
     // Simulación de Base de Datos de Medios
-    let mediaLibrary = [
-        { name: 'Baile.mp4', url: 'https://i.imgur.com/WDWKJOT.mp4', type: 'video' },
-        { name: 'Gato.jpg', url: 'https://i.imgur.com/Example.jpg', type: 'image' }
-    ];
+    let mediaLibrary = [];
 
     // 2. Mostrar/Ocultar config al dar check (Alertas)
     if(checkAlertShowMedia) {
@@ -87,6 +84,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             inputMediaUrl.value = '';
             inputMediaName.value = '';
             renderMediaGrid();
+
+            saveAllData(); // <--- ¡AGREGA ESTA LÍNEA AQUÍ
         });
     }
 
@@ -127,6 +126,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         if(confirm('¿Borrar este archivo?')) {
             mediaLibrary.splice(index, 1);
             renderMediaGrid();
+
+            saveAllData(); // <--- ¡AGREGA ESTA LÍNEA AQUÍ!
         }
     };
 
@@ -1016,7 +1017,11 @@ if (window.electronAPI) {
 
     async function saveAllData() {
         if (window.electronAPI) {
-            await window.electronAPI.saveData({ profiles, activeProfileName });
+            await window.electronAPI.saveData({ 
+            profiles, 
+            activeProfileName, 
+            mediaLibrary // <--- ¡ESTO ES LO NUEVO!
+        });
             console.log("Datos de perfiles guardados.");
         } else {
             console.warn("Modo Navegador: saveAllData no hace nada. Los datos son temporales.");
@@ -1039,6 +1044,12 @@ if (window.electronAPI) {
                 };
                 activeProfileName = 'Perfil Principal';
             }
+            
+                // 2. Cargar Biblioteca de Medios (¡ESTO ES LO NUEVO!)
+                if (loadedData.mediaLibrary) {
+                    mediaLibrary = loadedData.mediaLibrary;
+                }
+
             await loadGiftsCache();
         }
     }
@@ -2570,19 +2581,27 @@ if (window.electronAPI) {
                 }));
             }
 
-            // --- TAREA DE MEDIA (NUEVO) ---
+            // --- TAREA DE MEDIA (CORREGIDO PARA SOCKET.IO) ---
             if (action.mediaAction) {
-                tasks.push(new Promise((res) => {
-                    const dbRef = firebase.database().ref('widgets/mediaOverlay');
-                    dbRef.set({
+                tasks.push(new Promise(async (res) => {
+                    
+                    const mediaData = {
                         url: action.mediaAction.url,
                         volume: action.mediaAction.volume || 100,
-                        duration: action.duration || 5, // Usamos la duración general de la acción
-                        timestamp: Date.now() // <--- CORRECCIÓN: Usamos la hora de tu PC
-                    }).then(() => {
-                        // Esperamos la duración visual antes de continuar la cola
-                        setTimeout(res, (action.duration || 5) * 1000);
-                    });
+                        duration: action.duration || 5,
+                        timestamp: Date.now() // Importante para que no lo detecte como viejo
+                    };
+
+                    // EN LUGAR DE FIREBASE, USAMOS ELECTRON API
+                    if (window.electronAPI) {
+                        // Enviamos al backend local, y el backend lo enviará por Socket.io
+                        await window.electronAPI.updateWidget('mediaOverlay', mediaData);
+                    } else {
+                        console.warn("No estás en la app de Electron, no se puede enviar media local.");
+                    }
+
+                    // Esperamos la duración visual antes de continuar la cola
+                    setTimeout(res, (action.duration || 5) * 1000);
                 }));
             }
 
