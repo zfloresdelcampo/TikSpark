@@ -30,21 +30,19 @@
         #container.show { opacity: 1; }
 
         .heart {
-            width: 90px; height: 90px; 
+            width: 70px; height: 70px; 
             animation: beat 0.8s infinite alternate;
-            filter: drop-shadow(4px 4px 0px #000);
             flex-shrink: 0; 
         }
 
         .bar-bg {
             flex-grow: 1; /* Estírate lo máximo posible */
             height: 60px;
-            background: #0078d4; 
-            border: 5px solid #000;
-            border-radius: 35px;
+            background: #ffd900; 
+            border: 2px solid #000;
+            border-radius: 15px;
             position: relative; 
             overflow: hidden;
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
         }
 
         .bar-fill {
@@ -52,15 +50,21 @@
             background: #00c6ff;
             transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
             box-shadow: inset 0 -5px 10px rgba(0,0,0,0.2);
-            border-right: 2px solid rgba(0,0,0,0.2);
+            border-right: 0px solid rgba(0,0,0,0.2);
         }
 
         .text {
             position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 35px; /* Un pelín más pequeño para asegurar fit */
-            text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            color: white; 
+            font-size: 35px; 
+            
+            /* --- CAMBIOS AQUÍ --- */
+            -webkit-text-stroke: 2px black; /* Esto crea el borde perfecto y continuo */
+            /*text-shadow: 4px 4px 0 #000;    /* Esto crea la profundidad (sombra) hacia un lado */
+            /* -------------------- */
+            
             z-index: 3;
             white-space: nowrap; letter-spacing: 1px;
         }
@@ -70,7 +74,7 @@
 </head>
 <body>
     <div id="container">
-        <img src="https://cdn-icons-png.flaticon.com/512/2107/2107845.png" class="heart">
+        <img src="https://cdn-icons-png.flaticon.com/512/9484/9484251.png" class="heart">
         <div class="bar-bg">
             <div id="fill" class="bar-fill"></div>
             <div id="text" class="text">ESPERANDO DATOS...</div>

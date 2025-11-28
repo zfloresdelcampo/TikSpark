@@ -14,6 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const pct = Math.min((cur / max) * 100, 100);
         
         fill.style.width = `${pct}%`;
-        text.innerHTML = `${data.title} &nbsp;-&nbsp; <span style="color:#ffeb3b">${cur}</span> / ${max} LIKES`;
+        text.innerHTML = `${data.title}&nbsp;-&nbsp;<span style="color:white">${cur}</span>&nbsp;/&nbsp;${max} LIKES`;
     }
 });

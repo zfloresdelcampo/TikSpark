@@ -3,9 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Win Overlay</title>
+
+    <!-- 1. IMPORTAR LA FUENTE LUCKIEST GUY -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+
     <style> /* ... Tu CSS existente no cambia ... */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: transparent; overflow: hidden; font-family: 'Arial Black', Gadget, sans-serif; }
-        .preview-box { position: absolute; top: 20px; left: 20px; background-color: #000000; color: white; border-radius: 12px; padding: 10px 25px; display: inline-flex; align-items: center; gap: 15px; font-size: 2.5em; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: transparent; 
+            overflow: hidden; 
+            font-family: 'Luckiest Guy', cursive;
+            
+            /* --- AGREGA ESTO PARA CENTRAR --- */
+            display: flex;
+            align-items: center;     /* Centra verticalmente */
+            justify-content: center; /* Centra horizontalmente */
+        }
+        .preview-box { 
+            /* position: absolute;  <-- BORRA ESTO */
+            /* top: 20px;           <-- BORRA ESTO */
+            /* left: 20px;          <-- BORRA ESTO */
+            
+            background-color: #000000; 
+            color: white; 
+            border-radius: 12px; 
+            padding: 10px 25px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 15px; 
+            font-size: 2.5em; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+        }
         .preview-box img { width: 50px; height: 50px; }
         .preview-number { background-color: white; color: black; border-radius: 8px; padding: 0px 12px; font-size: 0.9em; min-width: 30px; text-align: center; line-height: 1.4; }
         .preview-separator { font-weight: normal; color: #aaa; }
@@ -15,7 +48,7 @@
 
     <div class="preview-box">
          <img src="images/trophy.png" alt="Trofeo">
-         <span class="preview-text">Win</span>
+         <span class="preview-text">WIN</span>
          <span class="preview-number" id="overlay-conteo">0</span>
          <span class="preview-separator">/</span>
          <span class="preview-number" id="overlay-meta">5</span>

@@ -4,55 +4,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     const metaWinWidget = document.getElementById('meta-win-widget-1');
     if (!metaWinWidget) return;
 
-    // Referencias a elementos del DOM
+    // Referencias a los INPUTS (Ya no necesitamos las referencias a la "preview")
     const metaInput = metaWinWidget.querySelector('#meta-win-meta-input');
     const conteoInput = metaWinWidget.querySelector('#meta-win-conteo-input');
-    const previewMeta = metaWinWidget.querySelector('#preview-win-meta');
-    const previewConteo = metaWinWidget.querySelector('#preview-win-conteo');
+    
+    // Botones
     const plusButtons = metaWinWidget.querySelectorAll('.btn-win.plus');
     const minusButtons = metaWinWidget.querySelectorAll('.btn-win.minus');
 
-    // 1. Cargar datos iniciales desde el Backend Local
+    // 1. Cargar datos iniciales desde el Backend Local al abrir la app
     if (window.electronAPI) {
         try {
             const initialData = await window.electronAPI.getWidgetData('metaWin1');
-            if (initialData) updateUI(initialData);
+            if (initialData) updateInputs(initialData);
         } catch (e) {
             console.error("Error cargando MetaWin:", e);
         }
     }
 
-    // Función para actualizar la interfaz de la app
-    function updateUI(data) {
+    // Actualiza SOLO los inputs de texto (la previsualización se actualiza sola por el Iframe)
+    function updateInputs(data) {
         if (!data) return;
-        conteoInput.value = data.conteo || 0;
-        metaInput.value = data.meta || 5;
-        previewConteo.textContent = data.conteo || 0;
-        previewMeta.textContent = data.meta || 5;
+        if (data.conteo !== undefined) conteoInput.value = data.conteo;
+        if (data.meta !== undefined) metaInput.value = data.meta;
     }
 
-    // Función para guardar y enviar cambios al overlay
+    // Función para guardar y enviar cambios
     async function saveData() {
         const data = {
             conteo: parseInt(conteoInput.value, 10) || 0,
             meta: parseInt(metaInput.value, 10) || 0
         };
 
-        // Actualizar UI local inmediatamente
-        previewConteo.textContent = data.conteo;
-        previewMeta.textContent = data.meta;
-
-        // Enviar al Backend (Main.js) -> Socket.io -> Overlay
+        // Enviar al Backend -> Socket.io
+        // (El Socket avisará al Overlay en OBS Y al Iframe de la app al mismo tiempo)
         if (window.electronAPI) {
             await window.electronAPI.updateWidget('metaWin1', data);
         }
     }
 
-    // Listeners para botones
+    // Listeners para botones (+ y -)
     plusButtons.forEach(button => {
         button.addEventListener('click', () => {
             const targetInput = metaWinWidget.querySelector('#' + button.dataset.target);
-            targetInput.value = (parseInt(targetInput.value, 10) || 0) + 1;
+            let val = parseInt(targetInput.value, 10) || 0;
+            targetInput.value = val + 1;
             saveData();
         });
     });
@@ -60,12 +56,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     minusButtons.forEach(button => {
         button.addEventListener('click', () => {
             const targetInput = metaWinWidget.querySelector('#' + button.dataset.target);
-            targetInput.value = (parseInt(targetInput.value, 10) || 0) - 1;
+            let val = parseInt(targetInput.value, 10) || 0;
+            targetInput.value = val - 1;
             saveData();
         });
     });
     
-    // Listeners para escritura directa
+    // Listeners para escritura directa (input manual)
     metaInput.addEventListener('input', saveData);
     conteoInput.addEventListener('input', saveData);
 });

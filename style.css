@@ -1763,7 +1763,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .sidebar-separator {
     height: 1px;
     background-color: #3c3c3c; /* Mismo color que tus bordes actuales */
-    margin: 8px 15px; /* Espaciado vertical y horizontal */
+    margin: 15px 15px; /* Espaciado vertical y horizontal */
 }
 
 /* Contenedor del perfil/estado en la barra lateral */
@@ -2792,6 +2792,10 @@ input[type="range"].volume-slider::-moz-range-thumb {
     color: #8a2be2; /* Monitor Verde/Azulado */
     font-size: 14px;
 }
+.menu-separator i.fa-gamepad {
+    color: #8a2be2; /* Monitor Verde/Azulado */
+    font-size: 14px;
+}
 /* Estilos Panel Metas Likes */
 .goal-inputs-container {
     display: flex;
@@ -2837,13 +2841,16 @@ input[type="range"].volume-slider::-moz-range-thumb {
 
 /* Contenedor de la caja de previsualización */
 .goal-preview-box {
-    margin-top: 0; 
-    border: 1px solid #444;
-    border-top: none; 
+    margin-top: 15px; /* Añadir espacio arriba para separarlo como en el otro widget */
+    border: 1px solid #444; /* Borde completo (incluyendo arriba) */
+    /* border-top: none;  <-- ELIMINA O COMENTA ESTA LÍNEA */
     background-color: #252526; 
-    padding: 10px; /* Un poco de padding */
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    padding: 10px; 
+    
+    border-radius: 8px; /* <-- CAMBIA ESTO: Aplica redondeo a las 4 esquinas */
+    /* border-bottom-left-radius: 8px;  <-- ELIMINA ESTO */
+    /* border-bottom-right-radius: 8px; <-- ELIMINA ESTO */
+
     height: 130px; 
     display: flex;
     align-items: center;

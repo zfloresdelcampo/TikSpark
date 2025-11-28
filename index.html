@@ -130,6 +130,11 @@
                 Gifts Overlays
             </div>
 
+            <!-- SEPARADOR JUEGOS (Antes de Mini-Juegos) -->
+            <div class="menu-separator">
+                <i class="fas fa-gamepad"></i>
+            </div>
+
             <div class="nav-item" data-target="minigames-section">
                 Mini-Juegos
             </div>
@@ -499,7 +504,7 @@
                 </div>
 
                 <div class="overlay-url-actions">
-                    <input type="text" value="http://127.0.0.1:5500/overlay.html" readonly class="url-input">
+                    <input type="text" value="http://127.0.0.1:5500/meta-win-1.html" readonly class="url-input">
                     <div class="action-buttons">
                         <button class="action-btn primary-btn">Copiar URL</button>
                         <button class="action-btn">Testear</button>
@@ -528,12 +533,13 @@
                         </div>
                     </div>
                     <div class="meta-win-preview">
-                        <div class="preview-box">
-                            <img src="images/trophy.png" alt="Trofeo">
-                            <span class="preview-text">Win</span>
-                            <span class="preview-number" id="preview-win-conteo">0</span>
-                            <span class="preview-separator">/</span>
-                            <span class="preview-number" id="preview-win-meta">5</span>
+                        <!-- Contenedor para el Iframe -->
+                        <div style="width: 100%; height: 120px; overflow: hidden; background-color: #333; border-radius: 8px; border: 1px solid #444;">
+                            <iframe 
+                                src="http://127.0.0.1:5500/meta-win-1.html" 
+                                style="width: 100%; height: 100%; border: none; pointer-events: none;"
+                                scrolling="no">
+                            </iframe>
                         </div>
                     </div>
                 </div>
