@@ -19,7 +19,21 @@ const defaultWidgetsDB = {
     mediaOverlay: {},
     metaWin1: { conteo: 0, meta: 5 },
     subasta: { isRunning: false },
-    socialRotator: { accounts: [] }
+    socialRotator: { accounts: [] },
+    // AQUÍ ESTÁ EL CAMBIO:
+    topGift: { 
+        username: 'Username', 
+        coins: 0, 
+        giftName: 'Default', 
+        giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
+    },
+
+    topStreak: {
+        username: 'Username',
+        streakCount: 0,
+        giftName: 'Default',
+        giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp'
+    }
 };
 
 function loadWidgetsData() {

@@ -39,6 +39,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     const btnAddMedia = document.getElementById('add-new-media-btn');
     const gridMedia = document.getElementById('media-grid');
 
+    // Busca esta línea y cámbiala por esta:
+    let topGiftState = { 
+        username: 'Username', 
+        coins: 0, 
+        giftName: 'Default', 
+        // Puedes cambiar esta URL por la de un regalo caro que te guste
+        giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
+    };
+
+    //MEJOR RACHA
+    let topStreakState = { 
+        username: 'Username', 
+        streakCount: 0, 
+        giftName: 'Default', 
+        giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' 
+    };
+
     // Simulación de Base de Datos de Medios
     let mediaLibrary = [];
 
@@ -927,15 +944,40 @@ if (window.electronAPI) {
         }
     });
 
-    // Listener de Regalos (ligeramente mejorado)
+    // Listener de Regalos (MEJORADO PARA TOP GIFT)
     window.electronAPI.onGift(data => {
-        // ¡ESTA ES LA LÍNEA CLAVE!
-        // Si este evento es la señal de "fin de combo", lo ignoramos por completo.
-        if (data.repeatEnd) {
-            console.log('Ignorando evento de fin de combo para:', data.giftName);
-            return; // Detiene la ejecución aquí
-        }
+        if (data.repeatEnd) return; 
 
+        // --- LÓGICA TOP GIFT (CON IMAGEN DEL DROPDOWN) ---
+        const currentGiftValue = (data.diamondCount * data.repeatCount);
+        
+        if (currentGiftValue > topGiftState.coins) {
+            
+            // 1. Intentamos sacar la imagen HD de tu caché (igual que el menú desplegable)
+            let finalGiftImage = data.giftPictureUrl; // Valor por defecto (el que viene del evento)
+            
+            // Buscamos en la lista que ya tienes cargada
+            const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
+            
+            if (cachedGift && cachedGift.image && cachedGift.image.url_list && cachedGift.image.url_list.length > 0) {
+                finalGiftImage = cachedGift.image.url_list[0]; // ¡Encontrada la imagen HD!
+            }
+
+            console.log(`👑 NUEVO TOP GIFT: ${data.giftName} (${currentGiftValue}) - Imagen: ${finalGiftImage}`);
+            
+            topGiftState = {
+                username: data.nickname,
+                coins: currentGiftValue,
+                giftName: data.giftName,
+                giftImage: finalGiftImage // Usamos la imagen mejorada
+            };
+            
+            if(window.electronAPI) {
+                window.electronAPI.updateWidget('topGift', topGiftState);
+                saveAllData();
+            }
+        }
+        // -----------------------
         console.log('GIFT EVENT DATA RECEIVED (PROCESANDO):', data);
         const totalCoins = data.repeatCount * data.diamondCount;
         const message = `
@@ -1043,7 +1085,9 @@ if (window.electronAPI) {
             await window.electronAPI.saveData({ 
             profiles, 
             activeProfileName, 
-            mediaLibrary // <--- ¡ESTO ES LO NUEVO!
+            mediaLibrary, // <--- ¡ESTO ES LO NUEVO!
+            goalLikes: likeGoalState, // <--- AGREGA ESTA LÍNEA (con la coma al final de la anterior)
+            topGift: topGiftState
         });
             console.log("Datos de perfiles guardados.");
         } else {
@@ -1071,6 +1115,35 @@ if (window.electronAPI) {
                 // 2. Cargar Biblioteca de Medios (¡ESTO ES LO NUEVO!)
                 if (loadedData.mediaLibrary) {
                     mediaLibrary = loadedData.mediaLibrary;
+                }
+
+                // 3. Cargar Meta de Likes
+                if (loadedData.goalLikes) {
+                    likeGoalState = loadedData.goalLikes;
+                    
+                    // Actualizar los inputs visuales (usamos getElementById por seguridad)
+                    const tInput = document.getElementById('gl-title-input');
+                    const mInput = document.getElementById('gl-meta-input');
+                    
+                    if (tInput) tInput.value = likeGoalState.title;
+                    if (mInput) mInput.value = likeGoalState.meta;
+                    
+                    // Sincronizar overlay
+                    if (typeof syncGoalOverlay === 'function') syncGoalOverlay();
+                }
+                // -----------------------
+
+                // 4. Cargar Mejor Regalo
+                if (loadedData.topGift) {
+                    topGiftState = loadedData.topGift;
+                    // Forzar actualización visual al cargar
+                    if(window.electronAPI) window.electronAPI.updateWidget('topGift', topGiftState);
+                }
+
+                // 5. Cargar Mejor Racha
+                if (loadedData.topStreak) {
+                    topStreakState = loadedData.topStreak;
+                    if(window.electronAPI) window.electronAPI.updateWidget('topStreak', topStreakState);
                 }
 
             await loadGiftsCache();
@@ -3261,7 +3334,7 @@ if (window.electronAPI) {
         current: 0,
         meta: 1000,
         initialMeta: 1000, 
-        title: "10 VINDICADORES"
+        title: "Like Goal"
     };
 
     // 1. Actualizar dropdown de acciones cuando cambia el perfil
@@ -3429,6 +3502,7 @@ if (window.electronAPI) {
     glTitleInput.addEventListener('input', (e) => {
         likeGoalState.title = e.target.value;
         syncGoalOverlay();
+        saveAllData(); // <--- Guardar cambios
     });
     
     glMetaInput.addEventListener('change', (e) => {
@@ -3436,18 +3510,55 @@ if (window.electronAPI) {
         likeGoalState.meta = val;
         likeGoalState.initialMeta = val;
         syncGoalOverlay();
+        saveAllData(); // <--- Guardar cambios
     });
+    
+    // ==========================================
+    // LÓGICA RESET TOP GIFT
+    // ==========================================
+    const btnResetTopGift = document.getElementById('btn-reset-top-gift');
 
-    // === INTEGRAR CON EL LISTENER DE LIKES EXISTENTE ===
-    // Busca esto en tu código y añade la línea marcada:
-    /*
-    window.electronAPI.onLike(data => {
-        addLogEntry(..., 'like');
-        processTikTokEvent('likes', data);
-        
-        addLikesToGoal(data.likeCount); // <--- ¡AÑADIR ESTO!
-    });
-    */
+    if (btnResetTopGift) {
+        btnResetTopGift.addEventListener('click', async () => {
+            if(confirm('¿Reiniciar el Mejor Regalo a 0?')) {
+                // 1. Reiniciar variable local
+                topGiftState = { 
+                    username: 'Username', 
+                    coins: 0, 
+                    giftName: 'Default', 
+                    giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
+                };
+
+                // 2. Enviar a Electron (Main) para guardar en disco y actualizar overlay
+                if (window.electronAPI) {
+                    await window.electronAPI.updateWidget('topGift', topGiftState);
+                    saveAllData(); // Guardar también en data.json por si acaso
+                }
+
+                showToastNotification("🏆 Mejor Regalo reiniciado.");
+            }
+        });
+    }
+
+    // LÓGICA RESET TOP STREAK
+    const btnResetTopStreak = document.getElementById('btn-reset-top-streak');
+    if (btnResetTopStreak) {
+        btnResetTopStreak.addEventListener('click', async () => {
+            if(confirm('¿Reiniciar la Mejor Racha a 0?')) {
+                topStreakState = { 
+                    username: 'Username', 
+                    streakCount: 0, 
+                    giftName: 'Default', 
+                    giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' 
+                };
+                if (window.electronAPI) {
+                    await window.electronAPI.updateWidget('topStreak', topStreakState);
+                    saveAllData();
+                }
+                showToastNotification("🔥 Mejor Racha reiniciada.");
+            }
+        });
+    }
     
     // ==========================================================
     // INICIALIZACIÓN FINAL

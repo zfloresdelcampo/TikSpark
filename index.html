@@ -124,6 +124,21 @@
                 <div class="sub-nav-item" onclick="scrollToSection('card-goal-likes', 'btn-goals-main')">
                     <i class="fas fa-heart"></i> Likes
                 </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-goal-follows', 'btn-goals-main')">
+                    <i class="fas fa-user-plus"></i> Follows
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-goal-shares', 'btn-goals-main')">
+                    <i class="fas fa-share-alt"></i> Shares
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-goal-viewers', 'btn-goals-main')">
+                    <i class="fas fa-eye"></i> Viewer Count
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-goal-coins', 'btn-goals-main')">
+                    <i class="fas fa-coins"></i> Coins Earned
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-goal-fans', 'btn-goals-main')">
+                    <i class="fas fa-star"></i> New Super Fans
+                </div>
             </div>
 
             <div class="nav-item" data-target="gift-section">
@@ -637,7 +652,7 @@
                     </div>
                     <div class="goal-input-item">
                         <label>Titulo:</label>
-                        <input type="text" id="gl-title-input" value="10 VINDICADORES">
+                        <input type="text" id="gl-title-input" value="Like Goal">
                     </div>
                     <div class="goal-input-item">
                         <label>Cuando se alcanza:</label>
@@ -684,6 +699,312 @@
                 </div>
 
             </div>
+
+            <div class="overlay-card-container" id="card-goal-follows">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Follows</h3>
+                </div>
+
+                <!-- 1. NUEVO: Panel de Inputs (Arriba de tus botones) -->
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gf-meta-input" value="1000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Titulo:</label>
+                        <input type="text" id="gf-title-input" value="Follow Goal">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gf-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta (Loop)</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion al finalizar:</label>
+                        <select id="gf-action-select">
+                            <option value="">-- Ninguna --</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gf-active-check" checked>
+                    </div>
+                </div>
+
+                <!-- 2. TUS BOTONES EXISTENTES (Con IDs agregados) -->
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/goal-follows.html" readonly class="url-input" id="gf-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gf-copy-btn">Copiar URL</button>
+                        <button class="action-btn" id="gf-test-btn"><i class="fas fa-chevron-right"></i> Testear</button>
+                        <button class="action-btn short-btn" id="gf-reset-btn">Cortar Meta</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
+                <div class="goal-preview-box">
+                    <div class="preview-iframe-wrapper">
+                        <iframe 
+                            src="http://127.0.0.1:5500/goal-follows.html" 
+                            class="goal-iframe-preview"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="overlay-card-container" id="card-goal-shares">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Shares</h3>
+                </div>
+
+                <!-- 1. NUEVO: Panel de Inputs (Arriba de tus botones) -->
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gs-meta-input" value="1000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Titulo:</label>
+                        <input type="text" id="gs-title-input" value="Share Goal">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gs-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta (Loop)</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion al finalizar:</label>
+                        <select id="gs-action-select">
+                            <option value="">-- Ninguna --</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gs-active-check" checked>
+                    </div>
+                </div>
+
+                <!-- 2. TUS BOTONES EXISTENTES (Con IDs agregados) -->
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/goal-shares.html" readonly class="url-input" id="gs-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gs-copy-btn">Copiar URL</button>
+                        <button class="action-btn" id="gs-test-btn"><i class="fas fa-chevron-right"></i> Testear</button>
+                        <button class="action-btn short-btn" id="gs-reset-btn">Cortar Meta</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
+                <div class="goal-preview-box">
+                    <div class="preview-iframe-wrapper">
+                        <iframe 
+                            src="http://127.0.0.1:5500/goal-shares.html" 
+                            class="goal-iframe-preview"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="overlay-card-container" id="card-goal-viewers">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Viewer Count</h3>
+                </div>
+
+                <!-- 1. NUEVO: Panel de Inputs (Arriba de tus botones) -->
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gv-meta-input" value="1000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Titulo:</label>
+                        <input type="text" id="gv-title-input" value="Viewer Count Goal">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gv-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta (Loop)</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion al finalizar:</label>
+                        <select id="gv-action-select">
+                            <option value="">-- Ninguna --</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gv-active-check" checked>
+                    </div>
+                </div>
+
+                <!-- 2. TUS BOTONES EXISTENTES (Con IDs agregados) -->
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/goal-viewers.html" readonly class="url-input" id="gv-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gv-copy-btn">Copiar URL</button>
+                        <button class="action-btn" id="gv-test-btn"><i class="fas fa-chevron-right"></i> Testear</button>
+                        <button class="action-btn short-btn" id="gv-reset-btn">Cortar Meta</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
+                <div class="goal-preview-box">
+                    <div class="preview-iframe-wrapper">
+                        <iframe 
+                            src="http://127.0.0.1:5500/goal-viewers.html" 
+                            class="goal-iframe-preview"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="overlay-card-container" id="card-goal-coins">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Coins Earned</h3>
+                </div>
+
+                <!-- 1. NUEVO: Panel de Inputs (Arriba de tus botones) -->
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gc-meta-input" value="1000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Titulo:</label>
+                        <input type="text" id="gc-title-input" value="Coins Earned Goal">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gc-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta (Loop)</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion al finalizar:</label>
+                        <select id="gc-action-select">
+                            <option value="">-- Ninguna --</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gc-active-check" checked>
+                    </div>
+                </div>
+
+                <!-- 2. TUS BOTONES EXISTENTES (Con IDs agregados) -->
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/goal-coins.html" readonly class="url-input" id="gc-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gc-copy-btn">Copiar URL</button>
+                        <button class="action-btn" id="gc-test-btn"><i class="fas fa-chevron-right"></i> Testear</button>
+                        <button class="action-btn short-btn" id="gc-reset-btn">Cortar Meta</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
+                <div class="goal-preview-box">
+                    <div class="preview-iframe-wrapper">
+                        <iframe 
+                            src="http://127.0.0.1:5500/goal-coins.html" 
+                            class="goal-iframe-preview"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="overlay-card-container" id="card-goal-fans">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">New Super Fans</h3>
+                </div>
+
+                <!-- 1. NUEVO: Panel de Inputs (Arriba de tus botones) -->
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gn-meta-input" value="1000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Titulo:</label>
+                        <input type="text" id="gn-title-input" value="New Super Fans Goal">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gn-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta (Loop)</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion al finalizar:</label>
+                        <select id="gn-action-select">
+                            <option value="">-- Ninguna --</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gn-active-check" checked>
+                    </div>
+                </div>
+
+                <!-- 2. TUS BOTONES EXISTENTES (Con IDs agregados) -->
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/goal-fans.html" readonly class="url-input" id="gn-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gn-copy-btn">Copiar URL</button>
+                        <button class="action-btn" id="gn-test-btn"><i class="fas fa-chevron-right"></i> Testear</button>
+                        <button class="action-btn short-btn" id="gn-reset-btn">Cortar Meta</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
+                <div class="goal-preview-box">
+                    <div class="preview-iframe-wrapper">
+                        <iframe 
+                            src="http://127.0.0.1:5500/goal-fans.html" 
+                            class="goal-iframe-preview"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
         <div id="gift-section" class="content-section">
@@ -703,6 +1024,76 @@
                 
             </div>
 
+            <!-- UNA SOLA TARJETA CONTENEDORA -->
+            <div class="overlay-card-container" id="card-gifts-combined">
+                
+                <!-- Checkbox opcional estilo TikFinity (solo visual por ahora) -->
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                    <div class="config-item checkbox-row" style="background: transparent; padding: 0;">
+                        <input type="checkbox" id="reset-stream-check">
+                        <label for="reset-stream-check" style="font-size: 13px; color: #ccc;">Reset on new stream</label>
+                    </div>
+                </div>
+
+                <!-- GRID DE 2 COLUMNAS -->
+                <div class="gifts-grid-layout">
+                    
+                    <!-- COLUMNA IZQUIERDA: TOP GIFT -->
+                    <div class="gift-column">
+                        <div class="overlay-header compact">
+                            <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Mejor Regalo</h3>
+                            <div class="premium-tag small">PRO</div>
+                        </div>
+                        <p class="overlay-description">El usuario que envió el regalo más grande.</p>
+
+                        <div class="overlay-url-actions compact">
+                            <input type="text" value="http://127.0.0.1:5500/top-gift.html" readonly class="url-input" id="top-gift-url-input">
+                                <button class="action-btn primary-btn copy-goal-btn" data-target="top-gift-url-input">Copiar</button>
+                                
+                                <!-- AGREGALE ESTE ID -->
+                                <button class="action-btn" title="Resetear" id="btn-reset-top-gift">
+                                    <i class="fas fa-redo"></i>
+                                </button> 
+                                
+                                <button class="action-btn personalize-btn"><i class="fas fa-cog"></i></button>
+                        </div>
+
+                        <div class="gift-preview-box">
+                            <div class="preview-iframe-wrapper">
+                                <iframe src="http://127.0.0.1:5500/top-gift.html" class="gift-iframe-preview" scrolling="no"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: TOP STREAK -->
+                    <div class="gift-column">
+                        <div class="overlay-header compact">
+                            <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Top Streak</h3>
+                            <div class="premium-tag small">PRO</div>
+                        </div>
+                        <p class="overlay-description">El usuario que ha enviado la racha más larga.</p>
+
+                        <div class="overlay-url-actions compact">
+                            <input type="text" value="http://127.0.0.1:5500/top-streak.html" readonly class="url-input" id="top-streak-url-input">
+                            <button class="action-btn primary-btn copy-goal-btn" data-target="top-streak-url-input">Copiar</button>
+
+                            <!-- AGREGALE ESTE ID -->
+                                <button class="action-btn" title="Resetear" id="btn-reset-top-streak">
+                                    <i class="fas fa-redo"></i>
+                                </button> 
+                                
+                                <button class="action-btn personalize-btn"><i class="fas fa-cog"></i></button>
+                        </div>
+
+                        <div class="gift-preview-box">
+                            <div class="preview-iframe-wrapper">
+                                <iframe src="http://127.0.0.1:5500/top-streak.html" class="gift-iframe-preview" scrolling="no"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
         <div id="minigames-section" class="content-section">

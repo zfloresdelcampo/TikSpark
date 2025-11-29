@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Top Gift Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; overflow: hidden; background: transparent; font-family: 'Luckiest Guy', cursive; }
+        
+        #container {
+            width: 100%; height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+            text-align: center;
+            opacity: 0; transition: opacity 0.5s;
+        }
+        #container.show { opacity: 1; }
+
+        /* Título "MEJOR REGALO" - AHORA ENORME */
+        .header {
+            font-size: 35px; /* <--- TAMAÑO AUMENTADO MUCHO */
+            color: #c9c9c9;
+            -webkit-text-stroke: 2.5px black;
+            text-shadow: 4px 4px 0 #000;
+            /* Margen negativo fuerte para que la imagen se meta "debajo" del título */
+            margin-bottom: -10px; 
+            z-index: 3; /* El título va por encima de la imagen */
+            position: relative;
+        }
+
+        /* Imagen del regalo */
+        .gift-img {
+            width: 190px; height: 190px; /* Tamaño medio-grande */
+            object-fit: contain;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            animation: float 3s ease-in-out infinite;
+            z-index: 1; /* La imagen va al fondo */
+            margin-top: 0;
+        }
+
+        /* Nombre y Monedas */
+        .info-box {
+            /* Subimos el texto para que pise la parte de abajo de la imagen */
+            margin-top: -50px; 
+            z-index: 4; /* El texto va por encima de todo */
+            position: relative;
+        }
+
+        .nickname {
+            font-size: 40px; 
+            color: white;
+            -webkit-text-stroke: 2px black;
+            text-shadow: 3px 3px 0 #000;
+            line-height: 0.9;
+            margin-bottom: 5px;
+        }
+        .coins {
+            font-size: 35px; 
+            color: #ffeb3b; 
+            -webkit-text-stroke: 1.5px black;
+            text-shadow: 2px 2px 0 #000;
+            line-height: 0.9;
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    </style>
+</head>
+<body>
+    <div id="container" class="show"> <!-- Agregamos class="show" para que siempre se vea -->
+        <!-- CAMBIO: Texto en Español -->
+        <div class="header">MEJOR REGALO</div>
+        <img id="gift-img" class="gift-img" src="">
+        <div class="info-box">
+            <div id="nickname" class="nickname">USERNAME</div>
+            <!-- CAMBIO: Texto Monedas -->
+            <div id="coins" class="coins">0 MONEDAS</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        socket.on('init-data', (db) => { if(db && db.topGift) update(db.topGift); });
+        socket.on('widget-update', (msg) => { if(msg.widgetId === 'topGift') update(msg.data); });
+
+        function update(data) {
+            // ELIMINAMOS la línea que decía "if (!data || data.coins === 0) return;"
+            // Ahora siempre actualiza, incluso si es el valor por defecto.
+
+            document.getElementById('nickname').innerText = data.username || 'USERNAME';
+            document.getElementById('coins').innerText = `${Number(data.coins).toLocaleString('de-DE')} MONEDAS`;
+            
+            if(data.giftImage) {
+                document.getElementById('gift-img').src = data.giftImage;
+            }
+        }
+    </script>
+</body>
+</html>
