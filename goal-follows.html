@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Goal Likes</title>
+    <title>Goal Follows</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
@@ -11,33 +11,34 @@
         body { 
             margin: 0; padding: 0; overflow: hidden; background: transparent; 
             font-family: 'Luckiest Guy', cursive; 
-            display: flex; align-items: center; justify-content: center; /* Centrar todo */
+            display: flex; align-items: center; justify-content: center;
             width: 100%; height: 100%;
         }
         
-        /* Contenedor Flexible y Responsive */
+        /* Contenedor Flexible idéntico al de Likes */
         #container {
-            width: 95%; /* Ocupa casi todo el ancho disponible */
-            max-width: 1000px; /* Pero no te pases de gigante */
+            width: 95%;
+            max-width: 1000px;
             height: 120px;
             display: flex; 
             align-items: center; 
             gap: 10px; 
             padding-left: 10px;
             opacity: 0; transition: opacity 0.5s;
-            box-sizing: border-box; /* Importante para que no se salga */
+            box-sizing: border-box;
         }
         #container.show { opacity: 1; }
 
-        .heart {
+        .icon {
             width: 70px; height: 70px; 
             animation: beat 0.8s infinite alternate;
             flex-shrink: 0; 
         }
 
         .bar-bg {
-            flex-grow: 1; /* Estírate lo máximo posible */
+            flex-grow: 1;
             height: 60px;
+            /* Fondo oscuro para diferenciar, o pon #ffd900 si lo quieres amarillo igual */
             background: #202020; 
             border: 2px solid #000;
             border-radius: 15px;
@@ -47,7 +48,8 @@
 
         .bar-fill {
             height: 100%; width: 0%;
-            background: #ffd900;
+            /* Color Morado para Follows */
+            background: #8A2BE2; 
             transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
             box-shadow: inset 0 -5px 10px rgba(0,0,0,0.2);
             border-right: 0px solid rgba(0,0,0,0.2);
@@ -59,12 +61,7 @@
             display: flex; align-items: center; justify-content: center;
             color: white; 
             font-size: 35px; 
-            
-            /* --- CAMBIOS AQUÍ --- */
-            -webkit-text-stroke: 2px black; /* Esto crea el borde perfecto y continuo */
-            /*text-shadow: 4px 4px 0 #000;    /* Esto crea la profundidad (sombra) hacia un lado */
-            /* -------------------- */
-            
+            -webkit-text-stroke: 2px black;
             z-index: 3;
             white-space: nowrap; letter-spacing: 1px;
         }
@@ -74,7 +71,8 @@
 </head>
 <body>
     <div id="container">
-        <img src="https://cdn-icons-png.flaticon.com/512/9484/9484251.png" class="heart">
+        <!-- Icono de Usuario -->
+        <img src="https://cdn-icons-png.flaticon.com/512/11086/11086076.png" class="icon">
         <div class="bar-bg">
             <div id="fill" class="bar-fill"></div>
             <div id="text" class="text">ESPERANDO DATOS...</div>
@@ -82,6 +80,6 @@
     </div>
     
     <script src="/socket.io/socket.io.js"></script>
-    <script src="scripts/goal-likes.js"></script>
+    <script src="scripts/goal-follows.js"></script>
 </body>
 </html>

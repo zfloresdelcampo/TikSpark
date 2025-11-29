@@ -1087,6 +1087,7 @@ if (window.electronAPI) {
             activeProfileName, 
             mediaLibrary, // <--- ¡ESTO ES LO NUEVO!
             goalLikes: likeGoalState, // <--- AGREGA ESTA LÍNEA (con la coma al final de la anterior)
+            goalFollows: followGoalState,
             topGift: topGiftState
         });
             console.log("Datos de perfiles guardados.");
@@ -1133,14 +1134,27 @@ if (window.electronAPI) {
                 }
                 // -----------------------
 
-                // 4. Cargar Mejor Regalo
+                // 4. Cargar Meta de Follows
+                if (loadedData.goalFollows) {
+                    followGoalState = loadedData.goalFollows;
+                    
+                    // Sincronizar inputs visuales
+                    const tInput = document.getElementById('gf-title-input');
+                    const mInput = document.getElementById('gf-meta-input');
+                    if (tInput) tInput.value = followGoalState.title;
+                    if (mInput) mInput.value = followGoalState.meta;
+                    
+                    if (typeof syncFollowGoalOverlay === 'function') syncFollowGoalOverlay();
+                }
+
+                // 5. Cargar Mejor Regalo
                 if (loadedData.topGift) {
                     topGiftState = loadedData.topGift;
                     // Forzar actualización visual al cargar
                     if(window.electronAPI) window.electronAPI.updateWidget('topGift', topGiftState);
                 }
 
-                // 5. Cargar Mejor Racha
+                // 6. Cargar Mejor Racha
                 if (loadedData.topStreak) {
                     topStreakState = loadedData.topStreak;
                     if(window.electronAPI) window.electronAPI.updateWidget('topStreak', topStreakState);
@@ -3340,7 +3354,7 @@ if (window.electronAPI) {
     // 1. Actualizar dropdown de acciones cuando cambia el perfil
     function updateGoalActions() {
         if (!glActionSelect) return;
-        glActionSelect.innerHTML = '<option value="">-- Ninguna --</option>';
+        glActionSelect.innerHTML = '<option value="">Selecciona...</option>';
         const profile = profiles[activeProfileName];
         if (profile && profile.actions) {
             profile.actions.forEach(act => {
@@ -3512,7 +3526,153 @@ if (window.electronAPI) {
         syncGoalOverlay();
         saveAllData(); // <--- Guardar cambios
     });
+    // FIN DE LÓGICA DE LIKES //
     
+    // ==========================================================
+    // LÓGICA DE META DE FOLLOWS (NUEVO)
+    // ==========================================================
+    const gfMetaInput = document.getElementById('gf-meta-input');
+    const gfTitleInput = document.getElementById('gf-title-input');
+    const gfBehaviorSelect = document.getElementById('gf-behavior-select');
+    const gfActionSelect = document.getElementById('gf-action-select');
+    const gfActiveCheck = document.getElementById('gf-active-check');
+    const gfTestBtn = document.getElementById('gf-test-btn');
+    const gfResetBtn = document.getElementById('gf-reset-btn');
+    const gfCopyBtn = document.getElementById('gf-copy-btn');
+
+    // Estado interno para Follows
+    let followGoalState = {
+        current: 0,
+        meta: 100,       // Meta inicial típica para follows
+        initialMeta: 100,
+        title: "Follow Goal"
+    };
+
+    // 1. Actualizar dropdown de acciones (Follows)
+    function updateGoalFollowActions() {
+        if (!gfActionSelect) return;
+        gfActionSelect.innerHTML = '<option value="">Selecciona...</option>';
+        const profile = profiles[activeProfileName];
+        if (profile && profile.actions) {
+            profile.actions.forEach(act => {
+                const opt = document.createElement('option');
+                opt.value = act.id;
+                opt.textContent = act.name;
+                gfActionSelect.appendChild(opt);
+            });
+        }
+    }
+    profileSelector.addEventListener('change', updateGoalFollowActions);
+    setTimeout(updateGoalFollowActions, 500);
+
+    // 2. Enviar datos al Overlay Follows
+    async function syncFollowGoalOverlay() {
+        if(window.electronAPI) {
+            await window.electronAPI.updateWidget('goalFollows', followGoalState);
+        }
+    }
+
+    let lastFollowGoalActionTime = 0;
+
+    // 3. Lógica de Meta Alcanzada (Follows)
+    function followGoalReached() {
+        const now = Date.now();
+        if (now - lastFollowGoalActionTime < 5000) return;
+        lastFollowGoalActionTime = now;
+        
+        console.log("¡META FOLLOWS ALCANZADA!");
+        const actionId = parseInt(gfActionSelect.value);
+
+        if (actionId) {
+            const currentProfile = profiles[activeProfileName];
+            const action = currentProfile.actions.find(a => a.id === actionId);
+            if (action) {
+                playAction(action.id, { nickname: 'META FOLLOWS' });
+                showToastNotification(`🎉 Meta Follows: Ejecutando "${action.name}"`);
+            }
+        }
+    }
+
+    // 4. Procesar Follows
+    function addFollowsToGoal(amount) {
+        if (!gfActiveCheck.checked) return;
+        
+        followGoalState.current += amount;
+
+        // Comportamiento al llegar a la meta
+        if (gfBehaviorSelect.value === 'increase') {
+            if (followGoalState.current >= followGoalState.meta) {
+                followGoalReached();
+                // Calcular siguiente meta (escalonada)
+                const nextStep = Math.ceil((followGoalState.current + 1) / followGoalState.initialMeta);
+                const multiplier = Math.max(nextStep, (followGoalState.meta / followGoalState.initialMeta) + 1);
+                followGoalState.meta = multiplier * followGoalState.initialMeta;
+            }
+        } else if (gfBehaviorSelect.value === 'stop' && followGoalState.current >= followGoalState.meta) {
+            followGoalReached();
+            gfActiveCheck.checked = false;
+        }
+
+        syncFollowGoalOverlay();
+        saveAllData(); 
+    }
+
+    // 5. Listener de API (Follow)
+    window.electronAPI.onFollow(data => {
+        // Log y evento estándar
+        addLogEntry(`<i class="fas fa-user-plus" style="color: #ff4d4d;"></i> <b>${data.nickname}</b> te ha seguido.`, 'follow');
+        processTikTokEvent('follow', data);
+        
+        // Sumar a la meta (1 follow = 1 punto)
+        addFollowsToGoal(1);
+    });
+
+    // 6. Listeners de la Interfaz (Follows)
+    if(gfTestBtn) {
+        gfTestBtn.addEventListener('click', () => {
+            const previousCurrent = followGoalState.current;
+            followGoalState.current = followGoalState.meta; // Llenar al 100%
+            syncFollowGoalOverlay(); 
+            showToastNotification("🧪 Testeando Follow Goal...");
+            setTimeout(() => {
+                followGoalState.current = previousCurrent; // Restaurar
+                syncFollowGoalOverlay();
+            }, 2500);
+        });
+    }
+    
+    if(gfResetBtn) gfResetBtn.addEventListener('click', () => {
+        followGoalState.current = 0;
+        followGoalState.meta = parseInt(gfMetaInput.value) || 100;
+        followGoalState.initialMeta = followGoalState.meta;
+        syncFollowGoalOverlay();
+        saveAllData();
+        showToastNotification("Meta Follows reseteada");
+    });
+
+    if(gfCopyBtn) {
+        gfCopyBtn.addEventListener('click', () => {
+            const urlInput = document.getElementById('gf-url-input');
+            navigator.clipboard.writeText(urlInput.value);
+            showToastNotification("URL Follows copiada");
+        });
+    }
+
+    // Inputs
+    gfTitleInput.addEventListener('input', (e) => {
+        followGoalState.title = e.target.value;
+        syncFollowGoalOverlay();
+        saveAllData();
+    });
+    
+    gfMetaInput.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value) || 100;
+        followGoalState.meta = val;
+        followGoalState.initialMeta = val;
+        syncFollowGoalOverlay();
+        saveAllData();
+    });
+
     // ==========================================
     // LÓGICA RESET TOP GIFT
     // ==========================================

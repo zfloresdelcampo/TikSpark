@@ -214,8 +214,93 @@
 
         </div>
         
+        <div id="config-section" class="content-section">
+            <div class="section-container">
+                <h2>Configuración</h2>
+                <p>
+                    Aquí puedes definir la configuración básica.
+                </p>
+            </div>
+
+            <div class="section-container" id="servertap-section">
+                <h2>Minecraft ServerTap</h2>
+                
+                <!-- Caja de información Superior -->
+                <div class="info-box">
+                    <p>
+                        Si utilizas el plugin ServerTap, debes ingresar aquí tu nombre de jugador para usar el placeholder de {playername}.<br>
+                        Si deja el campo en blanco, los comandos se ejecutarán para todos los jugadores en el servidor (@p).<br>
+                        Elige entre el mod de TikFinity (para un jugador) o el plugin ServerTap (para servidores). ¡No los uses juntos!
+                    </p>
+                </div>
+
+                <!-- Enlaces de descarga -->
+                <div class="mc-downloads">
+                    <a href="https://modrinth.com/mod/tikfinity/version/1.1" target="_blank" class="mc-download-link">
+                        <i class="fas fa-download"></i> Descarga TikFinity Minecraft Mod para Minecraft Fabric (solo para un jugador)
+                    </a>
+                    <a href="https://github.com/servertap-io/servertap/releases/download/v0.6.1/ServerTap-0.6.1.jar" target="_blank" class="mc-download-link">
+                        <i class="fas fa-download"></i> Descarga ServerTap Plugin v0.6.1 para Minecraft (Java) (solo servidores)
+                    </a>
+                </div>
+
+                <!-- WRAPPER NUEVO: Esto limitará el ancho de todo lo de abajo -->
+                <div class="mc-limit-width">
+
+                    <!-- Caja interna Gris Oscura -->
+                    <div class="mc-inner-box">
+                        
+                        <!-- Input Nombre Jugador -->
+                        <div class="mc-row-external">
+                            <label for="mc-player-name">Nombre del Jugador</label>
+                            <input type="text" id="mc-player-name" placeholder="(requerido para el plugin ServerTap)">
+                        </div>
+
+                        <!-- Texto de ayuda (Ahora DENTRO de la caja) -->
+                        <div class="info-box">
+                            La configuración predeterminada debería funcionar en la mayoría de los casos. Si usa ServerTap, puede leer en la documentación cómo cambiar la contraseña. Utilice el botón Probar para validar la conexión.
+                        </div>
+
+                        <!-- Inputs de conexión -->
+                        <div class="mc-form-grid">
+                            <div class="mc-row">
+                                <label for="mc-ip">IP</label>
+                                <input type="text" id="mc-ip" value="127.0.0.1" placeholder="localhost">
+                            </div>
+                            <div class="mc-row">
+                                <label for="mc-port">Puerto</label>
+                                <input type="number" id="mc-port" value="4567" placeholder="4567">
+                            </div>
+                            <div class="mc-row">
+                                <label for="mc-key">Key</label>
+                                <input type="password" id="mc-key" value="change_me" placeholder="change_me">
+                            </div>
+                        </div>
+
+                        <!-- Botón a la derecha -->
+                        <div class="mc-button-row">
+                            <button id="test-mc-connection-btn" class="btn">Probar Conexión</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
         <div id="actions-events-section" class="content-section">
             
+            <div class="section-container">
+                
+                <h2>Acciones y Eventos</h2>
+                
+                <p>
+                    Aquí puedes definir tus acciones y eventos personalizados (activadores). Por ejemplo, puedes mostrar un vídeo o una animación sobre un regalo específico.<br>
+                    Para ello, primero debes definir la acción y luego el evento. Se requiere la superposición "Mis acciones" para OBS/LIVE Studio.<br>
+                    Mira este vídeo para aprender cómo funciona el sistema de acciones y eventos.
+                </p>
+                
+            </div>
+
             <div class="section-container" id="profiles-section">
                 <h2>Perfiles</h2>
                 <p>Crea acciones y eventos únicos para cada perfil. Cambia entre perfiles, agrega, edita o elimínalos según tus preferencias.</p>
@@ -296,6 +381,37 @@
             </div>
         </div>
         
+        <!-- === NUEVO: SECCIÓN DE ALERTAS === -->
+        <div id="alerts-section" class="content-section">
+            <div class="section-container">
+                <h2>Alertas</h2>
+                <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
+            
+                <div class="list-view-container">
+                    <div class="list-view-controls">
+                        <div class="control-group">
+                            <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
+                        </div>
+                        <div class="search-wrapper">
+                            <span>🔍</span>
+                            <input type="text" placeholder="Buscar alertas...">
+                        </div>
+                    </div>
+                    <div class="list-view-header alert-header">
+                        <input type="checkbox" class="header-checkbox">
+                        <div>Activo</div>
+                        <div>Acciones</div>
+                        <div>Eventos</div>
+                        <div>Duración (seg)</div>
+                        <div>Descripción</div>
+                    </div>
+                    <div id="alerts-list-container"></div>
+                    <div class="list-view-pagination" id="alerts-pagination"></div>
+                </div>
+            </div>
+        </div>
+        <!-- === FIN DE LA SECCIÓN DE ALERTAS === -->
+
         <div id="overlay-gallery" class="content-section">
     
             <div class="section-container" id="gallery-info-section">
@@ -590,37 +706,6 @@
             </div>
 
         </div>
-    
-        <!-- === NUEVO: SECCIÓN DE ALERTAS === -->
-        <div id="alerts-section" class="content-section">
-            <div class="section-container">
-                <h2>Alertas</h2>
-                <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
-            
-                <div class="list-view-container">
-                    <div class="list-view-controls">
-                        <div class="control-group">
-                            <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
-                        </div>
-                        <div class="search-wrapper">
-                            <span>🔍</span>
-                            <input type="text" placeholder="Buscar alertas...">
-                        </div>
-                    </div>
-                    <div class="list-view-header alert-header">
-                        <input type="checkbox" class="header-checkbox">
-                        <div>Activo</div>
-                        <div>Acciones</div>
-                        <div>Eventos</div>
-                        <div>Duración (seg)</div>
-                        <div>Descripción</div>
-                    </div>
-                    <div id="alerts-list-container"></div>
-                    <div class="list-view-pagination" id="alerts-pagination"></div>
-                </div>
-            </div>
-        </div>
-        <!-- === FIN DE LA SECCIÓN DE ALERTAS === -->
 
         <div id="goals-section" class="content-section">
             <div class="section-container" id="goals-info-section">
@@ -665,7 +750,7 @@
                     <div class="goal-input-item">
                         <label>Accion al finalizar:</label>
                         <select id="gl-action-select">
-                            <option value="">-- Ninguna --</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div class="goal-input-item checkbox">
@@ -709,7 +794,7 @@
                 <div class="goal-inputs-container">
                     <div class="goal-input-item small">
                         <label>Meta:</label>
-                        <input type="number" id="gf-meta-input" value="1000">
+                        <input type="number" id="gf-meta-input" value="100">
                     </div>
                     <div class="goal-input-item">
                         <label>Titulo:</label>
@@ -726,7 +811,7 @@
                     <div class="goal-input-item">
                         <label>Accion al finalizar:</label>
                         <select id="gf-action-select">
-                            <option value="">-- Ninguna --</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div class="goal-input-item checkbox">
@@ -787,7 +872,7 @@
                     <div class="goal-input-item">
                         <label>Accion al finalizar:</label>
                         <select id="gs-action-select">
-                            <option value="">-- Ninguna --</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div class="goal-input-item checkbox">
@@ -848,7 +933,7 @@
                     <div class="goal-input-item">
                         <label>Accion al finalizar:</label>
                         <select id="gv-action-select">
-                            <option value="">-- Ninguna --</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div class="goal-input-item checkbox">
@@ -909,7 +994,7 @@
                     <div class="goal-input-item">
                         <label>Accion al finalizar:</label>
                         <select id="gc-action-select">
-                            <option value="">-- Ninguna --</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div class="goal-input-item checkbox">
@@ -970,7 +1055,7 @@
                     <div class="goal-input-item">
                         <label>Accion al finalizar:</label>
                         <select id="gn-action-select">
-                            <option value="">-- Ninguna --</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div class="goal-input-item checkbox">

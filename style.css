@@ -2998,3 +2998,115 @@ input[type="range"].volume-slider::-moz-range-thumb {
     pointer-events: none;
     transform: scale(0.85); /* Un poco más pequeño para asegurar que entre */
 }
+/* === ESTILOS ESPECÍFICOS MINECRAFT SERVERTAP (CORREGIDO) === */
+
+/* Enlaces de descarga */
+.mc-downloads {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.mc-download-link {
+    color: #8a2be2; 
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.2s;
+}
+.mc-download-link:hover { color: #5c1d80; text-decoration: underline; }
+
+/* NUEVO: Limitador de ancho para que los inputs no sean eternos */
+.mc-limit-width {
+    max-width: 1200px; /* Ajusta este valor si quieres que sean más o menos largos */
+}
+
+/* Fila externa (Nombre Jugador) */
+.mc-row-external {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px; /* Espacio entre label e input */
+}
+.mc-row-external label {
+    width: 150px; /* Ancho fijo para alinear */
+    min-width: 150px;
+    font-weight: 500;
+    color: #e0e0e0;
+}
+.mc-row-external input {
+    /* width: 100%;  <-- BORRA O COMENTA ESTA LÍNEA */
+    width: 350px;    /* <-- AÑADE ESTA LÍNEA (Ajusta el número si lo quieres más corto o largo) */
+    
+    background-color: #2e2e2e;
+    border: 1px solid #505050;
+    padding: 10px;
+    color: white;
+    border-radius: 4px;
+}
+
+/* Caja Interna Gris */
+.mc-inner-box {
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* Grid de Inputs (IP, Puerto, Key) */
+.mc-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.mc-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.mc-row label {
+    width: 140px; /* Mismo ancho que arriba para alinear */
+    min-width: 140px;
+    color: #e0e0e0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.mc-row input {
+    /* width: 100%;  <-- BORRA O COMENTA ESTA LÍNEA */
+    width: 350px;    /* <-- AÑADE ESTA LÍNEA */
+    
+    background-color: #2e2e2e;
+    border: 1px solid #555;
+    padding: 8px 10px;
+    border-radius: 4px;
+    color: white;
+    transition: border-color 0.3s;
+}
+
+.mc-row input:focus {
+    border-color: #8A2BE2; 
+    outline: none;
+}
+
+/* Botón alineado con los inputs */
+.mc-button-row {
+    display: flex;
+    justify-content: flex-start; /* Alinea a la derecha del contenedor limitado */
+    margin-top: 15px;
+    /* 140px del ancho del label + 15px del gap = 155px */
+    padding-left: 155px;
+}
+
+#test-mc-connection-btn {
+    background-color: #444;
+    border: 1px solid #555;
+    padding: 8px 20px;
+}
+#test-mc-connection-btn:hover {
+    background-color: #5c1d80;
+    border-color: #5c1d80;
+}
