@@ -1006,27 +1006,10 @@ if (window.electronAPI) {
         // sendNicknameToGame(data.nickname);
     });
 
-    // Listener de "Seguir" (NUEVO)
-    window.electronAPI.onFollow(data => {
-        addLogEntry(`<i class="fas fa-user-plus" style="color: #ff4d4d;"></i> <b>${data.nickname}</b> te ha seguido.`, 'follow');
-        processTikTokEvent('follow', data);
-    });
-
     // Listener de "Compartir" (NUEVO)
     window.electronAPI.onShare(data => {
         addLogEntry(`<i class="fas fa-share-square" style="color: #38c172;"></i> <b>${data.nickname}</b> ha compartido el directo.`, 'share');
         processTikTokEvent('share', data);
-    });
-
-    // Listener de "Likes" (ACTUALIZADO) - ESTE YA LO TIENES
-    window.electronAPI.onLike(data => {
-        addLogEntry(`<i class="fas fa-heart" style="color: #ff005c;"></i> <b>${data.nickname}</b> ha dado ${data.likeCount} Me gusta.`, 'like');
-        processTikTokEvent('likes', data);
-        
-        console.log("DATA LIKES COMPLETA:", data); 
-        
-        // Actualización en tiempo real
-        addLikesToGoal(data.likeCount, data.totalLikeCount); 
     });
 
     // === PEGA ESTO JUSTO AQUÍ DEBAJO ===

@@ -8,7 +8,7 @@ const WinReg = require('winreg');
 const WebSocket = require('ws');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { startTikTokDetector , fetchProfileViaHTML } = require('./detector.js');
+const { startTikTokDetector , fetchProfileViaHTML } = require('./tiktokConnection.js');
 const { autoUpdater } = require('electron-updater');
 
 // --- MANEJO DE DATOS DE WIDGETS (PERSISTENCIA) ---

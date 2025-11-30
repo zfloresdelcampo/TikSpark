@@ -3179,3 +3179,28 @@ input[type="range"].volume-slider::-moz-range-thumb {
     z-index: 5;
     backdrop-filter: blur(2px); /* Efecto borroso pro */
 }
+
+/* TITULO DE TIKTOK */
+.live-title-container {
+    /* Habilita Flexbox para alinear elementos en una fila */
+    display: flex; 
+    /* Alinea los elementos verticalmente en el centro */
+    align-items: center; 
+    /* Establece un pequeño espacio entre el icono y el texto */
+    gap: 10px; 
+    /* Asegúrate de que no haya margen inferior innecesario */
+    margin-bottom: 0; 
+}
+
+/* Ajusta el margen del h3 para que se alinee mejor con el icono */
+.live-title-container h3 {
+    margin: 0; 
+    /* Opcional: ajustar el tamaño si es necesario */
+    font-size: 1.5em; 
+}
+
+/* Opcional: ajusta el margen inferior del panel-header para el espaciado general */
+.panel-header {
+    /* Puedes ajustar el padding o margin-bottom si es necesario */
+    padding: 15px; 
+}
