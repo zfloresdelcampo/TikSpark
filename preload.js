@@ -6,6 +6,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     installMod: (data) => ipcRenderer.invoke('install-mod', data),
     deleteMod: (data) => ipcRenderer.invoke('delete-mod', data),
 
+    // === LINEAS PARA SERVERTAP MINECRAFT//
+    testServerTapConnection: (config) => ipcRenderer.invoke('test-servertap-connection', config),
+
+    // === LINEAS PARA EJECUTAR COMANDOS EN MINECRAFT//
+    executeMinecraftCommand: (data) => ipcRenderer.invoke('execute-servertap-command', data),
+
+    // === GUARDAR CONFIGURACIÓN DE MINECRAFT //
+    saveMcConfig: (data) => ipcRenderer.invoke('save-mc-config', data),
+    getMcConfig: () => ipcRenderer.invoke('get-mc-config'),
+
     // === AÑADE LIKES INICIALES ===
     onRoomInfo: (callback) => ipcRenderer.on('room-info', (_event, data) => callback(data)),
 

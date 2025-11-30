@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const audioPlayer = document.getElementById('audio-player');
     const myInstantsUrlInput = document.getElementById('myinstants-url-input');
     const addMyInstantsBtn = document.getElementById('add-myinstants-btn');
+
+    // Listener para mostrar/ocultar el menú de Minecraft
+    document.getElementById('action-minecraft').addEventListener('change', (e) => {
+        document.getElementById('minecraft-config').classList.toggle('open', e.target.checked);
+    });
     
     // --- LOGICA PARA GESTOR DE MEDIA (IMG/VIDEO) - MODIFICADA PARA ALERTAS ---
 
@@ -647,9 +652,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // --- AQUI ACTIVAS TUS JUEGOS ---
+    setupGameController('cubo-tnt', 'Cubo TNT');
     setupGameController('peak', 'PEAK'); 
     setupGameController('supermarket-simulator', 'Supermarket Simulator');
     setupGameController('the-forest', 'The Forest');
+    setupGameController('lucky-wheel', 'Lucky Wheel');
     // setupGameController('gta5', 'GTA5_MOD');  <-- Cuando agregues GTA, solo descomentas esto
 
 // ==========================================================
@@ -1768,6 +1775,13 @@ if (window.electronAPI) {
         document.getElementById('action-image').value = '';
         document.getElementById('repeat-with-gift-combo').checked = false;
         document.getElementById('audio-config').classList.remove('open');
+
+        // LIMPIEZA DE MINECRAFT
+        document.getElementById('minecraft-config').classList.remove('open'); // Cierra el menú desplegable
+        document.getElementById('minecraft-command').value = ''; // Borra el texto del comando
+        document.getElementById('minecraft-quantity').value = '1'; // Resetea cantidad
+        document.getElementById('minecraft-interval').value = '100'; // Resetea intervalo
+
         // --- AÑADE ESTAS DOS LÍNEAS AQUÍ ---
         selectedAudioFile = null;
         const existingDisplay = document.querySelector('.selected-audio-file');
@@ -1926,6 +1940,15 @@ if (window.electronAPI) {
                 volume: document.getElementById('audio-volume').value
             };
             descriptions.push('Play Audio');
+        }
+
+        if (document.getElementById('action-minecraft').checked) {
+            newActionData.minecraftAction = {
+                command: document.getElementById('minecraft-command').value,
+                quantity: document.getElementById('minecraft-quantity').value,
+                interval: document.getElementById('minecraft-interval').value
+            };
+            descriptions.push('Minecraft');
         }
 
         // --- AGREGA ESTO ---
@@ -2104,6 +2127,18 @@ if (window.electronAPI) {
                 document.getElementById('game-compat-check').checked = action.keystrokeAction.gameCompatibility; 
             }
             
+            // AGREGAR ESTO PARA PODER EDITAR MINECRAFT
+            if (action.minecraftAction) {
+                const cb = document.getElementById('action-minecraft');
+                cb.checked = true;
+                // Forzamos el evento change para que se abra el menú
+                cb.dispatchEvent(new Event('change'));
+                
+                document.getElementById('minecraft-command').value = action.minecraftAction.command;
+                document.getElementById('minecraft-quantity').value = action.minecraftAction.quantity;
+                document.getElementById('minecraft-interval').value = action.minecraftAction.interval;
+            }
+
             actionModalOverlay.classList.add('open');
         }
     };
@@ -2670,6 +2705,52 @@ if (window.electronAPI) {
             // Si eventData.nickname existe, usa eso. Punto.
             // -----------------------------------------------------------------------
             const nickname = (eventData && eventData.nickname) ? eventData.nickname : 'Usuario';
+
+            // Tarea de Minecraft ServerTap
+            if (action.minecraftAction && window.electronAPI) {
+                tasks.push(new Promise(async (res) => {
+                    // 1. Obtener datos de conexión de la pestaña Configuración
+                    const ip = document.getElementById('mc-ip').value.trim();
+                    const port = document.getElementById('mc-port').value.trim();
+                    const key = document.getElementById('mc-key').value.trim();
+                    const playername = document.getElementById('mc-player-name').value.trim() || '@a'; // Default a todos si no hay nombre
+
+                    if (!ip || !port || !key) {
+                        console.warn("Faltan datos de conexión de Minecraft en Configuración.");
+                        return res();
+                    }
+
+                    // 2. Preparar los comandos (separar por líneas)
+                    const rawCommands = action.minecraftAction.command.split('\n');
+                    const quantity = parseInt(action.minecraftAction.quantity) || 1;
+                    let interval = parseInt(action.minecraftAction.interval);
+                    if (isNaN(interval)) interval = 100; // Si está vacío usa 100, pero si es 0, respeta el 0.
+
+                    // 3. Bucle de cantidad
+                    for (let i = 0; i < quantity; i++) {
+                        
+                        // 4. Ejecutar cada línea del comando
+                        for (let line of rawCommands) {
+                            line = line.trim();
+                            if (!line) continue;
+
+                            // REEMPLAZO DE VARIABLES
+                            // {nickname} -> Usuario de TikTok
+                            // {playername} -> Tu usuario de Minecraft (Config)
+                            let finalCommand = line
+                                .replace(/{nickname}/g, nickname)
+                                .replace(/{playername}/g, playername);
+
+                            // Enviar al backend
+                            await window.electronAPI.executeMinecraftCommand({ ip, port, key, command: finalCommand });
+                        }
+
+                        // Esperar intervalo si hay más repeticiones
+                        if (i < quantity - 1) await new Promise(r => setTimeout(r, interval));
+                    }
+                    res();
+                }));
+            }
 
             // Tarea de Audio
             if (action.audioAction && window.electronAPI) {
@@ -3720,6 +3801,115 @@ if (window.electronAPI) {
         });
     }
     
+    // --- LÓGICA BOTÓN PROBAR CONEXIÓN MINECRAFT (CON MODAL PROPIO) ---
+    const testMcBtn = document.getElementById('test-mc-connection-btn');
+    
+    // Referencias al modal de sistema
+    const sysModal = document.getElementById('system-message-modal');
+    const sysTitle = document.getElementById('sys-modal-title');
+    const sysMessage = document.getElementById('sys-modal-message');
+    const sysIcon = document.getElementById('sys-modal-icon');
+    const sysDetails = document.getElementById('sys-modal-details');
+    const sysCloseBtn = document.getElementById('sys-modal-close-btn');
+
+    // Función para mostrar el modal
+    function showSystemModal(type, title, message, details = null) {
+        sysTitle.textContent = title;
+        sysMessage.textContent = message;
+        
+        // Resetear clases e iconos
+        sysIcon.className = '';
+        sysDetails.style.display = 'none';
+
+        if (type === 'success') {
+            sysIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            sysIcon.classList.add('sys-icon-success');
+            if (details) {
+                sysDetails.style.display = 'block';
+                sysDetails.innerHTML = details.replace(/\n/g, '<br>');
+            }
+        } else if (type === 'error') {
+            sysIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+            sysIcon.classList.add('sys-icon-error');
+        } else {
+            sysIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            sysIcon.classList.add('sys-icon-warning');
+        }
+
+        sysModal.classList.add('open');
+    }
+
+    // Cerrar modal
+    if (sysCloseBtn) {
+        sysCloseBtn.addEventListener('click', () => {
+            sysModal.classList.remove('open');
+        });
+    }
+
+    if (testMcBtn) {
+        testMcBtn.addEventListener('click', async () => {
+            const ip = document.getElementById('mc-ip').value.trim();
+            const port = document.getElementById('mc-port').value.trim();
+            const key = document.getElementById('mc-key').value.trim();
+
+            const originalText = testMcBtn.innerHTML;
+            testMcBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Probando...';
+            testMcBtn.disabled = true;
+
+            if (window.electronAPI) {
+                // Llamamos al backend
+                const result = await window.electronAPI.testServerTapConnection({ ip, port, key });
+                
+                // Mostramos NUESTRO modal bonito dependiendo del resultado
+                showSystemModal(result.status, result.title, result.message, result.details);
+            } else {
+                alert("Función solo disponible en escritorio.");
+            }
+
+            testMcBtn.innerHTML = originalText;
+            testMcBtn.disabled = false;
+        });
+    }
+
+    // 1. Referencias a los 4 inputs
+    const mcInputs = {
+        player: document.getElementById('mc-player-name'),
+        ip: document.getElementById('mc-ip'),
+        port: document.getElementById('mc-port'),
+        key: document.getElementById('mc-key')
+    };
+
+    // Función para guardar todo
+    const saveMcSettings = () => {
+        if (window.electronAPI) {
+            window.electronAPI.saveMcConfig({
+                player: mcInputs.player.value.trim(),
+                ip: mcInputs.ip.value.trim(),
+                port: mcInputs.port.value.trim(),
+                key: mcInputs.key.value.trim()
+            });
+        }
+    };
+
+    // 2. CARGAR DATOS AL INICIAR
+    if (window.electronAPI) {
+        window.electronAPI.getMcConfig().then(config => {
+            // Si hay datos guardados, los ponemos. Si no, dejamos los del HTML.
+            if (config.player) mcInputs.player.value = config.player;
+            if (config.ip) mcInputs.ip.value = config.ip;
+            if (config.port) mcInputs.port.value = config.port;
+            if (config.key) mcInputs.key.value = config.key;
+        });
+    }
+
+    // 3. GUARDAR DATOS AL ESCRIBIR (En cualquiera de los 4 inputs)
+    // Usamos Object.values para recorrer los inputs y añadirles el listener
+    Object.values(mcInputs).forEach(input => {
+        if (input) {
+            input.addEventListener('input', saveMcSettings);
+        }
+    });
+
     // ==========================================================
     // INICIALIZACIÓN FINAL
     // ==========================================================

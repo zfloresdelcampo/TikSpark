@@ -1,0 +1,603 @@
+{
+    "wheels": [
+        {
+            "name": "wheel_9",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "ganaste",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 100.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_8",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "ganaste",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 50.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "nada",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 50.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_7",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "ganaste",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "muy cerca",
+                    "webhook": "",
+                    "image": "card-blue",
+                    "frequency": 45.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "cerca",
+                    "webhook": "",
+                    "image": "card-yellow",
+                    "frequency": 30.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "casi",
+                    "webhook": "",
+                    "image": "card-purple",
+                    "frequency": 14.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 5,
+                    "type": "text",
+                    "text": "nada",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_6",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "ganaste",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "muy cerca",
+                    "webhook": "",
+                    "image": "card-blue",
+                    "frequency": 25.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "cerca",
+                    "webhook": "",
+                    "image": "card-yellow",
+                    "frequency": 45.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "nada",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 29.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_5",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "ganaste",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "cerca",
+                    "webhook": "",
+                    "image": "card-yellow",
+                    "frequency": 39.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "nada",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 60.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_4",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "picture",
+                    "text": "LasCombinasionas2.png",
+                    "webhook": "",
+                    "image": "card-black",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "muy cerca",
+                    "webhook": "",
+                    "image": "card-blue",
+                    "frequency": 25.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "cerca",
+                    "webhook": "",
+                    "image": "card-yellow",
+                    "frequency": 30.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "casi",
+                    "webhook": "",
+                    "image": "card-purple",
+                    "frequency": 14.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 5,
+                    "type": "text",
+                    "text": "nada",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 30.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_3",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "dibujarse un bigote",
+                    "webhook": "",
+                    "image": "card-yellow",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "me salvo",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 5.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "otro giro",
+                    "webhook": "http://localhost:5730/wheel?id=3&userName={nickname}",
+                    "image": "card-blue",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "apagar live",
+                    "webhook": "",
+                    "image": "card-orange",
+                    "frequency": 5.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 5,
+                    "type": "text",
+                    "text": "no hablar 10 min",
+                    "webhook": "",
+                    "image": "card-black",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 6,
+                    "type": "text",
+                    "text": "dar 20 vueltas",
+                    "webhook": "",
+                    "image": "card-yellow",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 7,
+                    "type": "text",
+                    "text": "comer cebolla",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 3.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 8,
+                    "type": "text",
+                    "text": "20 polichinelas",
+                    "webhook": "",
+                    "image": "card-purple",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 9,
+                    "type": "text",
+                    "text": "30 sentadillas",
+                    "webhook": "",
+                    "image": "card-pink",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 10,
+                    "type": "text",
+                    "text": "cantar",
+                    "webhook": "",
+                    "image": "card-cyan",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 11,
+                    "type": "text",
+                    "text": "pintarse como payaso",
+                    "webhook": "",
+                    "image": "card-blue",
+                    "frequency": 10.899999618530274,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_2",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "NADA",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=NADA",
+                    "image": "card-yellow",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "X100",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x100",
+                    "image": "card-yellow",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "X50",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x50",
+                    "image": "card-yellow",
+                    "frequency": 3.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "X30",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x30",
+                    "image": "card-yellow",
+                    "frequency": 5.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 5,
+                    "type": "text",
+                    "text": "X20",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x20",
+                    "image": "card-yellow",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 6,
+                    "type": "text",
+                    "text": "X10",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x10",
+                    "image": "card-yellow",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 7,
+                    "type": "text",
+                    "text": "X5",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x5",
+                    "image": "card-yellow",
+                    "frequency": 15.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 8,
+                    "type": "text",
+                    "text": "X3",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x3",
+                    "image": "card-yellow",
+                    "frequency": 30.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 9,
+                    "type": "text",
+                    "text": "X2",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x2",
+                    "image": "card-yellow",
+                    "frequency": 20.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 10,
+                    "type": "text",
+                    "text": "X1",
+                    "webhook": "http://localhost:5731/timer/?action=start&data=30&multiplier=x1",
+                    "image": "card-yellow",
+                    "frequency": 5.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_1",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "NADA",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "+30 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "+10 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 3.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "+7 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 3.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 5,
+                    "type": "text",
+                    "text": "+6 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 5.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 6,
+                    "type": "text",
+                    "text": "+5 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 7,
+                    "type": "text",
+                    "text": "+4 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 15.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 8,
+                    "type": "text",
+                    "text": "+3 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 21.5,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 9,
+                    "type": "text",
+                    "text": "+2 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 21.5,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 10,
+                    "type": "text",
+                    "text": "+1 WIN",
+                    "webhook": "",
+                    "image": "card-green",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                }
+            ]
+        },
+        {
+            "name": "wheel_0",
+            "prizes": [
+                {
+                    "id": 1,
+                    "type": "text",
+                    "text": "NADA",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 2,
+                    "type": "text",
+                    "text": "-30 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 1.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 3,
+                    "type": "text",
+                    "text": "-10 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 3.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 4,
+                    "type": "text",
+                    "text": "-7 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 3.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 5,
+                    "type": "text",
+                    "text": "-6 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 5.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 6,
+                    "type": "text",
+                    "text": "-5 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 7,
+                    "type": "text",
+                    "text": "-4 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 15.0,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 8,
+                    "type": "text",
+                    "text": "-3 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 21.5,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 9,
+                    "type": "text",
+                    "text": "-2 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 21.5,
+                    "prizeImage": ""
+                },
+                {
+                    "id": 10,
+                    "type": "text",
+                    "text": "-1 WIN",
+                    "webhook": "",
+                    "image": "card-red",
+                    "frequency": 10.0,
+                    "prizeImage": ""
+                }
+            ]
+        }
+    ]
+}

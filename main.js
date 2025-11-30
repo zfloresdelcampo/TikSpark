@@ -123,7 +123,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({ width: 1200, height: 800, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true } });
     
     // === ¡AQUÍ ESTÁ LA LÍNEA AÑADIDA! ===
-    // mainWindow.setMenu(null);
+    mainWindow.setMenu(null);
     // === FIN DE LA LÍNEA AÑADIDA ===
 
     mainWindow.loadFile('index.html');
@@ -789,6 +789,88 @@ function createWindow() {
         }
     });
 
+    // --- LÓGICA DE PROBAR CONEXIÓN SERVERTAP (MODIFICADA PARA UI PERSONALIZADA) ---
+    ipcMain.handle('test-servertap-connection', async (event, { ip, port, key }) => {
+        
+        // CASO 1: ERROR DE VALIDACIÓN
+        if (!ip || !port || !key) {
+            return { 
+                status: 'warning', 
+                title: 'Faltan Datos', 
+                message: 'Por favor, rellena la IP, el Puerto y la Key antes de probar.' 
+            };
+        }
+
+        try {
+            const url = `http://${ip}:${port}/v1/server`;
+            const response = await axios.get(url, {
+                headers: { 'key': key },
+                timeout: 3000
+            });
+
+            // CASO 3: ÉXITO
+            const serverData = response.data;
+            const serverName = serverData.name || 'Desconocido';
+            const serverVersion = serverData.version || 'Desconocida';
+            const bucketVersion = serverData.bukkitVersion || '';
+
+            return { 
+                status: 'success', 
+                title: '¡Conexión Exitosa!', 
+                message: 'Se ha establecido conexión con el servidor de Minecraft correctamente.',
+                details: `Servidor: ${serverName}\nVersión: ${serverVersion}`
+            };
+
+        } catch (error) {
+            // CASO 2: ERROR DE CONEXIÓN
+            console.error("Error ServerTap:", error.message);
+            return { 
+                status: 'error', 
+                title: 'Error de Conexión', 
+                message: 'No se pudo conectar. Verifica que el servidor esté encendido, que el plugin ServerTap esté instalado y que la IP/Puerto/Key sean correctos.' 
+            };
+        }
+    });
+
+    // --- EJECUTAR COMANDO MINECRAFT (SERVERTAP) ---
+    ipcMain.handle('execute-servertap-command', async (event, { ip, port, key, command }) => {
+        try {
+            const url = `http://${ip}:${port}/v1/server/exec`;
+            
+            // ServerTap espera el comando en el cuerpo del POST como x-www-form-urlencoded
+            const params = new URLSearchParams();
+            params.append('command', command);
+
+            await axios.post(url, params, {
+                headers: { 
+                    'key': key,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                timeout: 2000
+            });
+            return { success: true };
+        } catch (error) {
+            console.error("Error enviando comando a Minecraft:", error.message);
+            return { success: false, error: error.message };
+        }
+    });
+
+    // 1. Guardar configuración de Minecraft (Todo en uno)
+    ipcMain.handle('save-mc-config', (event, data) => {
+        const config = loadConfig();
+        // Guardamos o actualizamos el objeto 'minecraft' dentro de config
+        config.minecraft = { ...config.minecraft, ...data }; 
+        saveConfig(config);
+        return true;
+    });
+
+    // 2. Obtener configuración de Minecraft
+    ipcMain.handle('get-mc-config', () => {
+        const config = loadConfig();
+        // Devuelve el objeto guardado o uno vacío si no existe
+        return config.minecraft || {}; 
+    });
+    
     // --- MANEJADOR GENÉRICO PARA ACTUALIZAR WIDGETS ---
     ipcMain.handle('update-widget', (event, { widgetId, data }) => {
         // 1. Guardar en memoria

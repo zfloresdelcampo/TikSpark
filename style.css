@@ -3110,3 +3110,72 @@ input[type="range"].volume-slider::-moz-range-thumb {
     background-color: #5c1d80;
     border-color: #5c1d80;
 }
+/* --- ESTILOS ESPECÍFICOS PARA EL MODAL DE SISTEMA --- */
+#system-message-modal .modal-content {
+    background-color: #1e1e1e; /* Fondo oscuro sólido (arregla la transparencia) */
+    border: 2px solid #5c1d80; /* Borde morado un poco más grueso */
+    box-shadow: 0 0 25px rgba(92, 29, 128, 0.4); /* Resplandor morado detrás */
+    padding: 0; /* Reseteamos padding para manejarlo nosotros */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Para que los bordes redondos no se corten */
+}
+
+/* El cuerpo del mensaje */
+#system-message-modal .modal-body-custom {
+    padding: 30px 30px 10px 30px; /* Espacio alrededor del texto/iconos */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* El pie donde va el botón */
+#system-message-modal .modal-footer-custom {
+    padding: 20px 30px 30px 30px; /* 30px abajo para separarlo del borde */
+    display: flex;
+    justify-content: center;
+    background-color: #1e1e1e; /* Aseguramos fondo aquí también */
+}
+
+/* Botón Entendido (Estilo Morado Brillante) */
+#sys-modal-close-btn {
+    background-color: #5c1d80;
+    color: white;
+    border: none;
+    padding: 10px 35px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+#sys-modal-close-btn:hover {
+    background-color: #7a29aa;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(92, 29, 128, 0.5);
+}
+
+/* Animaciones de los iconos (ya las tenías, las mantengo) */
+.sys-icon-success { color: #10c35b; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.sys-icon-error { color: #ed4245; animation: shake 0.4s ease; }
+.sys-icon-warning { color: #ffc107; animation: popIn 0.4s ease; }
+
+@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.version-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7); /* Fondo negro transparente */
+    color: #ffffff; /* Texto blanco */
+    padding: 5px 10px;
+    border-radius: 6px; /* Bordes redondeados */
+    font-size: 14px; /* Texto un poco más grande */
+    font-weight: bold;
+    z-index: 5;
+    backdrop-filter: blur(2px); /* Efecto borroso pro */
+}

@@ -1189,13 +1189,10 @@
                 </div>
 
                 <div class="games-grid">
-                    <div class="game-card locked"> 
+                    <div class="game-card" onclick="openSection('section-cubo-tnt')">
                         <div class="game-img-container">
-                            <img src="images/minigames/minecraft_tnt.jpg" alt="Cubo TNT">
-                            <div class="lock-overlay">
-                                <i class="fas fa-lock"></i>
-                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
-                            </div>
+                            <img src="images/minigames/minecraft-tnt.jpg" alt="Cubo TNT">
+                            <span class="version-badge">v1.0</span>
                         </div>
                         <div class="game-title">CUBO TNT</div>
                     </div>
@@ -1232,26 +1229,82 @@
                     <div class="game-card" onclick="openSection('section-peak')">
                         <div class="game-img-container">
                             <img src="images/minigames/peak.jpg" alt="PEAK">
+                            <span class="version-badge">v1.0</span>
                         </div>
                         <div class="game-title">PEAK</div>
                     </div>
                     <div class="game-card" onclick="openSection('section-supermarket-simulator')">
                         <div class="game-img-container">
                             <img src="images/minigames/supermarket-simulator.jpg" alt="Supermarket Simulator">
+                            <span class="version-badge">v1.0</span>
                         </div>
                         <div class="game-title">SUPERMARKET SIMULATOR</div>
                     </div>
                     <div class="game-card" onclick="openSection('section-the-forest')">
                         <div class="game-img-container">
                             <img src="images/minigames/the-forest.jpg" alt="The Forest">
+                            <span class="version-badge">v1.0</span>
                         </div>
                         <div class="game-title">THE FOREST</div>
+                    </div>
+                    <div class="game-card" onclick="openSection('section-lucky-wheel')">
+                        <div class="game-img-container">
+                            <img src="images/minigames/lucky-wheel.jpg" alt="Lucky Wheel">
+                            <span class="version-badge">v1.0</span>
+                        </div>
+                        <div class="game-title">LUCKY WHEEL</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- SECCIONES DE JUEGOS INDIVIDUALES (VAN AFUERA DE minigames-section) -->
+
+        <div id="section-cubo-tnt" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">Cubo TNT</h2>
+                </div>
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/minecraft-tnt.jpg" alt="Icono Cubo TNT">
+                        </div>
+                        <h2>Cubo TNT</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-right" style="background-image: url('images/minigames/minecraft-tnt.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="cubo-tnt-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-cubo-tnt-path">
+                                Select Cubo TNT
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-cubo-tnt">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-cubo-tnt">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
 
         <div id="section-peak" class="content-section">
             <div class="section-container">
@@ -1381,6 +1434,54 @@
                                 Instalar Mod
                             </button>
                             <button class="btn-dashboard btn-delete" id="btn-delete-the-forest">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-lucky-wheel" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">Lucky Wheel</h2>
+                </div>
+
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/lucky-wheel.jpg" alt="Icono Lucky Wheel">
+                        </div>
+                        <h2>Lucky Wheel</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-right" style="background-image: url('images/minigames/lucky-wheel.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="lucky-wheel-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-lucky-wheel-path">
+                                Select Lucky Wheel
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-lucky-wheel">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-lucky-wheel">
                                 Borrar Mod
                             </button>
                         </div>
@@ -1650,6 +1751,25 @@
                     <div class="checkbox-item">
                         <div class="checkbox-label-row">
                             <input type="checkbox" id="action-minecraft"><label for="action-minecraft">Comandos Minecraft</label>
+                        </div>
+                        <div id="minecraft-config" class="webhook-config">
+                            <label>Introduce un comando:</label>
+                            <textarea id="minecraft-command" placeholder="Ej: summon zombie {playername}" style="width:100%; background:#252526; color:white; border:1px solid #505050; border-radius:4px; padding:10px; resize:vertical; min-height:80px; font-family:inherit;"></textarea>
+                            
+                            <div style="display:flex; gap:15px; margin-top:5px; font-size:12px;">
+                                <a href="#" style="color:#10c35b; text-decoration:none;">🔗 Lista de Placeholders</a>
+                            </div>
+
+                            <div class="input-inline-group" style="margin-top:10px;">
+                                <div class="input-box">
+                                    <div class="label-container"><label>Cantidad:</label></div>
+                                    <div class="input-with-label"><span>#:</span><input type="number" id="minecraft-quantity" value="1" min="1"></div>
+                                </div>
+                                <div class="input-box">
+                                    <div class="label-container"><label>Intervalo:</label></div>
+                                    <div class="input-with-label"><input type="number" id="minecraft-interval" value="100" min="1"><span class="unit">ms</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -2013,6 +2133,34 @@
 
             <div class="media-grid-container" id="media-grid" style="padding: 20px; max-height: 400px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
                 <!-- Aquí se generarán las tarjetas con JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- === MODAL DE MENSAJES DEL SISTEMA (VERSIÓN FINAL CON ESTILO) === -->
+    <div id="system-message-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 450px;"> <!-- Ancho fijo un poco más grande -->
+            
+            <div class="modal-header" style="background-color: #252526; padding: 15px; border-bottom: 1px solid #333;">
+                <h3 id="sys-modal-title" style="margin: 0; font-size: 18px; width: 100%; text-align: center;">Mensaje</h3>
+            </div>
+            
+            <!-- Cuerpo -->
+            <div class="modal-body-custom">
+                <!-- Icono grande -->
+                <div id="sys-modal-icon" style="font-size: 60px; margin-bottom: 20px; margin-top: 10px;"></div>
+                
+                <!-- Mensaje -->
+                <p id="sys-modal-message" style="color: #e0e0e0; font-size: 16px; line-height: 1.6; text-align: center; margin: 0;"></p>
+                
+                <!-- Detalles técnicos (caja gris) -->
+                <div id="sys-modal-details" style="background: #2b2b2b; padding: 15px; border-radius: 6px; font-size: 13px; color: #b0b0b0; margin-top: 20px; width: 100%; box-sizing: border-box; border: 1px solid #444; display: none;">
+                </div>
+            </div>
+
+            <!-- Pie con botón separado -->
+            <div class="modal-footer-custom">
+                <button id="sys-modal-close-btn">Entendido</button>
             </div>
         </div>
     </div>
