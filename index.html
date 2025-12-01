@@ -7,6 +7,43 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- PANTALLA DE LOGIN (Nueva) -->
+    <div id="login-screen" class="login-overlay">
+        <!-- Fondo animado/degradado -->
+        <div class="login-background"></div>
+        
+        <div class="login-card" style="display: none;">
+            <h2>Iniciar Sesión</h2>
+            <p class="login-subtitle">Bienvenido a TikSpark</p>
+            
+            <div class="login-form-group">
+                <label>Correo Electrónico</label>
+                <input type="text" id="login-username" placeholder="Ingresa tu correo electrónico">
+            </div>
+            
+            <div class="login-form-group">
+                <label>Contraseña</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+                <i class="fas fa-eye password-toggle"></i>
+            </div>
+
+            <button id="btn-login-action">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </button>
+            
+            <div class="login-footer-links">
+                <!-- Enlace para cambiar a modo Registro -->
+                <p id="msg-login-mode">¿No tienes cuenta? <a href="#" id="btn-go-to-register">Regístrate</a></p>
+                
+                <!-- Enlace para cambiar a modo Login (oculto por defecto) -->
+                <p id="msg-register-mode" style="display: none;">¿Ya tienes cuenta? <a href="#" id="btn-go-to-login">Inicia Sesión</a></p>
+            </div>
+        </div>
+        
+        <div class="login-version-tag" id="login-version-tag">Cargando...</div>
+    </div>
+
     <!-- Reemplaza todo tu <div id="sidebar"> con esto: -->
 
     <div id="sidebar">
@@ -154,6 +191,12 @@
                 Mini-Juegos
             </div>
 
+        </div>
+        <!-- Botón Cerrar Sesión (Nuevo) -->
+        <div class="sidebar-footer-actions">
+            <button id="btn-logout" class="sidebar-btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </button>
         </div>
         <div id="app-version"></div>
     </div>
@@ -390,27 +433,26 @@
                 <h2>Alertas</h2>
                 <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
             
-                <div class="list-view-container">
-                    <div class="list-view-controls">
-                        <div class="control-group">
-                            <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
-                        </div>
-                        <div class="search-wrapper">
-                            <span>🔍</span>
-                            <input type="text" placeholder="Buscar alertas...">
-                        </div>
+                <div class="list-view-controls">
+                    <div class="control-group">
+                        <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
                     </div>
-                    <div class="list-view-header alert-header">
-                        <input type="checkbox" class="header-checkbox">
-                        <div>Activo</div>
-                        <div>Acciones</div>
-                        <div>Eventos</div>
-                        <div>Duración (seg)</div>
-                        <div>Descripción</div>
+                    <div class="search-wrapper">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Buscar alertas...">
                     </div>
-                    <div id="alerts-list-container"></div>
-                    <div class="list-view-pagination" id="alerts-pagination"></div>
                 </div>
+                <div class="list-view-header alert-header">
+                    <input type="checkbox" class="header-checkbox">
+                    <div>Activo</div>
+                    <div>Acciones</div>
+                    <div>Eventos</div>
+                    <div>Duración (seg)</div>
+                    <div>Descripción</div>
+                </div>
+                <div id="alerts-list-container"></div>
+                <div class="list-view-pagination" id="alerts-pagination"></div>
+                
             </div>
         </div>
         <!-- === FIN DE LA SECCIÓN DE ALERTAS === -->
@@ -899,13 +941,14 @@
 
                 <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
                 <div class="goal-preview-box">
-                    <div class="preview-iframe-wrapper">
+                    <!-- <div class="preview-iframe-wrapper">
                         <iframe 
                             src="http://127.0.0.1:5500/goal-shares.html" 
                             class="goal-iframe-preview"
                             scrolling="no">
                         </iframe>
-                    </div>
+                    </div> -->
+                    <p style="color: #aaa; text-align: center;">Previsualización de Shares va aquí...</p>
                 </div>
 
             </div>
@@ -960,13 +1003,14 @@
 
                 <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
                 <div class="goal-preview-box">
-                    <div class="preview-iframe-wrapper">
+                    <!-- <div class="preview-iframe-wrapper">
                         <iframe 
                             src="http://127.0.0.1:5500/goal-viewers.html" 
                             class="goal-iframe-preview"
                             scrolling="no">
                         </iframe>
-                    </div>
+                    </div> -->
+                    <p style="color: #aaa; text-align: center;">Previsualización de Viewers va aquí...</p>
                 </div>
 
             </div>
@@ -1021,13 +1065,14 @@
 
                 <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
                 <div class="goal-preview-box">
-                    <div class="preview-iframe-wrapper">
+                    <!-- <div class="preview-iframe-wrapper">
                         <iframe 
                             src="http://127.0.0.1:5500/goal-coins.html" 
                             class="goal-iframe-preview"
                             scrolling="no">
                         </iframe>
-                    </div>
+                    </div> -->
+                    <p style="color: #aaa; text-align: center;">Previsualización de Coins va aquí...</p>
                 </div>
 
             </div>
@@ -1082,13 +1127,14 @@
 
                 <!-- 3. NUEVO: Previsualización (Debajo de tus botones) -->
                 <div class="goal-preview-box">
-                    <div class="preview-iframe-wrapper">
+                    <!-- <div class="preview-iframe-wrapper">
                         <iframe 
                             src="http://127.0.0.1:5500/goal-fans.html" 
                             class="goal-iframe-preview"
                             scrolling="no">
                         </iframe>
-                    </div>
+                    </div> -->
+                    <p style="color: #aaa; text-align: center;">Previsualización de Fans va aquí...</p>
                 </div>
 
             </div>
@@ -2168,14 +2214,29 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <!-- LIBRERÍAS FIREBASE (Versión Modular Compatible 8.10.1) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <script>
+      // Tu configuración REAL de Firebase
       var firebaseConfig = {
-        databaseURL: "https://flutter-ai-playground-bc58f-default-rtdb.firebaseio.com/", // <-- ¡TU URL!
+        apiKey: "AIzaSyCqXoC7bjkD7-v0K40lZUsp08quxPeTPXo",
+        authDomain: "tikspark-app-f1402.firebaseapp.com",
+        databaseURL: "https://tikspark-app-f1402-default-rtdb.firebaseio.com",
+        projectId: "tikspark-app-f1402",
+        storageBucket: "tikspark-app-f1402.firebasestorage.app",
+        messagingSenderId: "886377587240", // (Opcional por ahora)
+        appId: "1:886377587240:web:092116eda1c7437bc48b1d" // (Opcional por ahora)
       };
+      
+      // Inicializar Firebase
       firebase.initializeApp(firebaseConfig);
+      
+      // Referencias globales para usarlas en script.js
+      const auth = firebase.auth();
+      const db = firebase.database();
     </script>
     
     <script src="scripts/script.js"></script>

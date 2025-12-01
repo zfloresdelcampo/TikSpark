@@ -43,8 +43,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // === ¡NUEVA LÍNEA PARA DESCONECTAR! ===
     disconnect: () => ipcRenderer.invoke('disconnect-tiktok'),
     
-    loadData: () => ipcRenderer.invoke('load-data'),
-    saveData: (data) => ipcRenderer.invoke('save-data', data),
+    // Acepta usuario para cargar
+    loadData: (username) => ipcRenderer.invoke('load-data', username),
+    // Acepta objeto con usuario y datos para guardar
+    saveData: (payload) => ipcRenderer.invoke('save-data', payload),
+    checkUserExists: (username) => ipcRenderer.invoke('check-user-exists', username),
 
     // --- NUEVA LÍNEA PARA EXPORTAR ---
     exportProfile: (profileData) => ipcRenderer.invoke('export-profile', profileData),

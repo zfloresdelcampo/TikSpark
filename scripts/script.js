@@ -44,6 +44,175 @@ document.addEventListener('DOMContentLoaded', async function() {
     const btnAddMedia = document.getElementById('add-new-media-btn');
     const gridMedia = document.getElementById('media-grid');
 
+    // --- PERMITIR TECLA ENTER PARA ENTRAR ---
+    const loginInputs = [document.getElementById('login-username'), document.getElementById('login-password')];
+    
+    loginInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Evita saltos de línea raros
+                    btnAction.click(); // Simula el clic en el botón
+                }
+            });
+        }
+    });
+
+    // SISTEMA DE LOGUEO //
+    let currentAppUser = null; // Guardará el usuario logueado en la App
+
+   // === SISTEMA DE LOGIN Y REGISTRO ===
+    const loginScreen = document.getElementById('login-screen');
+    const btnAction = document.getElementById('btn-login-action');
+    const inputUser = document.getElementById('login-username');
+    const btnLogout = document.getElementById('btn-logout');
+    
+    // Elementos del toggle Login/Registro
+    const linkToRegister = document.getElementById('btn-go-to-register');
+    const linkToLogin = document.getElementById('btn-go-to-login');
+    const msgLoginMode = document.getElementById('msg-login-mode');
+    const msgRegisterMode = document.getElementById('msg-register-mode');
+    const loginTitle = document.querySelector('.login-card h2');
+
+    let isRegisterMode = false; // false = Login, true = Registro
+    
+    // --- ESCUCHA AUTOMÁTICA DE SESIÓN (MODIFICADO) ---
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log("✅ Sesión encontrada:", user.email);
+            currentAppUser = user;
+
+            const sidebarName = document.getElementById('sidebar-username-display');
+            if (sidebarName && user.email) sidebarName.textContent = user.email.split('@')[0];
+
+            await loadAllDataFromCloud();
+
+            if (loginScreen) loginScreen.classList.remove('active');
+        } else {
+            console.log("ℹ️ No hay sesión, mostrando formulario.");
+            // AQUÍ ESTÁ EL TRUCO: Solo mostramos la caja si CONFIRMAMOS que no hay usuario
+            if (loginScreen) {
+                loginScreen.classList.add('active');
+                document.querySelector('.login-card').style.display = 'block'; // <--- ESTO MUESTRA EL FORMULARIO
+            }
+        }
+    });
+
+    // Función para cambiar entre Login y Registro visualmente
+    function toggleLoginMode(toRegister) {
+        isRegisterMode = toRegister;
+        if (isRegisterMode) {
+            loginTitle.textContent = "Crear Cuenta";
+            btnAction.innerHTML = '<i class="fas fa-user-plus"></i> Registrarse';
+            msgLoginMode.style.display = 'none';
+            msgRegisterMode.style.display = 'block';
+        } else {
+            loginTitle.textContent = "Iniciar Sesión";
+            btnAction.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+            msgLoginMode.style.display = 'block';
+            msgRegisterMode.style.display = 'none';
+        }
+    }
+
+    if (linkToRegister) linkToRegister.addEventListener('click', () => toggleLoginMode(true));
+    if (linkToLogin) linkToLogin.addEventListener('click', () => toggleLoginMode(false));
+
+    // ACCIÓN DEL BOTÓN PRINCIPAL (LOGIN / REGISTRO CON FIREBASE)
+    // ACCIÓN DEL BOTÓN PRINCIPAL (LOGIN / REGISTRO CON FIREBASE)
+    if (btnAction) {
+        btnAction.addEventListener('click', async () => {
+            // CORRECCIÓN 1: Usar la variable correcta 'inputUser'
+            const email = inputUser.value.trim(); 
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) return alert("Por favor, completa correo y contraseña.");
+
+            try {
+                // Mostramos un texto de carga
+                btnAction.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+                
+                if (isRegisterMode) {
+                    // --- CREAR CUENTA EN NUBE ---
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    currentAppUser = userCredential.user;
+                    
+                    // Crear estructura inicial en base de datos (CORRECCIÓN 3: Estructura completa)
+                    await db.ref('users/' + currentAppUser.uid).set({
+                        email: email,
+                        createdAt: Date.now(),
+                        data: { 
+                            profiles: {
+                                'Perfil Principal': { actions: [], events: [], nextActionId: 1, nextEventId: 1 }
+                            },
+                            activeProfileName: 'Perfil Principal' 
+                        }
+                    });
+                    alert("✅ Cuenta creada. ¡Bienvenido!");
+                } else {
+                    // --- INICIAR SESIÓN EN NUBE ---
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    currentAppUser = userCredential.user;
+                }
+
+                // Cargar datos desde la nube
+                // CORRECCIÓN 2: Usar el nombre correcto de la función
+                await loadAllDataFromCloud();
+                
+                // Actualizar nombre en barra lateral
+                const sidebarName = document.getElementById('sidebar-username-display');
+                if(sidebarName) sidebarName.textContent = email.split('@')[0];
+                
+                loginScreen.classList.remove('active');
+
+            } catch (error) {
+                console.error(error);
+                let msg = error.message;
+                if (error.code === 'auth/email-already-in-use') msg = "El correo ya está registrado.";
+                if (error.code === 'auth/wrong-password') msg = "Contraseña incorrecta.";
+                if (error.code === 'auth/user-not-found') msg = "Usuario no encontrado.";
+                if (error.code === 'auth/weak-password') msg = "La contraseña es muy débil (mínimo 6 caracteres).";
+                alert("❌ Error: " + msg);
+            } finally {
+                // Restaurar botón
+                if(isRegisterMode) btnAction.innerHTML = '<i class="fas fa-user-plus"></i> Registrarse';
+                else btnAction.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+            }
+        });
+    }
+
+    // Botón Cerrar Sesión (Igual que antes)
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            await saveAllData(); // Guardar último estado
+            await auth.signOut(); // Cerrar sesión en Firebase
+            currentAppUser = null;
+            profiles = {};
+            activeProfileName = '';
+            inputUser.value = '';
+            document.getElementById('login-password').value = '';
+            
+            // Al salir, volvemos al modo Login por defecto
+            toggleLoginMode(false); 
+            loginScreen.classList.add('active');
+        });
+    }
+
+    // === Lógica del Ojito (Ver/Ocultar Contraseña) ===
+    const togglePassword = document.querySelector('.password-toggle');
+    const passwordInput = document.getElementById('login-password');
+
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            // Cambiar tipo de input: password <-> text
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Cambiar icono: ojo abierto <-> ojo tachado
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+
     // Busca esta línea y cámbiala por esta:
     let topGiftState = { 
         username: 'Username', 
@@ -167,7 +336,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // === AGREGA ESTA LÍNEA AQUÍ ===
     let audioSelectionContext = 'action'; // Valores: 'action' o 'alert'
 
-    // === NUEVO: Función para renderizar Alertas ===
+    // === NUEVO: Función para renderizar Alertas (CORREGIDA) ===
     function renderAlerts() {
         const currentProfile = profiles[activeProfileName];
         if (!currentProfile) {
@@ -177,13 +346,24 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         const alerts = currentProfile.alerts || [];
         const container = alertsListContainer.parentElement;
+        
+        // --- 1. Buscamos la cabecera en el HTML ---
+        const alertHeader = container.querySelector('.list-view-header.alert-header');
+        
         alertsListContainer.innerHTML = '';
 
         if (alerts.length === 0) {
             alertsListContainer.innerHTML = '<div class="no-items-message">Sin alertas</div>';
             container.classList.add('empty');
+            
+            // --- 2. Si está vacío, OCULTAMOS la cabecera ---
+            if (alertHeader) alertHeader.style.display = 'none';
+            
             return;
         }
+        
+        // --- 3. Si hay datos, MOSTRAMOS la cabecera ---
+        if (alertHeader) alertHeader.style.display = ''; // Comillas vacías restauran el CSS original (grid/flex)
         container.classList.remove('empty');
 
         alerts.forEach(alert => {
@@ -199,14 +379,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // 1. Audio
             if (alert.audioAction) {
-                // Muestra el nombre del archivo de audio
                 descriptionParts.push(`🔊 Audio: ${alert.audioAction.file}`);
             }
 
-            // 2. Video / Media (Lo que pediste)
+            // 2. Video / Media
             if (alert.mediaAction) {
-                // Sacamos solo el nombre del archivo del link (lo que está después del último /)
-                // Ej: https://imgur.com/video.mp4 -> video.mp4
                 let fileName = 'Archivo desconocido';
                 try {
                     fileName = alert.mediaAction.url.split('/').pop();
@@ -215,7 +392,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 descriptionParts.push(`🎬 Video: ${fileName}`);
             }
 
-            // Unimos las partes con un separador (ej: "🔊 Audio.mp3 | 🎬 Video.mp4")
             let description = descriptionParts.join(' | ');
             // ---------------------------------------
 
@@ -761,10 +937,13 @@ toggleButtons.forEach(button => {
 
 if (window.electronAPI) {
     window.electronAPI.onSetVersion((version) => {
+        // Este es el del menú lateral (ya lo tenías)
         const versionElement = document.getElementById('app-version');
-        if (versionElement) {
-            versionElement.textContent = `v${version}`;
-        }
+        if (versionElement) versionElement.textContent = `v${version}`;
+
+        // AGREGA ESTO: Actualiza también la pantalla de Login
+        const loginVersion = document.getElementById('login-version-tag');
+        if (loginVersion) loginVersion.textContent = `v${version}`;
     });
 }
 
@@ -1071,86 +1250,74 @@ if (window.electronAPI) {
     let currentPageEvents = 1;
 
     async function saveAllData() {
-        if (window.electronAPI) {
-            await window.electronAPI.saveData({ 
-            profiles, 
-            activeProfileName, 
-            mediaLibrary, // <--- ¡ESTO ES LO NUEVO!
-            goalLikes: likeGoalState, // <--- AGREGA ESTA LÍNEA (con la coma al final de la anterior)
-            goalFollows: followGoalState,
-            topGift: topGiftState
-        });
-            console.log("Datos de perfiles guardados.");
-        } else {
-            console.warn("Modo Navegador: saveAllData no hace nada. Los datos son temporales.");
+        // Guardar en la NUBE (Firebase)
+        if (currentAppUser) {
+            try {
+                await db.ref('users/' + currentAppUser.uid + '/data').set({
+                    profiles, 
+                    activeProfileName, 
+                    mediaLibrary: mediaLibrary || [],
+                    goalLikes: likeGoalState,
+                    goalFollows: followGoalState,
+                    topGift: topGiftState,
+                    topStreak: topStreakState
+                });
+                console.log("☁️ Datos guardados en la nube.");
+            } catch (e) {
+                console.error(e);
+                showToastNotification("❌ Error al guardar en la nube");
+            }
         }
     }
 
-    async function loadAllData() {
-        if (window.electronAPI) {
-            const loadedData = await window.electronAPI.loadData();
-            if (loadedData && loadedData.profiles) {
-                profiles = loadedData.profiles;
-                activeProfileName = loadedData.activeProfileName;
-            } else if (loadedData && loadedData.actions) {
-                console.log("Detectados datos de versión anterior. Migrando a perfiles...");
-                profiles['Perfil Principal'] = {
-                    actions: loadedData.actions || [],
-                    events: loadedData.events || [],
-                    nextActionId: loadedData.nextActionId || 1,
-                    nextEventId: loadedData.nextEventId || 1,
-                };
-                activeProfileName = 'Perfil Principal';
-            }
+    async function loadAllDataFromCloud() {
+        if (currentAppUser) {
+            const userId = currentAppUser.uid;
+            showToastNotification("☁️ Descargando datos...");
             
-                // 2. Cargar Biblioteca de Medios (¡ESTO ES LO NUEVO!)
-                if (loadedData.mediaLibrary) {
-                    mediaLibrary = loadedData.mediaLibrary;
+            const snapshot = await db.ref('users/' + userId + '/data').once('value');
+            const data = snapshot.val();
+
+            if (data) {
+                profiles = data.profiles || {};
+                activeProfileName = data.activeProfileName || '';
+                mediaLibrary = data.mediaLibrary || [];
+                
+                // Cargar Metas y Widgets (con validación por si son undefined)
+                likeGoalState = data.goalLikes || { current: 0, meta: 1000, initialMeta: 1000, title: "Like Goal" };
+                followGoalState = data.goalFollows || { current: 0, meta: 100, initialMeta: 100, title: "Follow Goal" };
+                topGiftState = data.topGift || { username: 'Username', coins: 0, giftName: 'Default', giftImage: '' };
+                topStreakState = data.topStreak || { username: 'Username', streakCount: 0, giftName: 'Default', giftImage: '' };
+
+                // Actualizar Inputs Visuales de Metas
+                if(document.getElementById('gl-title-input')) {
+                    document.getElementById('gl-title-input').value = likeGoalState.title;
+                    document.getElementById('gl-meta-input').value = likeGoalState.meta;
+                }
+                if(document.getElementById('gf-title-input')) {
+                    document.getElementById('gf-title-input').value = followGoalState.title;
+                    document.getElementById('gf-meta-input').value = followGoalState.meta;
                 }
 
-                // 3. Cargar Meta de Likes
-                if (loadedData.goalLikes) {
-                    likeGoalState = loadedData.goalLikes;
-                    
-                    // Actualizar los inputs visuales (usamos getElementById por seguridad)
-                    const tInput = document.getElementById('gl-title-input');
-                    const mInput = document.getElementById('gl-meta-input');
-                    
-                    if (tInput) tInput.value = likeGoalState.title;
-                    if (mInput) mInput.value = likeGoalState.meta;
-                    
-                    // Sincronizar overlay
-                    if (typeof syncGoalOverlay === 'function') syncGoalOverlay();
-                }
-                // -----------------------
-
-                // 4. Cargar Meta de Follows
-                if (loadedData.goalFollows) {
-                    followGoalState = loadedData.goalFollows;
-                    
-                    // Sincronizar inputs visuales
-                    const tInput = document.getElementById('gf-title-input');
-                    const mInput = document.getElementById('gf-meta-input');
-                    if (tInput) tInput.value = followGoalState.title;
-                    if (mInput) mInput.value = followGoalState.meta;
-                    
-                    if (typeof syncFollowGoalOverlay === 'function') syncFollowGoalOverlay();
+                // Sincronizar widgets visualmente
+                if (window.electronAPI) {
+                    window.electronAPI.updateWidget('topGift', topGiftState);
+                    window.electronAPI.updateWidget('topStreak', topStreakState);
+                    // syncGoalOverlay(); // Si tienes estas funciones definidas
                 }
 
-                // 5. Cargar Mejor Regalo
-                if (loadedData.topGift) {
-                    topGiftState = loadedData.topGift;
-                    // Forzar actualización visual al cargar
-                    if(window.electronAPI) window.electronAPI.updateWidget('topGift', topGiftState);
-                }
+            } else {
+                // Usuario nuevo sin datos
+                profiles = {};
+                activeProfileName = '';
+            }
 
-                // 6. Cargar Mejor Racha
-                if (loadedData.topStreak) {
-                    topStreakState = loadedData.topStreak;
-                    if(window.electronAPI) window.electronAPI.updateWidget('topStreak', topStreakState);
-                }
+            // Cargar caché global de regalos
+            if(window.electronAPI) await loadGiftsCache(); // Sin el "window."
 
-            await loadGiftsCache();
+            updateProfileSelector();
+            renderActiveProfileData();
+            showToastNotification("✅ Datos cargados correctamente.");
         }
     }
 
@@ -1740,6 +1907,9 @@ if (window.electronAPI) {
             actionsListContainer.appendChild(actionDiv);
         });
         renderPaginationControls(container, currentPageActions, actions.length, handleActionPageChange);
+        // --- AGREGA ESTAS 2 LÍNEAS AQUÍ: ---
+        if (typeof updateGoalActions === 'function') updateGoalActions();
+        if (typeof updateGoalFollowActions === 'function') updateGoalFollowActions();
     }
 
     function resetActionModal() {
@@ -1982,6 +2152,9 @@ if (window.electronAPI) {
 
         newActionData.description = descriptions.join(' + ') || 'Acción Local';
 
+        // --- AGREGAR ESTA LÍNEA DE SEGURIDAD AQUÍ ---
+        if (!currentProfile.actions) currentProfile.actions = []; 
+        // --------------------------------------------
 
         if (id) {
             const index = currentProfile.actions.findIndex(a => a.id === id);
@@ -2233,23 +2406,31 @@ if (window.electronAPI) {
     }
 
     async function populateGiftSelector() {
+        const listContainer = document.getElementById('gift-options-list');
         if (!window.electronAPI) {
-            giftOptionsList.innerHTML = '<div class="no-gifts-message">No disponible en modo navegador.</div>';
+            listContainer.innerHTML = '<div class="no-gifts-message">No disponible en modo navegador.</div>';
             return;
         }
-        if (availableGiftsCache.length > 0) { renderGiftOptions(availableGiftsCache); return; }
-        giftOptionsList.innerHTML = '<div class="no-gifts-message">Cargando...</div>';
+
+        // 1. Intentamos usar la caché actual
+        if (availableGiftsCache && availableGiftsCache.length > 0) { 
+            renderGiftOptions(availableGiftsCache); 
+            return; 
+        }
+
+        // 2. Si está vacía, pedimos al backend
+        listContainer.innerHTML = '<div class="no-gifts-message">Cargando regalos...</div>';
         try {
             const gifts = await window.electronAPI.getAvailableGifts();
-            if (gifts.length === 0) {
-                giftOptionsList.innerHTML = '<div class="no-gifts-message">No hay regalos guardados.</div>';
-                return;
+            if (gifts && gifts.length > 0) {
+                availableGiftsCache = gifts;
+                renderGiftOptions(gifts);
+            } else {
+                listContainer.innerHTML = '<div class="no-gifts-message" style="padding:10px; text-align:center;">Lista vacía.<br>Conéctate a un Live y pulsa "Actualizar Regalos".</div>';
             }
-            availableGiftsCache = gifts;
-            renderGiftOptions(gifts);
         } catch (error) {
             console.error("Error al cargar los regalos:", error);
-            giftOptionsList.innerHTML = '<div class="no-gifts-message">Error al cargar regalos.</div>';
+            listContainer.innerHTML = '<div class="no-gifts-message">Error al cargar regalos.</div>';
         }
     }
 
@@ -2401,6 +2582,8 @@ if (window.electronAPI) {
 
         paginatedEvents.forEach(event => { 
             let triggerContent = '';
+            
+            // 1. Lógica para Regalos
             if (event.why === 'gift-specific' && event.giftId) {
                 const giftDetails = getFullGiftDetails(event.giftId);
                 if (giftDetails) {
@@ -2408,7 +2591,14 @@ if (window.electronAPI) {
                 } else {
                     triggerContent = `<div class="trigger-content"><i class="fas fa-gift"></i> Gift ID: ${event.giftId}</div>`;
                 }
-            } else {
+            } 
+            // 2. NUEVA LÓGICA PARA LIKES
+            else if (event.why === 'likes') {
+                const amount = event.likesAmount || 0;
+                triggerContent = `<div class="trigger-content">${eventIcons['likes'] || ''} Likes ${amount}+</div>`;
+            }
+            // 3. Resto de eventos
+            else {
                 triggerContent = `<div class="trigger-content">${eventIcons[event.why] || ''} ${whyLabels[event.why] || event.why}</div>`;
             }
 
@@ -2504,6 +2694,10 @@ if (window.electronAPI) {
         }
         // --- FIN DEL BLOQUE A AÑADIR ---
 
+        // --- AGREGAR ESTA LÍNEA DE SEGURIDAD AQUÍ ---
+        if (!currentProfile.events) currentProfile.events = [];
+        // --------------------------------------------
+
         if (id) { 
             const index = currentProfile.events.findIndex(e => e.id === id); 
             if (index !== -1) currentProfile.events[index] = eventData; 
@@ -2519,36 +2713,76 @@ if (window.electronAPI) {
     });
     
     window.editEvent = async (id) => { 
-        const event = profiles[activeProfileName]?.events.find(e => e.id === id); 
+        const currentProfile = profiles[activeProfileName]; 
+        // SEGURIDAD: Si no hay perfil o no hay eventos, no hacemos nada
+        if (!currentProfile || !currentProfile.events) return;
+
+        // SEGURIDAD: Usamos '==' en vez de '===' para que funcione si el ID es texto o número
+        const event = currentProfile.events.find(e => e.id == id); 
+        
         if (event) { 
             resetEventModal(); 
             document.getElementById('event-modal-title').textContent = 'Editar Evento'; 
             document.getElementById('editing-event-id').value = event.id; 
-            document.querySelector(`input[name="event_who"][value="${event.who}"]`).checked = true; 
+            
+            // Restaurar Radios (Quién y Por Qué)
+            const whoRadio = document.querySelector(`input[name="event_who"][value="${event.who}"]`);
+            if (whoRadio) whoRadio.checked = true;
+
             const whyRadio = document.querySelector(`input[name="event_why"][value="${event.why}"]`);
-            whyRadio.checked = true;
-            whyRadio.dispatchEvent(new Event('change'));
+            if (whyRadio) {
+                whyRadio.checked = true;
+                whyRadio.dispatchEvent(new Event('change')); // Activar lógica visual
+            }
+
             document.getElementById('event-cooldown').value = event.cooldown; 
             document.getElementById('event-image').value = event.image; 
-            selectedActionsAll.splice(0, selectedActionsAll.length, ...event.actionsAll); 
-            selectedActionsRandom.splice(0, selectedActionsRandom.length, ...event.actionsRandom); 
+            
+            // Restaurar acciones seleccionadas
+            selectedActionsAll.splice(0, selectedActionsAll.length, ...(event.actionsAll || [])); 
+            selectedActionsRandom.splice(0, selectedActionsRandom.length, ...(event.actionsRandom || [])); 
             renderSelectedTags(multiSelectAll, selectedActionsAll); 
             renderSelectedTags(multiSelectRandom, selectedActionsRandom); 
+            
             await openEventModal();
+            
+            // Restaurar Regalo Específico
             if (event.why === 'gift-specific' && event.giftId) {
-                const selectedGift = availableGiftsCache.find(g => g.id === event.giftId);
-                if (selectedGift) selectGift(selectedGift);
+                // Intentamos buscarlo en la caché
+                const selectedGift = availableGiftsCache.find(g => g.id == event.giftId);
+                if (selectedGift) {
+                    selectGift(selectedGift);
+                } else {
+                    // Si no está en caché, ponemos la data guardada manualmente
+                    const display = document.getElementById('gift-selector-display');
+                    const input = document.getElementById('selected-gift-id');
+                    input.value = event.giftId;
+                    if(event.giftImage) {
+                        display.innerHTML = `<img src="${event.giftImage}" alt="${event.giftName}"><span>${event.giftName}</span>`;
+                    } else {
+                        display.innerHTML = `<span>${event.giftName || 'Regalo ID: ' + event.giftId}</span>`;
+                    }
+                }
+            }
+
+            // Restaurar Likes Específicos
+            if (event.why === 'likes' && event.likesAmount) {
+                document.getElementById('likes-amount').value = event.likesAmount;
             }
         } 
     };
 
     window.deleteEvent = async (id) => { 
         const currentProfile = profiles[activeProfileName];
-        if (!currentProfile) return;
+        if (!currentProfile || !currentProfile.events) return; // Seguridad extra
+
         if (confirm(`¿Seguro que quieres borrar este evento?`)) { 
-            currentProfile.events = currentProfile.events.filter(e => e.id !== id);
+            // Filtramos usando '!=' para seguridad de tipos (texto vs numero)
+            currentProfile.events = currentProfile.events.filter(e => e.id != id);
+            
             const totalPages = Math.ceil(currentProfile.events.length / ITEMS_PER_PAGE) || 1;
             if (currentPageEvents > totalPages) currentPageEvents = totalPages;
+            
             renderEvents(); 
             await saveAllData(); 
             showToastNotification(`🗑 Evento eliminado.`); 
@@ -2653,26 +2887,44 @@ if (window.electronAPI) {
     let userLikeCounters = {}; // <-- NUEVO OBJETO PARA CONTEOS INDIVIDUALES
     
     async function executeExtraAction(extraAction) {
+        // Validación básica
         if (!extraAction || extraAction.type !== 'widgetControl') return;
 
         const { widgetId, operation, quantity } = extraAction;
-        const databaseRef = firebase.database().ref('widgets/' + widgetId);
 
-        console.log(`[Motor Extra] Aplicando: ${operation} ${quantity} a ${widgetId}`);
-        return databaseRef.transaction(currentData => {
-            if (currentData === null) {
-                console.warn(`[Motor Extra] No se encontraron datos para ${widgetId}. Creando valores iniciales.`);
-                currentData = { conteo: 0, meta: 5 };
-            }
+        // 1. Obtener datos actuales del backend LOCAL (donde viven los Overlays)
+        // Usamos window.electronAPI en vez de firebase
+        let currentData = await window.electronAPI.getWidgetData(widgetId);
+        
+        // Si no existen datos previos, creamos una estructura base
+        if (!currentData) {
+            currentData = { conteo: 0, meta: 5 }; // Valores por defecto para Meta Win
+        }
+        
+        // Aseguramos que 'conteo' sea un número para poder sumar
+        if (typeof currentData.conteo !== 'number') currentData.conteo = 0;
 
-            switch (operation) {
-                case 'sumar': currentData.conteo += quantity; break;
-                case 'quitar': currentData.conteo -= quantity; break;
-                case 'reset': currentData.conteo = 0; break;
-            }
-            console.log(`[Motor Extra] Widget ${widgetId} actualizado:`, currentData);
-            return currentData;
-        });
+        console.log(`[Motor Extra] Aplicando: ${operation} ${quantity} a ${widgetId} (Valor actual: ${currentData.conteo})`);
+
+        // 2. Aplicar la operación matemática
+        const qty = parseInt(quantity) || 1;
+        switch (operation) {
+            case 'sumar': 
+                currentData.conteo += qty; 
+                break;
+            case 'quitar': 
+                currentData.conteo -= qty; 
+                break;
+            case 'reset': 
+                currentData.conteo = 0; 
+                break;
+        }
+
+        // 3. Enviar datos actualizados al backend LOCAL
+        // Esto hará que el Overlay en OBS/Live Studio se mueva inmediatamente
+        await window.electronAPI.updateWidget(widgetId, currentData);
+        
+        console.log(`[Motor Extra] Widget ${widgetId} actualizado a:`, currentData);
     }
 
     let actionQueue = []; 
@@ -3350,7 +3602,7 @@ if (window.electronAPI) {
             }
 
             if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 targetElement.classList.remove('shake-active');
                 void targetElement.offsetWidth; 
@@ -3896,8 +4148,8 @@ if (window.electronAPI) {
     // ==========================================================
     // INICIALIZACIÓN FINAL
     // ==========================================================
-    await loadAllData();
-    initializeProfiles();
+    // await loadAllData();
+    // initializeProfiles();
 });
 // REEMPLAZA TU FUNCIÓN openSection ACTUAL CON ESTA
 window.openSection = function(sectionId) {

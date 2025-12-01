@@ -101,11 +101,6 @@ const configPath = path.join(app.getPath('userData'), 'config.json');
 function loadConfig() { try { if (fs.existsSync(configPath)) { return JSON.parse(fs.readFileSync(configPath, 'utf8')); } } catch (error) { console.error('Error al cargar la configuración:', error); } return {}; }
 function saveConfig(config) { try { fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8'); } catch (error) { console.error('Error al guardar la configuración:', error); } }
 
-// --- MANEJO DE DATOS ---
-const dataPath = path.join(app.getPath('userData'), 'data.json');
-function loadData() { try { if (fs.existsSync(dataPath)) { return JSON.parse(fs.readFileSync(dataPath)); } } catch (error) { console.error('Error al cargar datos:', error); } return { profiles: {}, activeProfileName: '' }; }
-function saveData(data) { try { fs.writeFileSync(dataPath, JSON.stringify(data, null, 2)); } catch (error) { console.error('Error al guardar datos:', error); } }
-
 // --- LÓGICA PARA CACHÉ DE REGALOS ---
 const giftsPath = path.join(app.getPath('userData'), 'gifts.json');
 function loadGifts() { try { if (fs.existsSync(giftsPath)) { return JSON.parse(fs.readFileSync(giftsPath)); } } catch (error) { console.error('Error al cargar los regalos guardados:', error); } return []; }
@@ -120,7 +115,7 @@ function startDetector(forceGiftFetch = false) { if (currentDetector) { currentD
 // --- FUNCIÓN PRINCIPAL PARA CREAR LA VENTANA ---
 function createWindow() {
     currentUsername = loadConfig().username || '';
-    mainWindow = new BrowserWindow({ width: 1200, height: 800, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true } });
+    mainWindow = new BrowserWindow({ width: 1200, height: 800, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true } });
     
     // === ¡AQUÍ ESTÁ LA LÍNEA AÑADIDA! ===
     mainWindow.setMenu(null);
@@ -173,8 +168,6 @@ function createWindow() {
 
     // --- MANEJADORES DE IPC ---
     ipcMain.handle('get-username', () => currentUsername);
-    ipcMain.handle('load-data', async () => loadData());
-    ipcMain.handle('save-data', async (event, data) => saveData(data));
     
     ipcMain.handle('save-username', (event, newUsername) => { if (tikfinitySocket) { tikfinitySocket.close(); tikfinitySocket = null; } currentUsername = newUsername || ''; saveConfig({ username: currentUsername }); startDetector(); return true; });
     
@@ -891,6 +884,12 @@ function createWindow() {
         return localWidgetsDB[widgetId] || null;
     });
 
+    // 2. CAMBIO AQUÍ: Añade esto justo antes de cerrar la función createWindow
+    // Esperamos 500ms (medio segundo) y mostramos la ventana
+    setTimeout(() => {
+        mainWindow.show();
+    }, 1000);
+    
     mainWindow.webContents.on('did-finish-load', () => { mainWindow.webContents.send('connection-status', 'Desconectado. Introduce un usuario.'); });
 }
 
