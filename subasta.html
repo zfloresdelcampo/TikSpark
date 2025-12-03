@@ -93,11 +93,10 @@
         .default-avatar-icon {
             background-color: #0000009f; 
             box-shadow: none;
-            /* Aquí está el dibujo SVG de la persona de tu sidebar */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23cccccc' d='M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.7-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 448v48c0 17.7 14.3 32 32 32h384c17.7 0 32-14.3 32-32v-48c0-99.8-60.2-160-134.4-160z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 50%; /* Ajusta el tamaño de la personita aquí */
+            background-size: 50%;
         }
 
         .info-container {
@@ -171,13 +170,8 @@
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
             z-index: 100;
-            
-            /* 1. Alineamos la tarjeta a la izquierda */
             justify-content: flex-start; 
             align-items: center;
-            
-            /* 2. La empujamos usando una fórmula calc() */
-            /* 50vw (centro) - 175px (mitad del ranking) - 180px (offset a la izquierda) */
             padding-left: calc(50vw - 175px - 180px);
             box-sizing: border-box;
         }
@@ -210,7 +204,7 @@
             flex-direction: column;
             align-items: flex-start;
             color: white;
-            min-width: 0; /* Permite que el contenedor se encoja */
+            min-width: 0;
         }
 
         .ganador-text {
@@ -222,8 +216,7 @@
         .winner-name {
             font-size: 2.5em;
             font-weight: bold;
-            /* Estilos para truncar el nombre */
-            width: 200px; /* Ancho máximo - ¡AJÚSTALO SI ES NECESARIO! */
+            width: 200px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -253,11 +246,36 @@
         }
 
         @keyframes pop-in {
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            to { transform: scale(1); opacity: 1; }
         }
+
+        /* --- ANIMACIONES DE PUESTOS --- */
+        
+        /* Animación original (VERDE + GRANDE) para subida de rango */
+        @keyframes flashUp {
+            0% { transform: scale(1); }
+            50% { background-color: #2ecc71; transform: scale(1.05); box-shadow: 0 0 15px #2ecc71; border-color: #fff; }
+            100% { transform: scale(1); }
+        }
+
+        /* Animación original (ROJO + PEQUEÑO) para bajada de rango */
+        @keyframes flashDown {
+            0% { transform: scale(1); }
+            50% { background-color: #e74c3c; transform: scale(0.95); border-color: #c0392b; }
+            100% { transform: scale(1); }
+        }
+
+        /* NUEVA ANIMACIÓN (SOLO GRANDE) para actualización de moneda */
+        @keyframes pulseOnly {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); } /* Solo escala, no cambia color */
+            100% { transform: scale(1); }
+        }
+
+        .participant-row.rank-up { animation: flashUp 0.6s ease-out; z-index: 2; }
+        .participant-row.rank-down { animation: flashDown 0.6s ease-out; z-index: 1; }
+        .participant-row.pulse { animation: pulseOnly 0.3s ease-out; z-index: 2; }
+
     </style>
 </head>
 <body>
@@ -302,6 +320,21 @@
 
       const medalImages = { gold: 'images/primero.png', silver: 'images/segundo.png', bronze: 'images/tercero.png' };
 
+      // --- CONFIGURACIÓN AUDIO ---
+      const soundWin = new Audio('sounds/victory.mp3');
+      const soundPop = new Audio('sounds/pop.mp3');
+      const soundWhoosh = new Audio('sounds/whoosh.mp3'); 
+      
+      soundWin.volume = 0.5;
+      soundPop.volume = 0.5;
+      soundWhoosh.volume = 0.4;
+
+      // --- RASTREADOR DE POSICIONES ANTERIORES (ARRAY DE 3) ---
+      let lastTop3Ids = [null, null, null]; 
+      
+      // --- RASTREADOR DE MONEDAS (Objeto para recordar cuanto tenía c/u) ---
+      let lastCoinsMap = {};
+
       function formatTime(seconds) {
         if (typeof seconds !== 'number' || seconds < 0) { seconds = 0; }
         const minutes = Math.floor(seconds / 60);
@@ -330,24 +363,82 @@
                 timerElement.classList.remove('snipe-mode');
             }
 
-            // Participantes
+            // Procesar Participantes
             const participants = data.participants || {};
             const sortedParticipants = Object.values(participants).sort((a, b) => b.coins - a.coins);
+            const currentTop3 = sortedParticipants.slice(0, 3);
             
+            // --- DETECCIÓN DE CAMBIOS EN EL TOP 3 ---
+            let orderChanged = false;
+            let currentIds = [null, null, null];
+
+            for(let i = 0; i < 3; i++) {
+                if (currentTop3[i]) {
+                    currentIds[i] = currentTop3[i].userId;
+                    if (currentIds[i] !== lastTop3Ids[i]) {
+                        orderChanged = true;
+                    }
+                } else if (lastTop3Ids[i] !== null) {
+                    orderChanged = true;
+                }
+            }
+
+            // Sonidos de Ranking (Whoosh + Pop)
+            if (orderChanged && data.isRunning) {
+                const isFirstLoad = lastTop3Ids.every(id => id === null);
+                if (!isFirstLoad) {
+                    soundWhoosh.currentTime = 0;
+                    soundWhoosh.play().catch(e => {});
+                    soundPop.currentTime = 0;
+                    soundPop.play().catch(e => console.log("Audio bloqueado"));
+                }
+            }
+
             participantsList.innerHTML = ''; 
             const medals = ['gold', 'silver', 'bronze'];
 
             for (let i = 0; i < 3; i++) {
-                const participant = sortedParticipants[i];
+                const participant = currentTop3[i];
                 if (participant) {
                     const row = document.createElement('div');
-                    row.className = `participant-row ${medals[i]}`;
+                    
+                    let animClass = '';
+                    
+                    // --- 1. LÓGICA DE RANKING (Sube/Baja - Tiene prioridad) ---
+                    if (data.isRunning && orderChanged) {
+                        const prevIndex = lastTop3Ids.indexOf(participant.userId);
+                        if (prevIndex === -1 || prevIndex > i) {
+                            animClass = 'rank-up'; // Verde y Grande
+                        } else if (prevIndex < i) {
+                            animClass = 'rank-down'; // Rojo y Pequeño
+                        }
+                    }
+
+                    // --- 2. LÓGICA DE MONEDAS (Si no cambió de ranking, verificamos monedas) ---
+                    if (!animClass && data.isRunning) {
+                        // Verificamos si tenemos el dato anterior de este usuario
+                        if (lastCoinsMap.hasOwnProperty(participant.userId)) {
+                            // Si las monedas actuales son mayores que las anteriores
+                            if (participant.coins > lastCoinsMap[participant.userId]) {
+                                animClass = 'pulse'; // Solo grande (definido en CSS pulseOnly)
+                            }
+                        }
+                    }
+
+                    // Guardamos monedas actuales para la próxima comparación
+                    lastCoinsMap[participant.userId] = participant.coins;
+                    // -------------------------------------------------------------
+
+                    row.className = `participant-row ${medals[i]} ${animClass}`;
                     row.innerHTML = `<img class="medal-icon" src="${medalImages[medals[i]]}"><div class="profile-icon" style="background-image: url('${participant.profilePictureUrl || ''}')"></div><div class="info-container"><div class="text-bar name">${participant.nickname}</div><div class="bid-container"><span class="coin-icon"></span><span class="text-bar bid">${participant.coins}</span></div></div>`;
                     participantsList.appendChild(row);
                 } else {
                     participantsList.innerHTML += createPlaceholderRow(medals[i]);
                 }
             }
+
+            // Actualizar historial de IDs
+            lastTop3Ids = currentIds;
 
             // Ganador
             if (data.winnerInfo && !data.isRunning) {
@@ -356,13 +447,15 @@
                 winnerCoinAmount.textContent = data.winnerInfo.coins;
                 winnerOverlay.style.display = 'flex';
 
-                if (!winnerOverlay.dataset.confettiFired) {
+                if (!winnerOverlay.dataset.celebrated) {
+                    soundWin.currentTime = 0;
+                    soundWin.play().catch(e => console.log("Audio bloqueado"));
                     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-                    winnerOverlay.dataset.confettiFired = 'true';
+                    winnerOverlay.dataset.celebrated = 'true';
                 }
             } else {
                 winnerOverlay.style.display = 'none';
-                delete winnerOverlay.dataset.confettiFired;
+                delete winnerOverlay.dataset.celebrated;
             }
         }
     </script>

@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if(window.electronAPI) {
                 await window.electronAPI.updateWidget('socialRotator', data);
-                alert('Configuración guardada (Local).');
+                await window.showCustomAlert('Configuración guardada (Local).');
                 modal.style.display = 'none';
             }
         });

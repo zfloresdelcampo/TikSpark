@@ -63,7 +63,9 @@
                         </div>
                         <div class="sidebar-info-col">
                             <span id="sidebar-username-display" class="sidebar-username-text">Tu Nombre</span>
-                            <button id="sidebar-connect-btn" class="sidebar-small-btn">Conectar</button>
+                            <button id="sidebar-connect-btn" class="sidebar-small-btn">
+                                <i class="fas fa-link"></i> Conectar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -220,16 +222,40 @@
                     </div>
                     <p>Una vez que estés en directo, conecta la aplicación a tu canal de TikTok.</p> 
                 </div>
-                <div class="panel-content">
-                    <label for="username-input-main">Tu usuario de TikTok (<span style="color: #ff4d4d;">Requerido</span>)</label>
-                    <div class="input-group">
-                        <input type="text" id="username-input" placeholder="TikTok @username">
-                        <button id="connect-button">Conectar</button>
-                        <button id="disconnect-button" disabled>Desconectar</button>
-                        <button id="emotes-button" disabled>Obtener Emotes</button>
-                    </div>
-                    <div id="update-gifts-container">
-                         <button id="update-gifts-button" class="secondary-btn">Actualizar Regalos</button>
+                <div class="panel-content connect-panel-row">
+    
+                    <!-- COLUMNA IZQUIERDA: ETIQUETA -->
+                    <label for="username-input" class="connect-label">
+                        Tu usuario de TikTok (<span style="color: #ff4d4d;">Requerido!</span>)
+                    </label>
+                    
+                    <!-- COLUMNA DERECHA: INPUT Y BOTONES -->
+                    <div class="connect-actions-area">
+                        
+                        <!-- 1. INPUT -->
+                        <input type="text" id="username-input" placeholder="TikTok @username" style="width: 100%; box-sizing: border-box;">
+                        
+                        <!-- 2. FILA DE BOTONES -->
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            
+                            <button id="connect-button">
+                                <i class="fas fa-link"></i> Conectar
+                            </button>
+                            
+                            <button id="disconnect-button" disabled>
+                                <i class="fas fa-unlink"></i> Desconectar
+                            </button>
+                            
+                            <button id="emotes-button" disabled>
+                                <i class="fas fa-smile"></i> Emotes
+                            </button>
+
+                            <button id="update-gifts-button" class="secondary-btn" style="margin-top: 0;">
+                                <i class="fas fa-sync-alt"></i> Actualizar Regalos
+                            </button>
+                            
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -238,16 +264,22 @@
             <div id="api-tikfinity-panel" class="connection-panel">
                 <div class="panel-header">
                     <h3>Event API <span class="provider-badge">TikFinity</span></h3>
-                    <p>En caso de que la conexión directa no esté disponible, usa este método. Por favor, inicia la aplicación de escritorio de TikFinity y conéctate a una transmisión en vivo.</p>
+                    <p>En caso de que la conexión directa no esté disponible, usa este método...</p>
                 </div>
                 <div class="panel-content">
                     <div class="status-group">
                         <label>Estado:</label>
                         <span id="tikfinity-status" class="status-indicator disconnected">Disconnected</span>
                     </div>
-                    <div class="button-group">
-                        <button id="connect-tikfinity-button">Conectar</button>
-                        <button id="disconnect-tikfinity-button" disabled>Desconectar</button>
+                    
+                    <!-- BOTONES CON ICONOS NUEVOS -->
+                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button id="connect-tikfinity-button">
+                            <i class="fas fa-plug"></i> Conectar
+                        </button>
+                        <button id="disconnect-tikfinity-button" disabled>
+                            <i class="fas fa-power-off"></i> Desconectar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -442,13 +474,13 @@
                         <input type="text" placeholder="Buscar alertas...">
                     </div>
                 </div>
-                <div class="list-view-header alert-header">
-                    <input type="checkbox" class="header-checkbox">
-                    <div>Activo</div>
-                    <div>Acciones</div>
+                <div class="list-view-header alert-header" style="display: grid; grid-template-columns: 110px 60px 1.5fr 1.5fr 130px 2fr; align-items: center;">
+                    <div style="text-align: center;"></div> <!-- Columna botones (sin título) -->
+                    <div style="text-align: center;">Activo</div>
+                    <div>Acciones</div> <!-- Aquí va el Nombre de la Alerta -->
                     <div>Eventos</div>
-                    <div>Duración (seg)</div>
-                    <div>Descripción</div>
+                    <div style="text-align: center;">Duración (seg)</div>
+                    <div>Descripción</div> <!-- Nombre del video -->
                 </div>
                 <div id="alerts-list-container"></div>
                 <div class="list-view-pagination" id="alerts-pagination"></div>
@@ -1677,6 +1709,13 @@
                                 <div class="radio-item"><input type="radio" id="alert-who-top" name="alert_who" value="top"><label for="alert-who-top">Top Gifters Rank</label></div>
                                 <div class="radio-item"><input type="radio" id="alert-who-specific" name="alert_who" value="specific"><label for="alert-who-specific">Usuario específico</label></div>
                             </div>
+
+                            <!-- 1. CAMPO PARA USUARIOS ESPECÍFICOS -->
+                            <div class="event-input-row" id="alert-specific-user-input-container" style="display: none;">
+                                <label>Pon el usuario</label>
+                                <input type="text" id="alert-specific-users-list" placeholder="ej. pepito123, juanito, maria">
+                            </div>
+
                         </div>
                         <div class="event-section">
                             <label class="event-section-title">¿Por qué se activará el evento?</label>
@@ -1699,6 +1738,16 @@
                             <div id="dynamic-alert-event-fields">
                                 <!-- Campos dinámicos como el selector de regalos -->
                                 <!-- Campos dinámicos para ALERTAS -->
+                                
+                                <!-- 2. CAMPO PARA MÍNIMO DE MONEDAS -->
+                                <div class="event-input-row" id="alert-min-coins-input-container" style="display: none;">
+                                    <label>Definir un valor mínimo de monedas</label>
+                                    <div class="input-with-unit">
+                                        <input type="number" id="alert-min-coins-amount" value="1" min="1">
+                                        <span>Coins</span>
+                                    </div>
+                                </div>
+
                                 <div class="event-input-row" id="alert-gift-specific-selector" style="display: none;">
                                     <label>Elige un regalo</label>
                                     <div class="custom-gift-selector" id="alert-custom-gift-selector">
@@ -1770,6 +1819,18 @@
             <div class="profile-form-buttons">
                 <button id="apply-edit-profile-btn">✓ Aplicar</button>
                 <button id="discard-edit-profile-btn">✗ Descartar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DUPLICAR PERFIL -->
+    <div id="duplicate-profile-form-container" class="profile-form-overlay">
+        <div class="profile-form-content">
+            <h3>Duplicar Perfil</h3>
+            <input type="text" id="duplicate-profile-name-input" placeholder="Nombre de la copia...">
+            <div class="profile-form-buttons">
+                <button id="apply-duplicate-profile-btn">✓ Duplicar</button>
+                <button id="discard-duplicate-profile-btn">✗ Cancelar</button>
             </div>
         </div>
     </div>
@@ -1980,7 +2041,7 @@
                     <div class="checkbox-container">
                         <input type="checkbox" id="repeat-with-gift-combo">
                         <label for="repeat-with-gift-combo" style="font-style: italic; color: #b0b0b0;">
-                            (Si se activa, la acción se ejecutará por cada unidad del combo de un regalo)
+                            (Se ejecuta por cada regalo enviado)
                         </label>
                     </div>
                 </div>
@@ -2210,6 +2271,22 @@
             <!-- Pie con botón separado -->
             <div class="modal-footer-custom">
                 <button id="sys-modal-close-btn">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIÁLOGO PERSONALIZADO (Reemplazo de Alert/Confirm) -->
+    <div id="custom-dialog" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border: 1px solid #444;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 5px;">
+                <h3 id="dialog-title" style="margin: 0; font-size: 18px;">TikSpark</h3>
+            </div>
+            
+            <p id="dialog-message" style="color: #ccc; margin: 15px 0 25px 0; font-size: 15px;">Mensaje aquí...</p>
+            
+            <div class="modal-footer" style="justify-content: center; padding-top: 0; gap: 15px;">
+                <button id="btn-dialog-ok" class="btn">Aceptar</button>
+                <button id="btn-dialog-cancel" class="btn" style="background: #444; display: none;">Cancelar</button>
             </div>
         </div>
     </div>

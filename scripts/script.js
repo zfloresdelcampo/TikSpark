@@ -2,6 +2,67 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
+    // --- NUEVO: CARGA INSTANTÁNEA DE FOTO (CACHÉ LOCAL) ---
+    const cachedPic = localStorage.getItem('cachedProfilePic');
+    const cachedName = localStorage.getItem('cachedUsername');
+    
+    if (cachedPic) {
+        const img = document.getElementById('sidebar-profile-img');
+        const icon = document.getElementById('sidebar-default-icon');
+        if (img && icon) {
+            img.src = cachedPic;
+            img.style.display = 'block';
+            icon.style.display = 'none';
+        }
+    }
+    if (cachedName) {
+        const nameDisplay = document.getElementById('sidebar-username-display');
+        if (nameDisplay) nameDisplay.textContent = cachedName;
+    }
+    // -----------------------------------------------------
+
+    // --- SISTEMA DE DIÁLOGOS PERSONALIZADOS ---
+    const customDialog = document.getElementById('custom-dialog');
+    const dialogTitle = document.getElementById('dialog-title');
+    const dialogMessage = document.getElementById('dialog-message');
+    const btnDialogOk = document.getElementById('btn-dialog-ok');
+    const btnDialogCancel = document.getElementById('btn-dialog-cancel');
+
+    // Reemplazo bonito para alert()
+    window.showCustomAlert = (message, title = 'TikSpark') => {
+        return new Promise((resolve) => {
+            dialogTitle.textContent = title;
+            dialogMessage.textContent = message;
+            btnDialogCancel.style.display = 'none'; // Ocultar cancelar
+            btnDialogOk.onclick = () => {
+                customDialog.classList.remove('open');
+                resolve(true);
+            };
+            customDialog.classList.add('open');
+        });
+    };
+
+    // Reemplazo bonito para confirm()
+    window.showCustomConfirm = (message, title = 'Confirmar') => {
+        return new Promise((resolve) => {
+            dialogTitle.textContent = title;
+            dialogMessage.textContent = message;
+            btnDialogCancel.style.display = 'inline-flex'; // Mostrar cancelar
+            
+            btnDialogOk.onclick = () => {
+                customDialog.classList.remove('open');
+                resolve(true); // El usuario dijo SÍ
+            };
+            
+            btnDialogCancel.onclick = () => {
+                customDialog.classList.remove('open');
+                resolve(false); // El usuario dijo NO
+            };
+            
+            customDialog.classList.add('open');
+        });
+    };
+
     // === NUEVO: Constantes para Alertas ===
     const createAlertButton = document.getElementById('create-alert-button');
     const alertModalOverlay = document.getElementById('create-alert-modal');
@@ -118,7 +179,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (linkToLogin) linkToLogin.addEventListener('click', () => toggleLoginMode(false));
 
     // ACCIÓN DEL BOTÓN PRINCIPAL (LOGIN / REGISTRO CON FIREBASE)
-    // ACCIÓN DEL BOTÓN PRINCIPAL (LOGIN / REGISTRO CON FIREBASE)
     if (btnAction) {
         btnAction.addEventListener('click', async () => {
             // CORRECCIÓN 1: Usar la variable correcta 'inputUser'
@@ -147,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             activeProfileName: 'Perfil Principal' 
                         }
                     });
-                    alert("✅ Cuenta creada. ¡Bienvenido!");
+                    await window.showCustomAlert("✅ Cuenta creada. ¡Bienvenido!", "¡Éxito!");
                 } else {
                     // --- INICIAR SESIÓN EN NUBE ---
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -166,16 +226,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             } catch (error) {
                 console.error(error);
-                let msg = error.message;
-                if (error.code === 'auth/email-already-in-use') msg = "El correo ya está registrado.";
-                if (error.code === 'auth/wrong-password') msg = "Contraseña incorrecta.";
-                if (error.code === 'auth/user-not-found') msg = "Usuario no encontrado.";
-                if (error.code === 'auth/weak-password') msg = "La contraseña es muy débil (mínimo 6 caracteres).";
-                alert("❌ Error: " + msg);
-            } finally {
-                // Restaurar botón
-                if(isRegisterMode) btnAction.innerHTML = '<i class="fas fa-user-plus"></i> Registrarse';
-                else btnAction.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+                let cleanMsg = "Ocurrió un error desconocido.";
+
+                // 1. Detectar error JSON feo (INVALID_LOGIN_CREDENTIALS)
+                if (error.message && error.message.includes("INVALID_LOGIN_CREDENTIALS")) {
+                    cleanMsg = "Correo o contraseña incorrectos.";
+                } 
+                // 2. Detectar errores estándar de Firebase
+                else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    cleanMsg = "Correo o contraseña incorrectos.";
+                } 
+                else if (error.code === 'auth/email-already-in-use') {
+                    cleanMsg = "El correo ya está registrado.";
+                } 
+                else if (error.code === 'auth/invalid-email') {
+                    cleanMsg = "El correo no es válido.";
+                }
+                else if (error.code === 'auth/weak-password') {
+                    cleanMsg = "La contraseña es muy débil (mínimo 6 caracteres).";
+                }
+                else {
+                    // Si es otro error, intentamos mostrarlo limpio
+                    cleanMsg = error.message.replace("Firebase: ", "").replace(/\(auth\/.*\)\.?/, "");
+                }
+
+                await window.showCustomAlert("❌ " + cleanMsg, "Error");
             }
         });
     }
@@ -336,18 +411,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // === AGREGA ESTA LÍNEA AQUÍ ===
     let audioSelectionContext = 'action'; // Valores: 'action' o 'alert'
 
-    // === NUEVO: Función para renderizar Alertas (CORREGIDA) ===
+    // === FUNCIÓN RENDER ALERTS (CORREGIDA: ESPACIADO EN PRECIOS) ===
     function renderAlerts() {
-        const currentProfile = profiles[activeProfileName];
-        if (!currentProfile) {
-            alertsListContainer.innerHTML = '<div class="no-items-message">Selecciona un perfil</div>';
-            return;
-        }
-
-        const alerts = currentProfile.alerts || [];
+        const alerts = globalAlerts || [];
         const container = alertsListContainer.parentElement;
-        
-        // --- 1. Buscamos la cabecera en el HTML ---
         const alertHeader = container.querySelector('.list-view-header.alert-header');
         
         alertsListContainer.innerHTML = '';
@@ -355,64 +422,93 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (alerts.length === 0) {
             alertsListContainer.innerHTML = '<div class="no-items-message">Sin alertas</div>';
             container.classList.add('empty');
-            
-            // --- 2. Si está vacío, OCULTAMOS la cabecera ---
             if (alertHeader) alertHeader.style.display = 'none';
-            
             return;
         }
         
-        // --- 3. Si hay datos, MOSTRAMOS la cabecera ---
-        if (alertHeader) alertHeader.style.display = ''; // Comillas vacías restauran el CSS original (grid/flex)
+        if (alertHeader) alertHeader.style.display = 'grid';
         container.classList.remove('empty');
 
         alerts.forEach(alert => {
-            let eventString = `${whoLabels[alert.who] || alert.who} - `;
+            // 1. QUIÉN
+            let whoText = whoLabels[alert.who] || alert.who;
+            if (alert.who === 'specific' && alert.specificUsers) whoText = alert.specificUsers.join(', ');
+
+            // 2. POR QUÉ
+            let whyHTML = '';
+            
             if (alert.why === 'gift-specific' && alert.giftId) {
-                eventString += `${alert.giftName || `ID: ${alert.giftId}`}`;
-            } else {
-                eventString += whyLabels[alert.why] || alert.why;
-            }
-
-            // --- LÓGICA DE DESCRIPCIÓN MEJORADA ---
-            let descriptionParts = [];
-
-            // 1. Audio
-            if (alert.audioAction) {
-                descriptionParts.push(`🔊 Audio: ${alert.audioAction.file}`);
-            }
-
-            // 2. Video / Media
-            if (alert.mediaAction) {
-                let fileName = 'Archivo desconocido';
-                try {
-                    fileName = alert.mediaAction.url.split('/').pop();
-                } catch (e) {}
+                let imgUrl = alert.giftImage; 
+                let giftPrice = '';
                 
-                descriptionParts.push(`🎬 Video: ${fileName}`);
+                // Buscar en caché
+                if (availableGiftsCache) {
+                    const found = availableGiftsCache.find(g => g.id == alert.giftId);
+                    if(found) {
+                        if(!imgUrl) imgUrl = found.image.url_list[0];
+                        // AGREGADO: margin-left: 5px para separar
+                        giftPrice = `<span style="color: #ffeb3b; font-size: 0.9em; margin-left: 5px;">- ${found.diamond_count} coins</span>`;
+                    }
+                }
+                
+                // Caso Heart Me
+                if (alert.giftName === 'Heart Me' || alert.giftId == 1) {
+                     // AGREGADO: margin-left: 5px para separar
+                     giftPrice = `<span style="color: #ffeb3b; font-size: 0.9em; margin-left: 5px;">- 1 coins</span>`;
+                }
+
+                const imgTag = imgUrl ? `<img src="${imgUrl}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-gift fa-lg"></i> ';
+                whyHTML = `${imgTag}${alert.giftName || `ID: ${alert.giftId}`}${giftPrice}`;
+            } 
+            else if (alert.why === 'gift-min') {
+                whyHTML = `<i class="fas fa-gift fa-lg" style="color: #ff4d4d; margin-right: 6px;"></i> Gift (${alert.minCoins || 1}+)`;
+            }
+            else if (alert.why === 'emote') {
+                const imgTag = alert.emoteImage ? `<img src="${alert.emoteImage}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-smile fa-lg"></i> ';
+                whyHTML = `${imgTag} Fan Club Emote`;
+            }
+            else {
+                const icon = eventIcons[alert.why] || ''; 
+                whyHTML = `<span style="font-size: 1.2em; margin-right: 5px; color: #8a2be2;">${icon}</span> ${whyLabels[alert.why] || alert.why}`;
             }
 
-            let description = descriptionParts.join(' | ');
-            // ---------------------------------------
+            // 3. Descripción
+            let descriptionParts = [];
+            if (alert.audioAction) descriptionParts.push(`🔊 Audio: ${alert.audioAction.file}`);
+            if (alert.mediaAction) descriptionParts.push(`🎬 Video: ${alert.mediaAction.name || 'Archivo'}`);
+            let description = descriptionParts.join(' + ');
 
             const alertDiv = document.createElement('div');
             alertDiv.className = 'list-view-row alert-row';
+            alertDiv.style.gridTemplateColumns = "110px 60px 1.5fr 1.5fr 130px 2fr"; 
+            alertDiv.style.fontSize = "14px";
+            alertDiv.style.alignItems = "center";
+
             alertDiv.innerHTML = `
-                <div><input type="checkbox"></div>
-                <div class="icon-center"><input type="checkbox" ${alert.enabled ? 'checked' : ''} onchange="toggleAlertStatus(${alert.id})"></div>
-                <div class="row-icons">
+                <div class="row-icons" style="justify-content: center;">
                     <span class="action-icon-bg play" onclick="playAlert(${alert.id})"><i class="fas fa-play"></i></span>
                     <span class="action-icon-bg edit" onclick="editAlert(${alert.id})"><i class="fas fa-pencil-alt"></i></span>
                     <span class="action-icon-bg delete" onclick="deleteAlert(${alert.id})"><i class="fas fa-trash-alt"></i></span>
                 </div>
-                <div>${eventString}</div>
-                <div>${alert.duration}</div>
-                <div>${description}</div>
+                <div class="icon-center">
+                    <input type="checkbox" ${alert.enabled ? 'checked' : ''} onchange="toggleAlertStatus(${alert.id})">
+                </div>
+                <div style="color: #e0e0e0;">
+                    ${alert.name}
+                </div>
+                <div style="color: #e0e0e0; display: flex; align-items: center; gap: 5px; overflow: hidden;">
+                    <span style="white-space: nowrap;">${whoText}</span> 
+                    <span style="color: #e0e0e0;">-</span> 
+                    <span style="white-space: nowrap; display: flex; align-items: center;">${whyHTML}</span>
+                </div>
+                <div style="text-align: center;">${alert.duration}</div>
+                <div style="color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${description}
+                </div>
             `;
             alertsListContainer.appendChild(alertDiv);
         });
     }
-
 
     async function renderLocalAudios() {
         if (!window.electronAPI) return;
@@ -543,27 +639,50 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    // === LÓGICA DINÁMICA PARA ALERTAS (Mostrar/Ocultar Regalos y Likes) ===
+    // --- LÓGICA VISUAL: MOSTRAR/OCULTAR CAMPOS EN ALERTAS (CORREGIDO) ---
+    
+    // 1. Detectar cambio en "QUIÉN"
+    document.querySelectorAll('input[name="alert_who"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const container = document.getElementById('alert-specific-user-input-container');
+            if (container) container.style.display = (e.target.value === 'specific') ? 'grid' : 'none';
+        });
+    });
+
+    // 2. Detectar cambio en "POR QUÉ" (VERSIÓN EXACTA)
     document.querySelectorAll('input[name="alert_why"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            const selectedValue = e.target.value;
+            const val = e.target.value;
+            // Referencia al modal padre
+            const modal = document.querySelector('#create-alert-modal'); 
             
-            // 1. Ocultar todo primero
-            const giftSelector = document.getElementById('alert-gift-specific-selector');
-            const likesSelector = document.getElementById('alert-likes-amount-selector');
-            const emoteSelector = document.getElementById('alert-emote-selector-container'); // <--- AGREGADO
+            // 1. CERRAR MENÚS A LA FUERZA (Usando búsqueda local)
+            // Esto mata cualquier menú abierto dentro de ESTA ventana
+            const menus = modal.querySelectorAll('.custom-gift-selector'); 
+            menus.forEach(m => m.classList.remove('open'));
 
-            if (giftSelector) giftSelector.style.display = 'none';
-            if (likesSelector) likesSelector.style.display = 'none';
-            if (emoteSelector) emoteSelector.style.display = 'none'; // <--- AGREGADO
+            // 2. Ocultar todos los paneles
+            const idsToHide = [
+                '#alert-gift-specific-selector', 
+                '#alert-likes-amount-selector', 
+                '#alert-emote-selector-container',
+                '#alert-min-coins-input-container'
+            ];
+            idsToHide.forEach(sel => {
+                const el = modal.querySelector(sel);
+                if(el) el.style.display = 'none';
+            });
 
-            // 2. Mostrar según lo elegido
-            if (selectedValue === 'gift-specific') {
-                if (giftSelector) giftSelector.style.display = 'grid';
-            } else if (selectedValue === 'likes') {
-                if (likesSelector) likesSelector.style.display = 'grid';
-            } else if (selectedValue === 'emote') { // <--- AGREGADO
-                if (emoteSelector) emoteSelector.style.display = 'grid';
+            // 3. Mostrar el seleccionado
+            const showMap = {
+                'gift-specific': '#alert-gift-specific-selector',
+                'likes': '#alert-likes-amount-selector',
+                'emote': '#alert-emote-selector-container',
+                'gift-min': '#alert-min-coins-input-container'
+            };
+            if (showMap[val]) {
+                const target = modal.querySelector(showMap[val]);
+                if (target) target.style.display = 'grid';
             }
         });
     });
@@ -573,87 +692,99 @@ document.addEventListener('DOMContentLoaded', async function() {
     const alertGiftSelector = document.getElementById('alert-custom-gift-selector');
     const alertGiftSearchInput = document.getElementById('alert-gift-search-input');
     const alertGiftOptionsList = document.getElementById('alert-gift-options-list');
-    const alertSelectedGiftIdInput = document.getElementById('alert-selected-gift-id');
-
+    
     // ==========================================================
-    // LÓGICA PARA EL SELECTOR DE EMOTES (ALERTAS)
+    // LÓGICA PARA EL SELECTOR DE EMOTES (CORREGIDA)
     // ==========================================================
     const alertEmoteSelectorDisplay = document.getElementById('alert-emote-selector-display');
-    const alertEmoteSelector = document.getElementById('alert-custom-emote-selector');
     const alertEmoteOptionsList = document.getElementById('alert-emote-options-list');
-    const alertSelectedEmoteIdInput = document.getElementById('alert-selected-emote-id');
-    let availableEmotesCache = [];
-
-    // Función para seleccionar un Emote (CORREGIDA)
-    function selectEmoteForAlert(emote) {
-        // CORRECCIÓN: Usamos image_url directamente porque el backend ya lo limpió
-        const imgUrl = emote.image_url; 
-        
-        alertEmoteSelectorDisplay.innerHTML = `<img src="${imgUrl}" alt="Emote"><span>${emote.id || 'Emote'}</span>`;
-        alertSelectedEmoteIdInput.value = emote.id; // Usamos .id directamente
-        
-        // Guardamos la URL de la imagen en un atributo data
-        alertSelectedEmoteIdInput.dataset.imageUrl = imgUrl; 
-        
-        alertEmoteSelector.classList.remove('open');
-    }
-
-    // Renderizar lista de Emotes (CORREGIDA)
+    
+    // 1. Renderizar lista de Emotes (VERSIÓN EXACTA)
     function renderAlertEmoteOptions(emotes) {
         if (!alertEmoteOptionsList) return;
         alertEmoteOptionsList.innerHTML = '';
 
         if (!emotes || emotes.length === 0) {
-            alertEmoteOptionsList.innerHTML = '<div class="no-items-message" style="padding:10px; color:#ccc;">No se encontraron emotes o no estás conectado.</div>';
+            alertEmoteOptionsList.innerHTML = '<div class="no-items-message" style="padding:10px; color:#ccc;">Lista vacía.<br>Usa el botón "Obtener Emotes" en Inicio.</div>';
             return;
         }
         
         emotes.forEach(emote => {
-            // CORRECCIÓN 1: Validamos 'image_url' en lugar de la estructura compleja
             if (!emote.image_url) return;
             
             const optionItem = document.createElement('div');
             optionItem.className = 'gift-option-item'; 
+            optionItem.innerHTML = `<img src="${emote.image_url}" alt="Emote" style="width: 40px; height: 40px; object-fit: contain;">
+                                    <div class="gift-details"><span class="gift-name" style="font-size: 12px; font-weight: bold;">${emote.name || 'Emote'}</span></div>`;
             
-            // CORRECCIÓN 2: Usamos la variable directa
-            const imgUrl = emote.image_url;
-            const emoteId = emote.id; 
-            const emoteName = emote.name || 'Emote';
-
-            optionItem.innerHTML = `
-                <img src="${imgUrl}" alt="Emote" style="width: 40px; height: 40px; object-fit: contain;">
-                <div class="gift-details">
-                    <span class="gift-name" style="font-size: 12px; font-weight: bold;">${emoteName}</span>
-                    <span class="gift-cost" style="font-size: 10px; color: #aaa;">ID: ${emoteId}</span>
-                </div>`;
-            
+            // CLICK HANDLER
             optionItem.addEventListener('click', (e) => { 
                 e.stopPropagation(); 
-                selectEmoteForAlert(emote); 
+                e.preventDefault();
+
+                // 1. Buscar elementos usando el modal padre para evitar duplicados
+                const modal = document.querySelector('#create-alert-modal');
+                const display = modal.querySelector('#alert-emote-selector-display');
+                const input = modal.querySelector('#alert-selected-emote-id');
+                
+                // 2. Encontrar el menú padre exacto de este item y cerrarlo
+                const menuExacto = e.currentTarget.closest('.custom-gift-selector');
+
+                // Poner datos
+                if(display) display.innerHTML = `<img src="${emote.image_url}" alt="Emote"><span>${emote.name || 'Emote'}</span>`;
+                if(input) {
+                    input.value = emote.id; 
+                    input.dataset.imageUrl = emote.image_url;
+                }
+
+                // CERRAR EL MENÚ EXACTO QUE SE CLICKEÓ
+                if(menuExacto) {
+                    console.log("Cerrando menú específico...");
+                    menuExacto.classList.remove('open');
+                }
             });
+            
             alertEmoteOptionsList.appendChild(optionItem);
         });
     }
 
-    // Evento Click para ABRIR el selector de Emotes
+    // 2. ABRIR / CERRAR menú al pulsar el botón
     if (alertEmoteSelectorDisplay) {
-        alertEmoteSelectorDisplay.addEventListener('click', () => {
-            alertEmoteSelector.classList.toggle('open');
-            
-            // Solo mostramos lo que ya tenemos en caché (cargado con el botón de arriba)
-            if (availableEmotesCache.length === 0) {
-                alertEmoteOptionsList.innerHTML = '<div style="padding:10px; color:#ccc; text-align:center;">Lista vacía.<br>Usa el botón "Obtener Emotes" en Inicio.</div>';
-            } else {
-                renderAlertEmoteOptions(availableEmotesCache);
+        alertEmoteSelectorDisplay.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita conflictos
+            const selector = document.getElementById('alert-custom-emote-selector');
+            if(selector) {
+                selector.classList.toggle('open'); 
+                
+                if (selector.classList.contains('open')) {
+                    // Cargamos la lista al abrir
+                    renderAlertEmoteOptions(availableEmotesCache || []);
+                }
             }
         });
     }
 
-    // Cerrar al hacer clic fuera (Emotes)
+    // 3. CERRAR AL HACER CLICK FUERA (Global)
     document.addEventListener('click', (e) => { 
-        if (alertEmoteSelector && !alertEmoteSelector.contains(e.target)) { 
-            alertEmoteSelector.classList.remove('open'); 
-        } 
+        // Emotes
+        const emoteSel = document.getElementById('alert-custom-emote-selector');
+        const emoteDisp = document.getElementById('alert-emote-selector-display');
+        
+        if (emoteSel && emoteSel.classList.contains('open')) {
+             // Si el click NO fue en el menú Y NO fue en el botón de abrir
+             if (!emoteSel.contains(e.target) && (!emoteDisp || !emoteDisp.contains(e.target))) {
+                 emoteSel.classList.remove('open'); 
+             }
+        }
+
+        // Regalos (Mantenemos la lógica existente)
+        const giftSel = document.getElementById('alert-custom-gift-selector');
+        const giftDisp = document.getElementById('alert-gift-selector-display');
+        if (giftSel && giftSel.classList.contains('open')) { 
+             if (!giftSel.contains(e.target) && (!giftDisp || !giftDisp.contains(e.target))) {
+                 giftSel.classList.remove('open'); 
+             }
+        }
     });
 
     // Función auxiliar para seleccionar regalo en Alertas
@@ -663,21 +794,54 @@ document.addEventListener('DOMContentLoaded', async function() {
         alertGiftSelector.classList.remove('open');
     }
 
-    // Renderizar opciones en el modal de Alertas
+    // Renderizar opciones en el modal de Alertas (VERSIÓN QUE CIERRA AL CLICK)
     function renderAlertGiftOptions(gifts) {
         if (!alertGiftOptionsList) return;
         alertGiftOptionsList.innerHTML = '';
+        
+        // Ordenar por precio
         gifts.sort((a, b) => a.diamond_count - b.diamond_count);
+        
+        if (gifts.length === 0) {
+            alertGiftOptionsList.innerHTML = '<div class="no-items-message" style="padding:10px;">Lista vacía.</div>';
+            return;
+        }
         
         gifts.forEach(gift => {
             if (!gift.image || !gift.image.url_list[0]) return;
+            
             const optionItem = document.createElement('div');
             optionItem.className = 'gift-option-item';
             optionItem.innerHTML = `<img src="${gift.image.url_list[0]}" alt="${gift.name}"><div class="gift-details"><span class="gift-name">${gift.name}</span><span class="gift-cost">${gift.diamond_count} Coins - ID:${gift.id}</span></div>`;
+            
+            // --- CLICK HANDLER ROBUSTO (Igual que Emotes) ---
             optionItem.addEventListener('click', (e) => { 
                 e.stopPropagation(); 
-                selectGiftForAlert(gift); 
+                
+                // 1. Buscamos referencias dentro del modal para evitar errores
+                const modal = document.querySelector('#create-alert-modal');
+                // Si por alguna razón no encuentra el modal (raro), salimos
+                if (!modal) return; 
+
+                const display = modal.querySelector('#alert-gift-selector-display');
+                const input = modal.querySelector('#alert-selected-gift-id');
+
+                // 2. Poner los datos visuales (Foto y ID)
+                if (display) {
+                    display.innerHTML = `<img src="${gift.image.url_list[0]}" alt="${gift.name}"><span>${gift.name}</span>`;
+                }
+                if (input) {
+                    input.value = gift.id;
+                }
+
+                // 3. CERRAR EL MENÚ EXACTO DESDE DONDE SE HIZO CLICK
+                // Buscamos el contenedor padre (.custom-gift-selector) y le quitamos la clase 'open'
+                const menu = e.currentTarget.closest('.custom-gift-selector');
+                if (menu) {
+                    menu.classList.remove('open');
+                }
             });
+            
             alertGiftOptionsList.appendChild(optionItem);
         });
     }
@@ -735,7 +899,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // --- FIN DE LA NUEVA LÓGICA ---
             } else if (button.classList.contains('delete')) {
                 // Acción de Borrar
-                if (confirm(`¿Seguro que quieres eliminar el sonido "${fileName}"?`)) {
+                if (await window.showCustomConfirm(`¿Seguro que quieres eliminar el sonido "${fileName}"?`)) {
                     await window.electronAPI.deleteLocalAudio(fileName);
                 }
             } else if (button.classList.contains('select')) {
@@ -999,10 +1163,18 @@ if (window.electronAPI) {
         // ... tu código existente ...
         const isConnected = statusMessage.includes('✅');
         
-        // Actualizar texto del botón del sidebar
+        // Actualizar texto y color del botón del sidebar
         if (currentConnectionMode === 'api-server') {
-            sidebarConnectBtn.textContent = isConnected ? 'Desconectar' : 'Conectar';
-            sidebarConnectBtn.style.color = isConnected ? '#ff4d4d' : '#ccc'; // Rojo si está conectado (para desconectar)
+            if (isConnected) {
+                // ESTADO CONECTADO (ROJO)
+                sidebarConnectBtn.innerHTML = '<i class="fas fa-unlink"></i> Desconectar';
+                sidebarConnectBtn.classList.add('connected'); // Activa el rojo
+            } else {
+                // ESTADO DESCONECTADO (MORADO)
+                sidebarConnectBtn.innerHTML = '<i class="fas fa-link"></i> Conectar';
+                sidebarConnectBtn.classList.remove('connected'); // Vuelve al morado
+            }
+            // Eliminamos la linea vieja de .style.color porque el CSS ya lo maneja
         } else {
             // Lógica para Tikfinity Sidebar
             sidebarTikfinityStatusText.textContent = isConnected ? 'Connected' : 'Disconnected';
@@ -1040,6 +1212,11 @@ if (window.electronAPI) {
             if (result.success) {
                 showToastNotification(result.message);
                 availableEmotesCache = result.emotes || [];
+
+                // --- AÑADE ESTA LÍNEA AQUÍ PARA GUARDAR EN DISCO ---
+                if(window.electronAPI) window.electronAPI.saveEmotes(availableEmotesCache);
+                // ---------------------------------------------------
+
                 if(typeof renderAlertEmoteOptions === 'function') {
                     renderAlertEmoteOptions(availableEmotesCache);
                 }
@@ -1130,32 +1307,26 @@ if (window.electronAPI) {
         }
     });
 
-    // Listener de Regalos (MEJORADO PARA TOP GIFT)
+    // Listener de Regalos (CORREGIDO FINAL)
     window.electronAPI.onGift(data => {
-        if (data.repeatEnd) return; 
-
-        // --- LÓGICA TOP GIFT (CON IMAGEN DEL DROPDOWN) ---
-        const currentGiftValue = (data.diamondCount * data.repeatCount);
         
-        if (currentGiftValue > topGiftState.coins) {
-            
-            // 1. Intentamos sacar la imagen HD de tu caché (igual que el menú desplegable)
-            let finalGiftImage = data.giftPictureUrl; // Valor por defecto (el que viene del evento)
-            
-            // Buscamos en la lista que ya tienes cargada
+        // =================================================================
+        // 1. LÓGICA DE RÉCORDS (Se ejecuta SIEMPRE, incluso al final)
+        // =================================================================
+
+        // A) MEJOR REGALO (Por precio unitario)
+        if (data.diamondCount > topGiftState.coins) {
+            let finalGiftImage = data.giftPictureUrl; 
             const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
-            
-            if (cachedGift && cachedGift.image && cachedGift.image.url_list && cachedGift.image.url_list.length > 0) {
-                finalGiftImage = cachedGift.image.url_list[0]; // ¡Encontrada la imagen HD!
+            if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
+                finalGiftImage = cachedGift.image.url_list[0];
             }
 
-            console.log(`👑 NUEVO TOP GIFT: ${data.giftName} (${currentGiftValue}) - Imagen: ${finalGiftImage}`);
-            
             topGiftState = {
                 username: data.nickname,
-                coins: currentGiftValue,
+                coins: data.diamondCount, // Valor unitario
                 giftName: data.giftName,
-                giftImage: finalGiftImage // Usamos la imagen mejorada
+                giftImage: finalGiftImage
             };
             
             if(window.electronAPI) {
@@ -1163,18 +1334,47 @@ if (window.electronAPI) {
                 saveAllData();
             }
         }
-        // -----------------------
-        console.log('GIFT EVENT DATA RECEIVED (PROCESANDO):', data);
+
+        // B) MEJOR RACHA (Por cantidad de combo)
+        if (data.repeatCount > topStreakState.streakCount) {
+            let finalGiftImage = data.giftPictureUrl; 
+            const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
+            if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
+                finalGiftImage = cachedGift.image.url_list[0];
+            }
+
+            topStreakState = {
+                username: data.nickname,
+                streakCount: data.repeatCount, // Cantidad acumulada
+                giftName: data.giftName,
+                giftImage: finalGiftImage
+            };
+
+            if(window.electronAPI) {
+                window.electronAPI.updateWidget('topStreak', topStreakState);
+                saveAllData();
+            }
+        }
+
+        // =================================================================
+        // 2. FILTRO DE REPETICIÓN (Para Subasta y Logs)
+        // =================================================================
+        // Aquí sí detenemos si es el final, para no sumar monedas doble vez
+        if (data.repeatEnd) return; 
+
+        // Log visual
         const totalCoins = data.repeatCount * data.diamondCount;
         const message = `
             <img src="${data.giftPictureUrl}" class="gift-icon" alt="${data.giftName}">
             <b>${data.nickname}</b> envió <b>${data.repeatCount}x ${data.giftName}</b>
             (<i class="fas fa-coins" style="color: #ffeb3b;"></i> ${totalCoins})
         `;
-        addLogEntry(message, data.isHighValue ? 'win' : 'gift');
+        addLogEntry(message, 'gift');
 
-        // Ahora solo llamamos a estas funciones con el evento bueno, el inicial.
+        // Ejecutar acción AHORA (durante el combo)
         processTikTokEvent('gift-specific', data);
+        
+        // Sumar a la subasta AHORA (durante el combo)
         updateAuction(data);
     });
 
@@ -1221,15 +1421,23 @@ if (window.electronAPI) {
         // 1. Poner el nombre
         if (data.nickname && nameDisplay) {
             nameDisplay.textContent = data.nickname;
+            localStorage.setItem('cachedUsername', data.nickname); // <--- NUEVO: Guardar nombre local
         }
 
-        // 2. Poner la foto
+        // 2. Poner la foto y GUARDARLA
         if (data.avatar && profileImg && defaultIcon) {
             profileImg.src = data.avatar;
             profileImg.style.display = 'block'; 
             defaultIcon.style.display = 'none';
             
-            // Log opcional para confirmar visualmente
+            // Guardar en variable global y nube
+            lastProfilePicture = data.avatar;
+            saveAllData(); 
+            
+            // --- NUEVO: Guardar en Caché Local (Instantáneo) ---
+            localStorage.setItem('cachedProfilePic', data.avatar);
+            // ---------------------------------------------------
+            
             if(typeof addLogEntry === 'function') {
                 addLogEntry(`🖼️ Perfil actualizado: ${data.nickname}`, 'info');
             }
@@ -1244,23 +1452,31 @@ if (window.electronAPI) {
     // ==========================================================
     let profiles = {};
     let activeProfileName = '';
+    let globalAlerts = []; // <--- AGREGA ESTO (Alertas independientes)
     let availableGiftsCache = [];
+    let lastProfilePicture = ''; // <--- AGREGA ESTA LÍNEA AQUÍ
     const ITEMS_PER_PAGE = 20;
     let currentPageActions = 1;
     let currentPageEvents = 1;
 
     async function saveAllData() {
-        // Guardar en la NUBE (Firebase)
-        if (currentAppUser) {
+        if (currentAppUser && activeProfileName && profiles[activeProfileName]) {
+            
+            // 1. GUARDAMOS LAS METAS DENTRO DEL PERFIL ACTUAL ANTES DE SUBIR
+            profiles[activeProfileName].goals = {
+                likes: likeGoalState,
+                follows: followGoalState,
+            };
+
             try {
                 await db.ref('users/' + currentAppUser.uid + '/data').set({
                     profiles, 
                     activeProfileName, 
+                    globalAlerts, 
                     mediaLibrary: mediaLibrary || [],
-                    goalLikes: likeGoalState,
-                    goalFollows: followGoalState,
                     topGift: topGiftState,
-                    topStreak: topStreakState
+                    topStreak: topStreakState,
+                    lastProfilePicture: lastProfilePicture || '' // <--- ESTO GUARDA LA FOTO
                 });
                 console.log("☁️ Datos guardados en la nube.");
             } catch (e) {
@@ -1281,15 +1497,37 @@ if (window.electronAPI) {
             if (data) {
                 profiles = data.profiles || {};
                 activeProfileName = data.activeProfileName || '';
+                globalAlerts = data.globalAlerts || [];
                 mediaLibrary = data.mediaLibrary || [];
+                topGift = data.topGift || { username: 'Username', coins: 0, giftName: 'Default', giftImage: '' };
+                topStreak = data.topStreak || { username: 'Username', streakCount: 0, giftName: 'Default', giftImage: '' };
                 
-                // Cargar Metas y Widgets (con validación por si son undefined)
-                likeGoalState = data.goalLikes || { current: 0, meta: 1000, initialMeta: 1000, title: "Like Goal" };
-                followGoalState = data.goalFollows || { current: 0, meta: 100, initialMeta: 100, title: "Follow Goal" };
-                topGiftState = data.topGift || { username: 'Username', coins: 0, giftName: 'Default', giftImage: '' };
-                topStreakState = data.topStreak || { username: 'Username', streakCount: 0, giftName: 'Default', giftImage: '' };
+                // Cargar Foto guardada
+                lastProfilePicture = data.lastProfilePicture || '';
+                if (lastProfilePicture) {
+                    const img = document.getElementById('sidebar-profile-img');
+                    const icon = document.getElementById('sidebar-default-icon');
+                    if (img && icon) {
+                        img.src = lastProfilePicture;
+                        img.style.display = 'block';
+                        icon.style.display = 'none';
+                    }
+                }
 
-                // Actualizar Inputs Visuales de Metas
+                // Cargar Metas
+                const currentGoals = profiles[activeProfileName]?.goals || {};
+                
+                // Likes
+                likeGoalState = currentGoals.likes || { current: 0, meta: 1000, initialMeta: 1000, title: "Like Goal" };
+                likeGoalState.current = 0; // Reset barra a 0
+                if (likeGoalState.initialMeta) likeGoalState.meta = likeGoalState.initialMeta; // Reset meta a base
+
+                // Follows
+                followGoalState = currentGoals.follows || { current: 0, meta: 100, initialMeta: 100, title: "Follow Goal" };
+                followGoalState.current = 0; // Reset barra a 0
+                if (followGoalState.initialMeta) followGoalState.meta = followGoalState.initialMeta; // Reset meta a base
+                
+                // Rellenar Inputs de texto
                 if(document.getElementById('gl-title-input')) {
                     document.getElementById('gl-title-input').value = likeGoalState.title;
                     document.getElementById('gl-meta-input').value = likeGoalState.meta;
@@ -1299,24 +1537,44 @@ if (window.electronAPI) {
                     document.getElementById('gf-meta-input').value = followGoalState.meta;
                 }
 
-                // Sincronizar widgets visualmente
+                // Sincronizar widgets
                 if (window.electronAPI) {
                     window.electronAPI.updateWidget('topGift', topGiftState);
                     window.electronAPI.updateWidget('topStreak', topStreakState);
-                    // syncGoalOverlay(); // Si tienes estas funciones definidas
+                    syncGoalOverlay(); 
+                    syncFollowGoalOverlay(); 
                 }
 
             } else {
-                // Usuario nuevo sin datos
                 profiles = {};
+                globalAlerts = []; 
                 activeProfileName = '';
             }
 
-            // Cargar caché global de regalos
-            if(window.electronAPI) await loadGiftsCache(); // Sin el "window."
+            if(window.electronAPI) await loadGiftsCache(); 
+
+            if(window.electronAPI) {
+                const savedEmotes = await window.electronAPI.getSavedEmotes();
+                if(savedEmotes && savedEmotes.length > 0) availableEmotesCache = savedEmotes;
+            }
 
             updateProfileSelector();
             renderActiveProfileData();
+
+            // --- ESTO ES LO NUEVO: RECUPERAR LA ACCIÓN GUARDADA ---
+            // 1. Forzamos el llenado de la lista de acciones ahora mismo
+            if(typeof updateGoalActions === 'function') updateGoalActions();
+            if(typeof updateGoalFollowActions === 'function') updateGoalFollowActions();
+
+            // 2. Seleccionamos la opción guardada
+            if(document.getElementById('gl-action-select')) {
+                document.getElementById('gl-action-select').value = likeGoalState.actionId || "";
+            }
+            if(document.getElementById('gf-action-select')) {
+                document.getElementById('gf-action-select').value = followGoalState.actionId || "";
+            }
+            // ------------------------------------------------------
+
             showToastNotification("✅ Datos cargados correctamente.");
         }
     }
@@ -1404,130 +1662,220 @@ if (window.electronAPI) {
         });
     }
 
-    // === NUEVO: Funciones para el modal de Alertas ===
+    // === FUNCIÓN RESET (VERSIÓN BÚSQUEDA EXACTA) ===
     function resetAlertModal() {
-        document.getElementById('alert-modal-title').textContent = 'Nueva Alerta';
-        document.getElementById('editing-alert-id').value = '';
-        document.getElementById('alert-name').value = '';
-        // Resetea aquí todos los campos del nuevo modal
+        console.log("🧹 Limpiando modal de alertas (Modo Local)...");
+        
+        // 1. Referencia al contenedor PADRE (El modal que tienes abierto)
+        const modal = document.querySelector('#create-alert-modal');
+        if(!modal) return;
+
+        // 2. BUSCAMOS LOS ELEMENTOS DENTRO DE ESTE MODAL EXCLUSIVAMENTE
+        // (Esto evita que pille IDs duplicados de otras partes)
+        
+        const emoteMenu = modal.querySelector('#alert-custom-emote-selector');
+        const emoteDisplay = modal.querySelector('#alert-emote-selector-display');
+        const emoteInput = modal.querySelector('#alert-selected-emote-id');
+        const emoteContainer = modal.querySelector('#alert-emote-selector-container');
+
+        // 3. LIMPIEZA DE EMOTES
+        if (emoteMenu) {
+            emoteMenu.classList.remove('open'); // Cierra el menú exacto
+        }
+        if (emoteDisplay) {
+            emoteDisplay.innerHTML = '<span class="placeholder">Selecciona un emote...</span>'; // Borra la foto
+        }
+        if (emoteInput) {
+            emoteInput.value = ''; 
+            delete emoteInput.dataset.imageUrl; 
+        }
+        if (emoteContainer) {
+            emoteContainer.style.display = 'none';
+        }
+
+        // 4. LIMPIEZA DE REGALOS
+        const giftMenu = modal.querySelector('#alert-custom-gift-selector');
+        const giftDisplay = modal.querySelector('#alert-gift-selector-display');
+        const giftInput = modal.querySelector('#alert-selected-gift-id');
+        const giftSpecificContainer = modal.querySelector('#alert-gift-specific-selector');
+        
+        if (giftMenu) giftMenu.classList.remove('open');
+        if (giftDisplay) giftDisplay.innerHTML = '<span class="placeholder">Selecciona...</span>';
+        if (giftInput) giftInput.value = '';
+        if (giftSpecificContainer) giftSpecificContainer.style.display = 'none';
+
+        // 5. RESTO DE CAMPOS
+        modal.querySelector('#alert-modal-title').textContent = 'Nueva Alerta';
+        modal.querySelector('#editing-alert-id').value = '';
+        modal.querySelector('#alert-name').value = '';
+        modal.querySelector('#alert-duration').value = '5';
+        modal.querySelector('#alert-specific-users-list').value = '';
+        modal.querySelector('#alert-min-coins-amount').value = '1';
+
+        // Ocultar contenedores extra
+        const hiddenContainers = [
+            '#alert-specific-user-input-container',
+            '#alert-min-coins-input-container',
+            '#alert-likes-amount-selector',
+            '#alert-media-config'
+        ];
+        hiddenContainers.forEach(sel => {
+            const el = modal.querySelector(sel);
+            if(el) el.style.display = 'none';
+        });
+
+        // 6. AUDIO Y MEDIA
+        const checkMedia = modal.querySelector('#alert-action-show-media');
+        if(checkMedia) checkMedia.checked = false;
+        modal.querySelector('#alert-selected-media-url').value = '';
+        
+        const checkAudio = modal.querySelector('#alert-action-play-audio');
+        if(checkAudio) checkAudio.checked = false;
+        const audioConfig = modal.querySelector('#alert-audio-config');
+        if(audioConfig) audioConfig.classList.remove('open');
+
+        // 7. RADIOS
+        const defaultWho = modal.querySelector('input[name="alert_who"][value="all"]');
+        if(defaultWho) defaultWho.checked = true;
+        const defaultWhy = modal.querySelector('input[name="alert_why"][value="join"]');
+        if(defaultWhy) defaultWhy.checked = true;
     }
 
     function openAlertModal(alertData = null) {
-        resetAlertModal(); // Limpiamos primero
+        // 1. Limpieza inicial
+        resetAlertModal(); 
         
+        // 2. FORCE RESET VISUAL (Seguridad extra para el menú)
+        const emoteMenu = document.getElementById('alert-custom-emote-selector');
+        const emoteDisplay = document.getElementById('alert-emote-selector-display');
+        const emoteInput = document.getElementById('alert-selected-emote-id');
+        
+        if (emoteMenu) emoteMenu.classList.remove('open');
+        if (emoteDisplay) emoteDisplay.innerHTML = '<span class="placeholder">Selecciona un emote...</span>';
+        if (emoteInput) emoteInput.value = '';
+
+        // 3. RELLENAR DATOS (Si estamos editando)
         if (alertData) {
-            // Si estamos editando (hay datos)
-            document.getElementById('alert-modal-title').textContent = 'Editar Alerta';
-            document.getElementById('editing-alert-id').value = alertData.id;
-            document.getElementById('alert-name').value = alertData.name;
-            document.getElementById('display-duration').value = alertData.duration || 5;
-
-            // Seleccionar el "trigger" (Por qué ocurre)
-            const whyRadio = document.querySelector(`input[name="alert_why"][value="${alertData.why}"]`);
-            if (whyRadio) {
-                whyRadio.checked = true;
-                // Forzar evento change para mostrar inputs específicos
-                whyRadio.dispatchEvent(new Event('change')); 
-            }
-            
-            // Seleccionar el "who" (Quién lo activa)
-            const whoRadio = document.querySelector(`input[name="alert_who"][value="${alertData.who}"]`);
-            if (whoRadio) whoRadio.checked = true;
-
-            // Si es regalo específico, rellenar datos
-            if (alertData.why === 'gift-specific' && alertData.giftId) {
-                // Usamos los IDs CORRECTOS de la sección de Alertas
-                const alertInput = document.getElementById('alert-selected-gift-id');
-                const alertDisplay = document.getElementById('alert-gift-selector-display');
-
-                if (alertInput) alertInput.value = alertData.giftId;
+            try {
+                document.getElementById('alert-modal-title').textContent = 'Editar Alerta';
+                document.getElementById('editing-alert-id').value = alertData.id;
+                document.getElementById('alert-name').value = alertData.name || '';
                 
-                if (alertDisplay) {
-                    // Intentamos recuperar la imagen si está en caché para que se vea bonito
-                    const cachedGift = availableGiftsCache.find(g => g.id == alertData.giftId);
-                    const imgUrl = cachedGift ? cachedGift.image.url_list[0] : null;
+                // Duración (con seguridad)
+                const durationInput = document.getElementById('alert-duration');
+                if(durationInput) durationInput.value = alertData.duration || 5;
+
+                // --- RESTAURAR RADIOS (Trigger y Quién) ---
+                try {
+                    const whyRadio = document.querySelector(`input[name="alert_why"][value="${alertData.why}"]`);
+                    if (whyRadio) {
+                        whyRadio.checked = true;
+                        whyRadio.dispatchEvent(new Event('change')); // Muestra los inputs necesarios
+                    }
                     
-                    if (imgUrl) {
-                        alertDisplay.innerHTML = `<img src="${imgUrl}" alt="${alertData.giftName}"><span>${alertData.giftName}</span>`;
-                    } else {
-                        // Si no hay imagen, solo texto
-                        alertDisplay.innerHTML = `<span>${alertData.giftName || 'Regalo ID: ' + alertData.giftId}</span>`;
+                    const whoRadio = document.querySelector(`input[name="alert_who"][value="${alertData.who}"]`);
+                    if (whoRadio) whoRadio.checked = true;
+                } catch(e) { console.error("Error restaurando radios:", e); }
+
+                // --- RESTAURAR CAMPOS ESPECÍFICOS ---
+                
+                // Usuarios Específicos
+                if (alertData.who === 'specific' && alertData.specificUsers) {
+                    const userInput = document.getElementById('alert-specific-users-list');
+                    if(userInput) userInput.value = alertData.specificUsers.join(', ');
+                    
+                    const userContainer = document.getElementById('alert-specific-user-input-container');
+                    if(userContainer) userContainer.style.display = 'grid';
+                }
+
+                // Min Coins
+                if (alertData.why === 'gift-min' && alertData.minCoins) {
+                    const coinsInput = document.getElementById('alert-min-coins-amount');
+                    if(coinsInput) coinsInput.value = alertData.minCoins;
+                }
+
+                // Regalo Específico
+                if (alertData.why === 'gift-specific' && alertData.giftId) {
+                    const alertInput = document.getElementById('alert-selected-gift-id');
+                    const alertDisplay = document.getElementById('alert-gift-selector-display');
+
+                    if (alertInput) alertInput.value = alertData.giftId;
+                    
+                    if (alertDisplay) {
+                        // Intentar buscar imagen en caché
+                        let imgHtml = `<span>${alertData.giftName || 'Regalo ID: ' + alertData.giftId}</span>`;
+                        if(typeof availableGiftsCache !== 'undefined') {
+                            const cachedGift = availableGiftsCache.find(g => g.id == alertData.giftId);
+                            if (cachedGift && cachedGift.image) {
+                                imgHtml = `<img src="${cachedGift.image.url_list[0]}" alt="${cachedGift.name}"><span>${cachedGift.name}</span>`;
+                            }
+                        }
+                        alertDisplay.innerHTML = imgHtml;
                     }
                 }
-            }
 
-            // Restaurar Emote si es el caso
-            if (alertData.why === 'emote' && alertData.emoteId) {
-                const emoteDisplay = document.getElementById('alert-emote-selector-display');
-                const emoteInput = document.getElementById('alert-selected-emote-id');
-                
-                if (emoteInput) emoteInput.value = alertData.emoteId;
-                if (emoteDisplay) {
-                    // Si guardamos la imagen, úsala. Si no, texto genérico.
-                    const imgSrc = alertData.emoteImage || ''; 
-                    if (imgSrc) {
-                        emoteDisplay.innerHTML = `<img src="${imgSrc}" alt="Emote"><span>Emote</span>`;
-                    } else {
-                        emoteDisplay.innerHTML = `<span>Emote ID: ${alertData.emoteId}</span>`;
+                // Emotes
+                if (alertData.why === 'emote' && alertData.emoteId) {
+                    if (emoteInput) emoteInput.value = alertData.emoteId;
+                    if (emoteDisplay) {
+                        if (alertData.emoteImage) {
+                            emoteDisplay.innerHTML = `<img src="${alertData.emoteImage}" alt="Emote"><span>Emote</span>`;
+                            // Restaurar data-set para que al guardar no se pierda
+                            emoteInput.dataset.imageUrl = alertData.emoteImage;
+                        } else {
+                            emoteDisplay.innerHTML = `<span>Emote ID: ${alertData.emoteId}</span>`;
+                        }
                     }
                 }
-            }
 
-            // Audio
-            if (alertData.audioAction) {
-                // 1. Marcar el checkbox y mostrar el menú
-                const cb = document.getElementById('alert-action-play-audio');
-                const configMenu = document.getElementById('alert-audio-config');
-                
-                if(cb) cb.checked = true;
-                if(configMenu) configMenu.classList.add('open'); // <--- Esto fuerza que se vea el menú
+                // Audio
+                if (alertData.audioAction) {
+                    const cbAudio = document.getElementById('alert-action-play-audio');
+                    const menuAudio = document.getElementById('alert-audio-config');
+                    
+                    if(cbAudio) cbAudio.checked = true;
+                    if(menuAudio) menuAudio.classList.add('open');
 
-                // 2. Importante: Decirle al sistema que estamos en ALERTAS
-                audioSelectionContext = 'alert'; 
-                
-                // 3. Mostrar el archivo visualmente
-                selectAudio(alertData.audioAction.file);
+                    // Importante: Definir contexto
+                    audioSelectionContext = 'alert'; 
+                    selectAudio(alertData.audioAction.file);
 
-                // 4. Restaurar Volumen y actualizar color del slider
-                const vol = alertData.audioAction.volume || 50;
-                const volSlider = document.getElementById('alert-audio-volume');
-                const volLabel = document.getElementById('alert-volume-label');
-                
-                if (volSlider) {
-                    volSlider.value = vol;
-                    volSlider.style.background = `linear-gradient(to right, #5c1d80 ${vol}%, #555 ${vol}%)`;
+                    const volSlider = document.getElementById('alert-audio-volume');
+                    if (volSlider) {
+                        volSlider.value = alertData.audioAction.volume || 50;
+                        volSlider.dispatchEvent(new Event('input'));
+                    }
+
+                    if (alertData.audioAction.oneShot) document.getElementById('alert-audio-oneshot').checked = true;
+                    if (alertData.audioAction.skip) document.getElementById('alert-audio-skip').checked = true;
+                    if (alertData.audioAction.queue) document.getElementById('alert-audio-add-queue').checked = true;
                 }
-                if (volLabel) volLabel.textContent = `Volumen: ${vol}`;
 
-                // 5. Restaurar los otros checkboxes
-                if (alertData.audioAction.oneShot) document.getElementById('alert-audio-oneshot').checked = true;
-                if (alertData.audioAction.skip) document.getElementById('alert-audio-skip').checked = true;
-                if (alertData.audioAction.queue) document.getElementById('alert-audio-add-queue').checked = true;
+                // Media (Imagen/Video)
+                if (alertData.mediaAction) {
+                    const mediaCheck = document.getElementById('alert-action-show-media');
+                    const mediaDiv = document.getElementById('alert-media-config');
+                    const mediaInput = document.getElementById('alert-selected-media-url');
+
+                    if (mediaCheck) mediaCheck.checked = true;
+                    if (mediaDiv) mediaDiv.style.display = 'block';
+                    if (mediaInput) mediaInput.value = alertData.mediaAction.url;
+                }
+
+            } catch(err) {
+                console.error("⚠️ Error restaurando datos de alerta:", err);
+                // Si falla algo al rellenar, no pasa nada, continuamos para abrir la ventana
             }
-
-            // --- RECUPERAR DATOS DE MEDIA (FOTOS/VIDEOS) ---
-            if (alertData.mediaAction) {
-                const mediaCheck = document.getElementById('alert-action-show-media');
-                const mediaDiv = document.getElementById('alert-media-config');
-                const mediaInput = document.getElementById('alert-selected-media-url');
-
-                // 1. Marcar el checkbox
-                if (mediaCheck) mediaCheck.checked = true;
-                
-                // 2. Mostrar el menú (importante)
-                if (mediaDiv) mediaDiv.style.display = 'block';
-
-                // 3. Rellenar el texto con el link guardado
-                if (mediaInput) mediaInput.value = alertData.mediaAction.url;
-            }
-            // -----------------------------------------------
-
         }
         
-        alertModalOverlay.classList.add('open');
+        // 4. ABRIR EL MODAL (Finalmente)
+        document.getElementById('create-alert-modal').classList.add('open');
     }
     
-    const closeAlertModal = () => alertModalOverlay.classList.remove('open');
+    const closeAlertModal = () => { 
+        resetAlertModal(); // <--- IMPORTANTE: Limpiar antes de cerrar
+        alertModalOverlay.classList.remove('open'); 
+    };
 
     // === LÓGICA PARA GUARDAR ALERTAS (PEGAR ESTO) ===
     applyAlertButton.addEventListener('click', async () => {
@@ -1557,6 +1905,14 @@ if (window.electronAPI) {
             duration: document.getElementById('alert-duration').value || 5
         };
 
+        if (id) {
+            // Buscar en globalAlerts
+            const index = globalAlerts.findIndex(a => a.id === id);
+            if (index !== -1) globalAlerts[index] = newAlertData;
+        } else {
+            globalAlerts.push(newAlertData);
+        }
+
         // === CAMBIAR ESTO: Lógica de Audio para ALERTAS ===
         const playAudioCheck = document.getElementById('alert-action-play-audio'); // ID Nuevo
         if (playAudioCheck && playAudioCheck.checked) {
@@ -1580,14 +1936,41 @@ if (window.electronAPI) {
         if (showMediaCheck && showMediaCheck.checked) {
             const mediaUrl = document.getElementById('alert-selected-media-url').value;
             if (mediaUrl) {
-                // Guardamos la acción de media dentro de la alerta
+                // INTENTAMOS BUSCAR EL NOMBRE EN TU BIBLIOTECA
+                let niceName = "Archivo";
+                // mediaLibrary es tu variable global donde guardas las fotos/videos
+                const foundMedia = mediaLibrary.find(m => m.url === mediaUrl);
+                
+                if (foundMedia) {
+                    niceName = foundMedia.name; // Usamos el nombre que le pusiste
+                } else {
+                    // Si no está (es un link pegado), limpiamos la URL para dejar solo el archivo
+                    try { niceName = mediaUrl.split('/').pop().split('?')[0]; } catch(e){}
+                }
+
                 newAlertData.mediaAction = {
                     url: mediaUrl,
-                    volume: 100
+                    volume: 100,
+                    name: niceName // <--- AQUÍ GUARDAMOS EL NOMBRE
                 };
             } else {
                  return showToastNotification('⚠️ Selecciona una imagen o video.');
             }
+        }
+
+        // LÓGICA USUARIOS ESPECÍFICOS
+        if (who === 'specific') {
+            const rawUsers = document.getElementById('alert-specific-users-list').value;
+            if (!rawUsers.trim()) return showToastNotification('⚠️ Escribe al menos un usuario.');
+            // Guardamos como array limpio: ["pepito", "juan"]
+            newAlertData.specificUsers = rawUsers.split(',').map(u => u.trim().toLowerCase());
+        }
+
+        // LÓGICA MIN COINS
+        if (why === 'gift-min') {
+            const minCoins = parseInt(document.getElementById('alert-min-coins-amount').value);
+            if (!minCoins || minCoins < 1) return showToastNotification('⚠️ El mínimo debe ser 1 moneda.');
+            newAlertData.minCoins = minCoins;
         }
 
         // Lógica para Regalos Específicos
@@ -1603,16 +1986,14 @@ if (window.electronAPI) {
             }
         }
 
-        // Lógica para Emotes (AGREGAR ESTO)
+        // Lógica para Emotes (CORREGIDO)
         if (why === 'emote') {
-            const emoteIdInput = document.getElementById('alert-selected-gift-id'); // OJO: Corregiremos esto abajo, usa el ID nuevo
-            // CORRECCIÓN: Usar la variable correcta que definimos arriba
-            const emoteIdVal = document.getElementById('alert-selected-emote-id').value;
-            const emoteImgVal = document.getElementById('alert-selected-emote-id').dataset.imageUrl;
-
-            if (emoteIdVal) {
-                newAlertData.emoteId = emoteIdVal;
-                newAlertData.emoteImage = emoteImgVal; // Guardamos la URL para mostrarla luego
+            // Usamos el ID correcto del input de EMOTES, no de regalos
+            const emoteInput = document.getElementById('alert-selected-emote-id'); 
+            
+            if (emoteInput && emoteInput.value) {
+                newAlertData.emoteId = emoteInput.value;
+                newAlertData.emoteImage = emoteInput.dataset.imageUrl; // Guardamos la URL para mostrarla luego
             } else {
                 return showToastNotification('⚠️ Selecciona un emote de la lista.');
             }
@@ -1737,9 +2118,60 @@ if (window.electronAPI) {
     });
 
     profileSelector.addEventListener('change', async () => {
+        // 1. ANTES DE CAMBIAR: Guardamos TODO lo actual en la memoria del perfil VIEJO
+        // Usamos activeProfileName (que aún tiene el nombre viejo)
+        if (profiles[activeProfileName]) {
+            profiles[activeProfileName].goals = {
+                likes: likeGoalState,
+                follows: followGoalState
+            };
+        }
+
+        // 2. AHORA SÍ: Cambiamos al nuevo nombre
         activeProfileName = profileSelector.value;
-        renderActiveProfileData();
-        await saveAllData();
+        
+        // 3. CARGAMOS LOS DATOS DEL NUEVO PERFIL
+        const newProfileGoals = profiles[activeProfileName]?.goals || {};
+        
+        // --- LIKES (Cargar y mostrar) ---
+        likeGoalState = newProfileGoals.likes || { current: 0, meta: 1000, initialMeta: 1000, title: "Like Goal" };
+        if(document.getElementById('gl-title-input')) {
+            document.getElementById('gl-title-input').value = likeGoalState.title;
+            document.getElementById('gl-meta-input').value = likeGoalState.meta;
+        }
+
+        // --- FOLLOWS (Cargar y mostrar) ---
+        followGoalState = newProfileGoals.follows || { current: 0, meta: 100, initialMeta: 100, title: "Follow Goal" };
+        if(document.getElementById('gf-title-input')) {
+            document.getElementById('gf-title-input').value = followGoalState.title;
+            document.getElementById('gf-meta-input').value = followGoalState.meta;
+        }
+
+        // 4. ACTUALIZAR LISTAS DE ACCIONES (El paso clave)
+        renderActiveProfileData(); // Pinta la lista de abajo
+        
+        // Rellenamos los desplegables con las acciones de ESTE nuevo perfil
+        if(typeof updateGoalActions === 'function') updateGoalActions();
+        if(typeof updateGoalFollowActions === 'function') updateGoalFollowActions();
+
+        // 5. RECUPERAR LA SELECCIÓN EN EL DESPLEGABLE
+        // (El código espera 50ms para asegurar que el HTML se actualizó)
+        setTimeout(() => {
+            if(document.getElementById('gl-action-select')) {
+                document.getElementById('gl-action-select').value = likeGoalState.actionId || "";
+            }
+            if(document.getElementById('gf-action-select')) {
+                document.getElementById('gf-action-select').value = followGoalState.actionId || "";
+            }
+        }, 50);
+
+        // 6. GUARDAR TODO EN LA NUBE (Para que recuerde que este es el perfil activo)
+        await saveAllData(); 
+
+        syncGoalOverlay();
+        syncFollowGoalOverlay();
+        
+        showToastNotification(`Perfil cambiado a: ${activeProfileName}`);
     });
 
     createProfileBtn.addEventListener('click', () => {
@@ -1816,22 +2248,47 @@ if (window.electronAPI) {
         showToastNotification(`🗑 Perfil "${deletedProfileName}" eliminado.`);
     });
 
+    // --- LÓGICA DE DUPLICAR PERFIL CON MODAL ---
+    const duplicateProfileFormContainer = document.getElementById('duplicate-profile-form-container');
+    const duplicateProfileNameInput = document.getElementById('duplicate-profile-name-input');
+    const applyDuplicateBtn = document.getElementById('apply-duplicate-profile-btn');
+    const discardDuplicateBtn = document.getElementById('discard-duplicate-profile-btn');
+
+    // 1. Abrir el modal al dar clic en Duplicar
     duplicateProfileBtn.addEventListener('click', () => {
         if (!activeProfileName) return showToastNotification('⚠️ No hay un perfil para duplicar.');
-        const baseName = activeProfileName;
-        let newName = `${baseName} (Copia)`;
-        let counter = 2;
-        while (profiles[newName]) {
-            newName = `${baseName} (Copia ${counter++})`;
-        }
         
+        // Pre-llenar el nombre con "(Copia)"
+        duplicateProfileNameInput.value = `${activeProfileName} (Copia)`;
+        
+        duplicateProfileFormContainer.classList.add('visible');
+        duplicateProfileNameInput.focus();
+        duplicateProfileNameInput.select();
+    });
+
+    // 2. Botón Cancelar
+    discardDuplicateBtn.addEventListener('click', () => duplicateProfileFormContainer.classList.remove('visible'));
+    
+    // 3. Botón Confirmar Duplicación
+    applyDuplicateBtn.addEventListener('click', async () => {
+        const baseName = activeProfileName;
+        const newName = duplicateProfileNameInput.value.trim();
+
+        if (!newName) return showToastNotification('⚠️ El nombre no puede estar vacío.');
+        if (profiles[newName]) return showToastNotification('⚠️ Ya existe un perfil con ese nombre.');
+
+        // Realizar la copia
         profiles[newName] = JSON.parse(JSON.stringify(profiles[baseName]));
+        
+        // Cambiar al nuevo perfil (opcional, si prefieres quedarte en el viejo, quita esta línea)
         activeProfileName = newName;
         
         updateProfileSelector();
         renderActiveProfileData();
-        saveAllData();
-        showToastNotification(`✅ Perfil "${newName}" duplicado.`);
+        await saveAllData();
+        
+        duplicateProfileFormContainer.classList.remove('visible');
+        showToastNotification(`✅ Perfil duplicado como "${newName}".`);
     });
 
     // ====================================================
@@ -2303,7 +2760,7 @@ if (window.electronAPI) {
         const currentProfile = profiles[activeProfileName];
         if (!currentProfile) return;
         const action = currentProfile.actions.find(a => a.id === id);
-        if (action && confirm(`¿Seguro que quieres borrar la acción "${action.name}"?`)) {
+        if (action && await window.showCustomConfirm(`¿Seguro que quieres borrar la acción "${action.name}"?`)) {
             currentProfile.actions = currentProfile.actions.filter(a => a.id !== id);
             const totalPages = Math.ceil(currentProfile.actions.length / ITEMS_PER_PAGE) || 1;
             if (currentPageActions > totalPages) currentPageActions = totalPages;
@@ -2602,7 +3059,24 @@ if (window.electronAPI) {
                 triggerContent = `<div class="trigger-content">${eventIcons[event.why] || ''} ${whyLabels[event.why] || event.why}</div>`;
             }
 
-            const actionsSummary = [...(event.actionsAll || []), ...(event.actionsRandom || [])].map(a => a.name).join(', ') || 'Ninguna';
+            // --- INICIO CAMBIO VISUAL ---
+            let summaryParts = [];
+            
+            // 1. Agregar nombres de acciones FIJAS ("Activar todas estas acciones")
+            if (event.actionsAll && event.actionsAll.length > 0) {
+                summaryParts.push(event.actionsAll.map(a => a.name).join(', '));
+            }
+
+            // 2. Agregar nombres de acciones ALEATORIAS con formato especial
+            if (event.actionsRandom && event.actionsRandom.length > 0) {
+                const randomNames = event.actionsRandom.map(a => a.name).join(', ');
+                // Añadimos el prefijo RANDOM y color amarillo (#ffc107)
+                summaryParts.push(`<span style="color: #e0e0e0;">RANDOM(${randomNames})</span>`);
+            }
+
+            // Unir todo (ej: "Accion1 + RANDOM(Accion2, Accion3)")
+            const actionsSummary = summaryParts.join(' + ') || 'Ninguna';
+            // --- FIN CAMBIO VISUAL ---
 
             const eventDiv = document.createElement('div'); 
             eventDiv.className = 'list-view-row event-row'; 
@@ -2776,7 +3250,7 @@ if (window.electronAPI) {
         const currentProfile = profiles[activeProfileName];
         if (!currentProfile || !currentProfile.events) return; // Seguridad extra
 
-        if (confirm(`¿Seguro que quieres borrar este evento?`)) { 
+        if (await window.showCustomConfirm(`¿Seguro que quieres borrar este evento?`)) { 
             // Filtramos usando '!=' para seguridad de tipos (texto vs numero)
             currentProfile.events = currentProfile.events.filter(e => e.id != id);
             
@@ -2843,388 +3317,346 @@ if (window.electronAPI) {
     };
 
     window.playAlert = (id) => {
+        // Intentamos buscar la alerta en el perfil o en las globales
         const currentProfile = profiles[activeProfileName];
-        if (!currentProfile) return;
-        const alert = currentProfile.alerts.find(a => a.id === id);
+        let alert = currentProfile?.alerts?.find(a => a.id === id);
+        
+        // Si no está en el perfil, buscar en las globales
+        if (!alert && typeof globalAlerts !== 'undefined') {
+            alert = globalAlerts.find(a => a.id === id);
+        }
+
         if (alert) {
             // Simulamos una acción para probarla
             const testAction = {
                 name: alert.name,
                 duration: alert.duration,
                 audioAction: alert.audioAction,
-                mediaAction: alert.mediaAction // <--- ¡AÑADE ESTA LÍNEA!
+                mediaAction: alert.mediaAction,
+                image: alert.image
             };
-            actionQueue.push({ action: testAction, eventData: { nickname: 'TEST' } });
-            processQueue();
+            
+            // --- CORRECCIÓN: ENVIAR A LA COLA DE ALERTAS, NO A LA DE ACCIONES ---
+            alertQueue.push({ action: testAction, eventData: { nickname: 'TEST ALERTA' } });
+            processAlertQueue(); // Usar el procesador de alertas
         }
     };
 
     window.deleteAlert = async (id) => {
-        const currentProfile = profiles[activeProfileName];
-        if (!currentProfile) return;
-        if (confirm('¿Borrar esta alerta?')) {
-            currentProfile.alerts = currentProfile.alerts.filter(a => a.id !== id);
+        if (await window.showCustomConfirm('¿Borrar esta alerta?')) {
+            // Filtrar globalAlerts
+            globalAlerts = globalAlerts.filter(a => a.id !== id);
             renderAlerts();
             await saveAllData();
         }
     };
 
     window.editAlert = (id) => {
-        const alert = profiles[activeProfileName]?.alerts.find(a => a.id === id);
+        console.log("Intentando editar alerta ID:", id);
+        
+        // 1. Buscar en el perfil activo
+        let alert = profiles[activeProfileName]?.alerts?.find(a => a.id === id);
+        
+        // 2. Si no está ahí, buscar en la lista global (por si acaso)
+        if (!alert && globalAlerts) {
+            alert = globalAlerts.find(a => a.id === id);
+        }
+
         if (alert) {
-            // Aquí debes llamar a tu lógica de abrir modal con los datos
-            // Como openAlertModal espera datos, asegúrate de implementarlo
+            console.log("Alerta encontrada:", alert);
             openAlertModal(alert); 
-            // Nota: Tendrás que asegurarte que openAlertModal rellene el formulario
-            // basándose en el objeto 'alert' que le pasas.
+        } else {
+            console.error("❌ Error: No se encontró la alerta con ID", id);
+            showToastNotification("Error: No se pudo cargar la alerta.");
         }
     };
 
     // ==========================================================
-    // SECCIÓN 4: MOTOR DE EVENTOS Y SISTEMA DE COLA
-    // ==========================================================´
+    // SECCIÓN 4: MOTOR DE EVENTOS Y SISTEMA DE COLA (DOBLE MOTOR)
+    // ==========================================================
     let isAuctionRunning = false;
-    let userLikeCounters = {}; // <-- NUEVO OBJETO PARA CONTEOS INDIVIDUALES
-    
-    async function executeExtraAction(extraAction) {
-        // Validación básica
-        if (!extraAction || extraAction.type !== 'widgetControl') return;
+    let userLikeCounters = {}; 
 
-        const { widgetId, operation, quantity } = extraAction;
-
-        // 1. Obtener datos actuales del backend LOCAL (donde viven los Overlays)
-        // Usamos window.electronAPI en vez de firebase
-        let currentData = await window.electronAPI.getWidgetData(widgetId);
-        
-        // Si no existen datos previos, creamos una estructura base
-        if (!currentData) {
-            currentData = { conteo: 0, meta: 5 }; // Valores por defecto para Meta Win
-        }
-        
-        // Aseguramos que 'conteo' sea un número para poder sumar
-        if (typeof currentData.conteo !== 'number') currentData.conteo = 0;
-
-        console.log(`[Motor Extra] Aplicando: ${operation} ${quantity} a ${widgetId} (Valor actual: ${currentData.conteo})`);
-
-        // 2. Aplicar la operación matemática
-        const qty = parseInt(quantity) || 1;
-        switch (operation) {
-            case 'sumar': 
-                currentData.conteo += qty; 
-                break;
-            case 'quitar': 
-                currentData.conteo -= qty; 
-                break;
-            case 'reset': 
-                currentData.conteo = 0; 
-                break;
-        }
-
-        // 3. Enviar datos actualizados al backend LOCAL
-        // Esto hará que el Overlay en OBS/Live Studio se mueva inmediatamente
-        await window.electronAPI.updateWidget(widgetId, currentData);
-        
-        console.log(`[Motor Extra] Widget ${widgetId} actualizado a:`, currentData);
-    }
-
+    // --- CARRIL 1: ACCIONES (PERFILES) ---
     let actionQueue = []; 
     let isProcessingQueue = false;
 
-    function executeAction(action, eventData) {
+    // --- CARRIL 2: ALERTAS (GLOBALES) ---
+    let alertQueue = []; 
+    let isProcessingAlertQueue = false;
+
+    // --- FUNCIÓN: CREAR REPRODUCTORES DE AUDIO INDEPENDIENTES ---
+    // Esto crea un reproductor para alertas y otro para acciones para que no se corten.
+    function getAudioPlayer(type) {
+        const id = `audio-player-${type}`; // ID único: audio-player-action o audio-player-alert
+        let player = document.getElementById(id);
+        
+        if (!player) {
+            player = document.createElement('audio');
+            player.id = id;
+            player.style.display = 'none'; 
+            document.body.appendChild(player); 
+        }
+        return player;
+    }
+
+    // --- FUNCIÓN: EJECUTAR ACCIONES EXTRA (WIDGETS) ---
+    async function executeExtraAction(extraAction) {
+        if (!extraAction || extraAction.type !== 'widgetControl') return;
+        const { widgetId, operation, quantity } = extraAction;
+        if (!window.electronAPI) return;
+
+        let currentData = await window.electronAPI.getWidgetData(widgetId);
+        if (!currentData) currentData = { conteo: 0, meta: 5 };
+        if (typeof currentData.conteo !== 'number') currentData.conteo = 0;
+
+        const qty = parseInt(quantity) || 1;
+        switch (operation) {
+            case 'sumar': currentData.conteo += qty; break;
+            case 'quitar': currentData.conteo -= qty; break;
+            case 'reset': currentData.conteo = 0; break;
+        }
+        await window.electronAPI.updateWidget(widgetId, currentData);
+    }
+
+    // --- EL MOTOR DE EJECUCIÓN PRINCIPAL ---
+    // Recibe 'queueType' para saber qué carril usar ('action' o 'alert')
+    function executeAction(action, eventData, queueType) {
         return new Promise(async (resolve) => {
             const tasks = [];
-            
-            // -----------------------------------------------------------------------
-            // CORRECCIÓN DEFINITIVA: 
-            // Toma DIRECTAMENTE el nickname. No mira uniqueId, no mira username.
-            // Si eventData.nickname existe, usa eso. Punto.
-            // -----------------------------------------------------------------------
             const nickname = (eventData && eventData.nickname) ? eventData.nickname : 'Usuario';
 
-            // Tarea de Minecraft ServerTap
+            // 1. MINECRAFT (Se ejecuta en paralelo, NO espera)
             if (action.minecraftAction && window.electronAPI) {
-                tasks.push(new Promise(async (res) => {
-                    // 1. Obtener datos de conexión de la pestaña Configuración
+                (async () => {
                     const ip = document.getElementById('mc-ip').value.trim();
                     const port = document.getElementById('mc-port').value.trim();
                     const key = document.getElementById('mc-key').value.trim();
-                    const playername = document.getElementById('mc-player-name').value.trim() || '@a'; // Default a todos si no hay nombre
+                    const playername = document.getElementById('mc-player-name').value.trim() || '@a';
 
-                    if (!ip || !port || !key) {
-                        console.warn("Faltan datos de conexión de Minecraft en Configuración.");
-                        return res();
-                    }
+                    if (ip && port && key) {
+                        const rawCommands = action.minecraftAction.command.split('\n');
+                        const quantity = parseInt(action.minecraftAction.quantity) || 1;
+                        let interval = parseInt(action.minecraftAction.interval);
+                        if (isNaN(interval)) interval = 100;
 
-                    // 2. Preparar los comandos (separar por líneas)
-                    const rawCommands = action.minecraftAction.command.split('\n');
-                    const quantity = parseInt(action.minecraftAction.quantity) || 1;
-                    let interval = parseInt(action.minecraftAction.interval);
-                    if (isNaN(interval)) interval = 100; // Si está vacío usa 100, pero si es 0, respeta el 0.
-
-                    // 3. Bucle de cantidad
-                    for (let i = 0; i < quantity; i++) {
-                        
-                        // 4. Ejecutar cada línea del comando
-                        for (let line of rawCommands) {
-                            line = line.trim();
-                            if (!line) continue;
-
-                            // REEMPLAZO DE VARIABLES
-                            // {nickname} -> Usuario de TikTok
-                            // {playername} -> Tu usuario de Minecraft (Config)
-                            let finalCommand = line
-                                .replace(/{nickname}/g, nickname)
-                                .replace(/{playername}/g, playername);
-
-                            // Enviar al backend
-                            await window.electronAPI.executeMinecraftCommand({ ip, port, key, command: finalCommand });
+                        for (let i = 0; i < quantity; i++) {
+                            for (let line of rawCommands) {
+                                line = line.trim();
+                                if (!line) continue;
+                                let finalCommand = line.replace(/{nickname}/g, nickname).replace(/{playername}/g, playername);
+                                await window.electronAPI.executeMinecraftCommand({ ip, port, key, command: finalCommand });
+                            }
+                            if (i < quantity - 1) await new Promise(r => setTimeout(r, interval));
                         }
-
-                        // Esperar intervalo si hay más repeticiones
-                        if (i < quantity - 1) await new Promise(r => setTimeout(r, interval));
                     }
-                    res();
-                }));
+                })();
             }
 
-            // Tarea de Audio
+            // 2. AUDIO (Usa el reproductor independiente del carril)
             if (action.audioAction && window.electronAPI) {
                 tasks.push(new Promise(async (res) => {
-                    const audioPlayer = document.getElementById('audio-player');
+                    const audioPlayer = getAudioPlayer(queueType); // <--- Obtiene el reproductor correcto
                     const filePath = await window.electronAPI.getAudioFilePath(action.audioAction.file);
+                    
                     if (filePath) {
+                        audioPlayer.pause();
+                        audioPlayer.currentTime = 0;
                         audioPlayer.volume = parseInt(action.audioAction.volume, 10) / 100;
                         audioPlayer.src = filePath;
-                        audioPlayer.onended = res;
-                        audioPlayer.play().catch(e => {
-                            console.error("Error al reproducir audio:", e);
-                            res();
-                        });
+                        
+                        const onFinish = () => {
+                            audioPlayer.onended = null;
+                            audioPlayer.onerror = null;
+                            res(); // Libera la tarea cuando termina el audio
+                        };
+
+                        audioPlayer.onended = onFinish;
+                        audioPlayer.onerror = (e) => { console.error("Error audio:", e); onFinish(); };
+                        
+                        try { await audioPlayer.play(); } catch (err) { onFinish(); }
                     } else {
-                        showToastNotification(`❌ No se encontró el audio: ${action.audioAction.file}`);
                         res();
                     }
                 }));
             }
 
-            // --- TAREA DE MEDIA (CORREGIDO PARA SOCKET.IO) ---
+            // 3. VIDEO / IMAGEN (Espera la duración configurada)
             if (action.mediaAction) {
                 tasks.push(new Promise(async (res) => {
+                    const visualDuration = (action.duration || 5) * 1000;
                     
                     const mediaData = {
                         url: action.mediaAction.url,
                         volume: action.mediaAction.volume || 100,
                         duration: action.duration || 5,
-                        timestamp: Date.now() // Importante para que no lo detecte como viejo
+                        timestamp: Date.now(),
+                        name: action.mediaAction.name
                     };
 
-                    // EN LUGAR DE FIREBASE, USAMOS ELECTRON API
                     if (window.electronAPI) {
-                        // Enviamos al backend local, y el backend lo enviará por Socket.io
                         await window.electronAPI.updateWidget('mediaOverlay', mediaData);
-                    } else {
-                        console.warn("No estás en la app de Electron, no se puede enviar media local.");
                     }
 
-                    // Esperamos la duración visual antes de continuar la cola
-                    setTimeout(res, (action.duration || 5) * 1000);
+                    // Espera X segundos antes de liberar este carril
+                    setTimeout(res, visualDuration);
                 }));
             }
 
-            // Tarea de WebHook
+            // 4. OTROS (Webhooks, etc - No bloqueantes)
             if (action.webhookAction) { 
-                tasks.push(new Promise((res) => {
-                    let url = action.webhookAction.url.trim();
-                    if (!url) return res();
-
-                    // REEMPLAZO STRICTO EN LA URL
-                    url = url.replace(/{nickname}/g, nickname); 
-                    
-                    const quantity = parseInt(action.webhookAction.quantity) || 1;
-                    const interval = parseInt(action.webhookAction.interval) || 100;
-                    let count = 0;
-                    const intervalId = setInterval(() => {
-                        if (count < quantity) {
-                            fetch(url).catch(error => console.error('Error de WebHook:', error));
-                            count++;
-                        } else {
-                            clearInterval(intervalId);
-                            res();
-                        }
-                    }, interval);
-                }));
+                let url = action.webhookAction.url.trim().replace(/{nickname}/g, nickname);
+                if (url) fetch(url).catch(e => console.error(e));
             }
 
-            // Tarea de Keystrokes
             if (action.keystrokeAction && window.electronAPI) {
-                // Copia limpia de la acción
-                const keystrokeData = JSON.parse(JSON.stringify(action.keystrokeAction));
-
-                if (keystrokeData.sequence && Array.isArray(keystrokeData.sequence)) {
-                    keystrokeData.sequence.forEach(item => {
-                        // REEMPLAZO STRICTO EN EL TEXTO DEL TECLADO
-                        if (item.type === 'text' && item.key) {
-                            item.key = item.key.replace(/{nickname}/g, nickname);
-                        }
-                    });
+                const kData = JSON.parse(JSON.stringify(action.keystrokeAction));
+                if (kData.sequence) {
+                    kData.sequence.forEach(i => { if(i.type==='text' && i.key) i.key = i.key.replace(/{nickname}/g, nickname); });
                 }
-                
-                tasks.push(window.electronAPI.simulateKeystrokes(keystrokeData));
+                window.electronAPI.simulateKeystrokes(kData);
             }
 
-            // Tarea de Extra Action
             if (action.extraAction) {
-                tasks.push(executeExtraAction(action.extraAction));
+                executeExtraAction(action.extraAction);
             }
 
-            // Tarea de Duración
-            const visualDuration = (action.duration || 1) * 1000;
-            tasks.push(new Promise(res => setTimeout(res, visualDuration)));
+            // --- SEGURIDAD ---
+            // Si la acción no tiene ni audio ni video, esperamos 1s para no saturar el carril
+            if (!action.mediaAction && !action.audioAction) {
+                tasks.push(new Promise(res => setTimeout(res, 1000)));
+            }
 
-            // Espera a que TODAS las tareas terminen
+            // Esperamos a que terminen SOLO las tareas de ESTA acción en ESTE carril
             await Promise.all(tasks);
-            resolve(); 
+            resolve();
         });
     }
 
+    // --- PROCESADOR DE CARRIL 1: ACCIONES ---
     async function processQueue() { 
         if (isProcessingQueue || actionQueue.length === 0) return;
         isProcessingQueue = true; 
         const task = actionQueue.shift(); 
-        showToastNotification(`▶️ Ejecutando: ${task.action.name}`); 
-        await executeAction(task.action, task.eventData); 
+        
+        showToastNotification(`▶️ Acción: ${task.action.name}`); 
+        // Ejecuta en modo 'action'
+        await executeAction(task.action, task.eventData, 'action'); 
+        
         isProcessingQueue = false; 
         processQueue(); 
     }
+
+    // --- PROCESADOR DE CARRIL 2: ALERTAS ---
+    async function processAlertQueue() { 
+        if (isProcessingAlertQueue || alertQueue.length === 0) return;
+        isProcessingAlertQueue = true; 
+        const task = alertQueue.shift(); 
+        
+        showToastNotification(`🔔 Alerta: ${task.action.name}`); 
+        // Ejecuta en modo 'alert' (paralelo al otro)
+        await executeAction(task.action, task.eventData, 'alert'); 
+        
+        isProcessingAlertQueue = false; 
+        processAlertQueue(); 
+    }
     
+    // --- EL ENRUTADOR: DECIDE A QUÉ COLA VA CADA COSA ---
     function processTikTokEvent(triggerType, eventData) { 
         const currentProfile = profiles[activeProfileName];
         if (!currentProfile) return;
 
-        // 1. PROCESAR EVENTOS (Tu lógica original de Eventos/Perfiles)
+        // 1. REVISAR ACCIONES DE PERFIL -> Enviar a 'actionQueue'
         if (currentProfile.events) {
             currentProfile.events.forEach(eventRule => {
                 if (!eventRule.enabled) return;
                 
                 let match = false;
-
-                // Lógica de Likes por usuario
                 if (eventRule.why === 'likes' && triggerType === 'likes') {
-                    const userId = eventData.userId;
-                    if (!userLikeCounters[userId]) userLikeCounters[userId] = 0;
-                    userLikeCounters[userId] += eventData.likeCount || 1;
-                    
-                    if (userLikeCounters[userId] >= eventRule.likesAmount) {
-                        match = true;
-                        userLikeCounters[userId] -= eventRule.likesAmount; 
-                        console.log(`[MOTOR] Umbral likes alcanzado por ${eventData.nickname}`);
-                    }
-                }
-                // Lógica Estándar
-                else if (eventRule.why === triggerType) {
+                     const userId = eventData.userId;
+                     if (!userLikeCounters[userId]) userLikeCounters[userId] = 0;
+                     userLikeCounters[userId] += eventData.likeCount || 1;
+                     if (userLikeCounters[userId] >= eventRule.likesAmount) {
+                         match = true;
+                         userLikeCounters[userId] -= eventRule.likesAmount; 
+                     }
+                } else if (eventRule.why === triggerType) {
                     if (triggerType === 'gift-specific') {
-                        if (eventRule.giftId === eventData.giftId) match = true;
+                        if (String(eventRule.giftId) === String(eventData.giftId)) match = true;
                     } else {
                         match = true;
                     }
                 }
 
                 if (match) {
-                    console.log(`[MOTOR] Coincidencia evento: "${eventRule.why}"`);
                     eventRule.actionsAll?.forEach(actionInfo => { 
                         const fullAction = currentProfile.actions.find(a => a.id === actionInfo.id); 
                         if(fullAction) actionQueue.push({ action: fullAction, eventData }); 
                     });
-                    
                     if (eventRule.actionsRandom?.length > 0) {
                         const randomIndex = Math.floor(Math.random() * eventRule.actionsRandom.length);
                         const fullAction = currentProfile.actions.find(a => a.id === eventRule.actionsRandom[randomIndex].id);
                         if (fullAction) actionQueue.push({ action: fullAction, eventData });
                     }
-                    
-                    if ((eventRule.actionsAll?.length > 0) || (eventRule.actionsRandom?.length > 0)) {
-                        processQueue();
-                    }
+                    processQueue(); // Arranca el Carril 1
                 }
             });
         }
 
-        // 2. PROCESAR ALERTAS (CORREGIDO PARA EMOTES)
-        const alerts = currentProfile.alerts || [];
+        // 2. REVISAR ALERTAS GLOBALES -> Enviar a 'alertQueue'
+        const alerts = globalAlerts || []; 
         alerts.forEach(alertRule => {
             if (!alertRule.enabled) return;
             
-            let match = false;
+            let userMatch = (alertRule.who === 'all');
+            if (alertRule.who === 'specific' && alertRule.specificUsers && eventData.uniqueId) {
+                 if (alertRule.specificUsers.includes(eventData.uniqueId.toLowerCase())) userMatch = true;
+            }
+            if (!userMatch) return;
 
-            // Verificamos si el tipo de evento coincide
-            if (alertRule.why === triggerType) {
-                
-                // CASO 1: Regalo Específico
-                if (triggerType === 'gift-specific') {
-                    // Comparamos IDs como texto para evitar errores de número
-                    if (String(alertRule.giftId) === String(eventData.giftId)) match = true;
-                } 
-                
-                // CASO 2: Emote Específico (AQUÍ ESTABA EL FALTANTE)
-                else if (triggerType === 'emote') {
-                    // eventData.emotes es la lista de emotes que llegaron en el mensaje
-                    if (eventData.emotes && Array.isArray(eventData.emotes)) {
-                        
-                        // Revisamos si ALGUNO de los emotes del mensaje es el que configuramos
-                        const emoteFound = eventData.emotes.some(incomingEmote => {
-                            // TikTok a veces usa 'id' y a veces 'emoteId'. Revisamos ambos.
-                            const incomingId = String(incomingEmote.id || incomingEmote.emoteId || '');
-                            const savedId = String(alertRule.emoteId || '');
-                            return incomingId === savedId;
-                        });
-                        
-                        if (emoteFound) {
-                            console.log(`[MOTOR] ¡Match de Emote! ID: ${alertRule.emoteId}`);
-                            match = true;
-                        }
-                    }
-                } 
-                
-                // CASO 3: Resto de eventos (Follow, Share, etc.)
-                else {
-                    match = true;
-                }
+            let triggerMatch = false;
+            if (alertRule.why === 'gift-specific' && triggerType === 'gift-specific') {
+                if (String(alertRule.giftId) === String(eventData.giftId)) triggerMatch = true;
+            } else if (alertRule.why === 'gift-min' && triggerType === 'gift-specific') {
+                const totalValue = (eventData.diamondCount || 0) * (eventData.repeatCount || 1);
+                if (totalValue >= (alertRule.minCoins || 1)) triggerMatch = true;
+            } else if (alertRule.why === 'emote' && triggerType === 'emote') {
+                if (eventData.emotes?.some(e => String(e.id) === String(alertRule.emoteId))) triggerMatch = true;
+            } else if (alertRule.why === triggerType) {
+                triggerMatch = true;
             }
 
-            if (match) {
-                console.log(`[MOTOR] Ejecutando Alerta: "${alertRule.name}"`);
-                
-                // Construimos la acción 'al vuelo'
+            if (triggerMatch) {
                 const actionToExecute = {
                     name: alertRule.name,
                     duration: alertRule.duration || 5,
                     audioAction: alertRule.audioAction,
-                    mediaAction: alertRule.mediaAction, // <--- ¡AÑADE ESTA LÍNEA TAMBIÉN!
-                    image: alertRule.image,
-                    // Si guardaste algo más en la alerta, úsalo aquí
+                    mediaAction: alertRule.mediaAction,
+                    image: alertRule.image
                 };
                 
-                actionQueue.push({ action: actionToExecute, eventData });
-                processQueue();
+                // ¡ESTA ES LA CLAVE! Enviar a la segunda cola
+                alertQueue.push({ action: actionToExecute, eventData });
+                processAlertQueue(); // Arranca el Carril 2
             }
         });
     }
 
     // --- INICIO DEL CAMBIO ---
-    // FUNCIÓN MODIFICADA PARA USAR UNA TRANSACCIÓN ATÓMICA
+    // --- FUNCIÓN SUBASTA (CORREGIDA PARA SUMA UNITARIA) ---
     async function updateAuction(giftData) {
-        if (!isAuctionRunning) return;
-
-        const newCoins = (giftData.diamondCount || 0);
-        const userId = giftData.userId;
-        if (newCoins <= 0 || !userId) return;
-
-        // 1. Pedir el estado actual al backend local
         let subastaState = await window.electronAPI.getWidgetData('subasta');
-        if (!subastaState) subastaState = { participants: {} };
+        if (!subastaState || !subastaState.isRunning) return;
+
+        // IMPORTANTE: Sumamos solo el valor de ESTE regalo individual.
+        // Como la función se ejecuta varias veces en el combo, sumará 1+1+1...
+        const coinsToAdd = (giftData.diamondCount || 0); 
+        const userId = giftData.userId;
+
+        if (coinsToAdd <= 0 || !userId) return;
+
         if (!subastaState.participants) subastaState.participants = {};
 
-        // 2. Modificar los datos (Sumar monedas)
         let participant = subastaState.participants[userId];
         if (!participant) {
             participant = {
@@ -3235,25 +3667,17 @@ if (window.electronAPI) {
                 coins: 0
             };
         }
-        participant.coins += newCoins;
-        // Actualizar nombre/foto por si cambiaron
+        
+        participant.coins += coinsToAdd;
+        
+        // Actualizar datos visuales
         participant.nickname = giftData.nickname;
         participant.profilePictureUrl = giftData.profilePictureUrl;
 
         subastaState.participants[userId] = participant;
 
-        // 3. Guardar de nuevo (Enviar al backend)
         await window.electronAPI.updateWidget('subasta', subastaState);
-        console.log(`[Subasta Local] ${giftData.nickname} +${newCoins} monedas.`);
-    }
-    // --- FIN DEL CAMBIO ---
-
-    if (typeof firebase !== 'undefined') {
-        const auctionStatusRef = firebase.database().ref('widgets/subasta/isRunning');
-        auctionStatusRef.on('value', (snapshot) => {
-            isAuctionRunning = snapshot.val() === true;
-            console.log(`[Subasta] El estado ahora es: ${isAuctionRunning ? 'ACTIVA' : 'INACTIVA'}`);
-        });
+        console.log(`[Subasta] ${giftData.nickname} +${coinsToAdd} (Total: ${participant.coins})`);
     }
 
 // ==========================================================
@@ -3842,6 +4266,14 @@ if (window.electronAPI) {
         syncGoalOverlay();
         saveAllData(); // <--- Guardar cambios
     });
+
+    // --- AGREGAR ESTO: Guardar la acción de Likes ---
+    if (glActionSelect) {
+        glActionSelect.addEventListener('change', (e) => {
+            likeGoalState.actionId = e.target.value; 
+            saveAllData(); 
+        });
+    }
     // FIN DE LÓGICA DE LIKES //
     
     // ==========================================================
@@ -3989,6 +4421,14 @@ if (window.electronAPI) {
         saveAllData();
     });
 
+    // --- AGREGAR ESTO: Guardar la acción de Follows ---
+    if (gfActionSelect) {
+        gfActionSelect.addEventListener('change', (e) => {
+            followGoalState.actionId = e.target.value; 
+            saveAllData(); 
+        });
+    }
+
     // ==========================================
     // LÓGICA RESET TOP GIFT
     // ==========================================
@@ -3996,7 +4436,7 @@ if (window.electronAPI) {
 
     if (btnResetTopGift) {
         btnResetTopGift.addEventListener('click', async () => {
-            if(confirm('¿Reiniciar el Mejor Regalo a 0?')) {
+            if(await window.showCustomConfirm('¿Reiniciar el Mejor Regalo a 0?')) {
                 // 1. Reiniciar variable local
                 topGiftState = { 
                     username: 'Username', 
@@ -4020,7 +4460,7 @@ if (window.electronAPI) {
     const btnResetTopStreak = document.getElementById('btn-reset-top-streak');
     if (btnResetTopStreak) {
         btnResetTopStreak.addEventListener('click', async () => {
-            if(confirm('¿Reiniciar la Mejor Racha a 0?')) {
+            if(await window.showCustomConfirm('¿Reiniciar la Mejor Racha a 0?')) {
                 topStreakState = { 
                     username: 'Username', 
                     streakCount: 0, 

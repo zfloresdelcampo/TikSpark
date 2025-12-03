@@ -106,6 +106,30 @@ const giftsPath = path.join(app.getPath('userData'), 'gifts.json');
 function loadGifts() { try { if (fs.existsSync(giftsPath)) { return JSON.parse(fs.readFileSync(giftsPath)); } } catch (error) { console.error('Error al cargar los regalos guardados:', error); } return []; }
 function saveGifts(gifts) { try { fs.writeFileSync(giftsPath, JSON.stringify(gifts, null, 2)); console.log("Lista de regalos actualizada y guardada."); } catch (error) { console.error('Error al guardar la lista de regalos:', error); } }
 
+// --- LÓGICA PARA CACHÉ DE EMOTES (NUEVO) ---
+const emotesPath = path.join(app.getPath('userData'), 'emotes.json');
+
+ipcMain.handle('save-emotes', (event, emotes) => {
+    try {
+        fs.writeFileSync(emotesPath, JSON.stringify(emotes, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Error guardando emotes:', error);
+        return false;
+    }
+});
+
+ipcMain.handle('get-saved-emotes', () => {
+    try {
+        if (fs.existsSync(emotesPath)) {
+            return JSON.parse(fs.readFileSync(emotesPath));
+        }
+    } catch (error) {
+        console.error('Error cargando emotes:', error);
+    }
+    return [];
+});
+
 // --- FUNCIÓN PARA ENCONTRAR AUTOIT ---
 async function findAutoItExecutable() { const registryKeys = [new WinReg({ hive: WinReg.HKLM, key: '\\SOFTWARE\\WOW6432Node\\AutoIt v3\\AutoIt' }), new WinReg({ hive: WinReg.HKLM, key: '\\SOFTWARE\\AutoIt v3\\AutoIt' })]; for (const regKey of registryKeys) { try { const item = await new Promise((resolve) => { regKey.get('InstallDir', (err, result) => resolve(err ? null : result)); }); if (item && item.value) { const exePath = path.join(item.value, 'AutoIt3.exe'); if (fs.existsSync(exePath)) { return exePath; } } } catch (error) { /* Ignorar errores */ } } return null; }
 
@@ -115,9 +139,9 @@ function startDetector(forceGiftFetch = false) { if (currentDetector) { currentD
 // --- FUNCIÓN PRINCIPAL PARA CREAR LA VENTANA ---
 function createWindow() {
     currentUsername = loadConfig().username || '';
-    mainWindow = new BrowserWindow({ width: 1200, height: 800, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true } });
+    mainWindow = new BrowserWindow({ width: 1200, height: 800, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, backgroundThrottling: false } });
     
-    // === ¡AQUÍ ESTÁ LA LÍNEA AÑADIDA! ===
+    // === BARRA SUPERIOR MOLESTA ===
     mainWindow.setMenu(null);
     // === FIN DE LA LÍNEA AÑADIDA ===
 

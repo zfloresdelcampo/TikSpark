@@ -49,6 +49,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveData: (payload) => ipcRenderer.invoke('save-data', payload),
     checkUserExists: (username) => ipcRenderer.invoke('check-user-exists', username),
 
+    // --- GUARDAR EMOTES ---
+    saveEmotes: (emotes) => ipcRenderer.invoke('save-emotes', emotes),
+    getSavedEmotes: () => ipcRenderer.invoke('get-saved-emotes'),
+
     // --- NUEVA LÍNEA PARA EXPORTAR ---
     exportProfile: (profileData) => ipcRenderer.invoke('export-profile', profileData),
     // --- NUEVA LÍNEA PARA IMPORTAR ---

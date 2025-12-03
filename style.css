@@ -3206,11 +3206,11 @@ input[type="range"].volume-slider::-moz-range-thumb {
     padding: 15px; 
 }
 
-/* ESTILO PARA LA LISTA DE EMOTES */
+/* ESTILO PARA LA LISTA DE EMOTES - CORREGIDO */
 #alert-emote-options-list {
     max-height: 220px;
     overflow-y: auto;
-    display: block;
+    /* display: block;  <-- BORRA ESTO O COMENTALO */
 }
 /* ========================================= */
 /* ESTILOS DE LA PANTALLA DE LOGIN (NUEVO)   */
@@ -3386,4 +3386,164 @@ input[type="range"].volume-slider::-moz-range-thumb {
     background-color: #a4262c; /* Rojo al pasar el mouse */
     border-color: #a4262c;
     color: white;
+}
+/* --- ESTILOS DE BOTONES UNIFICADOS (Server + TikFinity) --- */
+
+/* 1. Estilos compartidos para TODOS los botones grandes */
+#connect-button, 
+#disconnect-button, 
+#emotes-button, 
+#update-gifts-button,
+#connect-tikfinity-button,    /* <-- TikFinity Agregado */
+#disconnect-tikfinity-button { /* <-- TikFinity Agregado */
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espacio para el icono */
+}
+
+/* 2. Efecto Hover General */
+#connect-button:hover, #disconnect-button:hover, #emotes-button:hover, 
+#update-gifts-button:hover, #connect-tikfinity-button:hover, #disconnect-tikfinity-button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.15);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. Colores Específicos */
+
+/* VERDE/MORADO (Conectar) */
+#connect-button, #connect-tikfinity-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* ROJO (Desconectar) */
+#disconnect-button, #disconnect-tikfinity-button {
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+}
+
+/* AMARILLO (Emotes) */
+#emotes-button {
+    background: linear-gradient(135deg, #f09819 0%, #edde5d 100%);
+    color: #1a1a1a;
+}
+
+/* GRIS TRANSICION (Deshabilitados) */
+button:disabled {
+    background: #3a3a3a !important;
+    color: #777 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* --- NUEVO: BOTÓN DE LA BARRA LATERAL (SIDEBAR) --- */
+/* --- BOTÓN DE LA BARRA LATERAL (SIDEBAR) --- */
+#sidebar-connect-btn {
+    /* Estado Normal (Conectar - Morado) */
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 20px;
+    color: white;
+    padding: 8px 15px; /* Un poco más de espacio */
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    margin-top: 5px;
+    width: 100%;
+    
+    /* ESTO ARREGLA LA ALINEACIÓN ICONO-TEXTO */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espacio entre icono y texto */
+}
+
+/* Estado Conectado (Desconectar - Rojo) */
+#sidebar-connect-btn.connected {
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    box-shadow: 0 2px 5px rgba(255, 75, 43, 0.4);
+}
+
+#sidebar-connect-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+/* --- DISEÑO RESPONSIVO DEL PANEL DE INICIO --- */
+
+/* Contenedor principal: Por defecto es Fila (Lado a lado) */
+.connect-panel-row {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start; /* Alineado arriba */
+}
+
+/* La etiqueta de la izquierda */
+.connect-label {
+    min-width: 220px;
+    padding-top: 12px; /* Para alinear con el input */
+    font-weight: 600;
+    color: #ccc;
+    flex-shrink: 0; /* Que no se aplaste nunca */
+}
+
+/* La parte derecha (Input + Botones) */
+.connect-actions-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+/* --- MAGIA RESPONSIVA --- */
+/* Cuando la ventana sea pequeña (menos de 950px), cambia a columna */
+@media (max-width: 950px) {
+    .connect-panel-row {
+        flex-direction: column; /* Se apila verticalmente */
+        gap: 10px;
+    }
+
+    .connect-label {
+        padding-top: 0;
+        margin-bottom: 5px;
+    }
+}
+/* --- ARREGLO VISUAL DEL DIÁLOGO/ALERT --- */
+
+/* 1. Fondo de la ventanita (Para que no sea transparente) */
+#custom-dialog .modal-content {
+    background-color: #1e1e1e; /* Gris oscuro sólido */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); /* Sombra fuerte para que flote */
+    border: 1px solid #444; /* Borde sutil */
+    /* ESTA ES LA LÍNEA NUEVA: Espacio interno en todos los lados */
+    padding: 30px;
+}
+
+/* 2. Fondo de la pantalla completa (El oscurecimiento de atrás) */
+#custom-dialog {
+    background-color: rgba(0, 0, 0, 0.7) !important; /* Oscurece el resto de la app */
+    backdrop-filter: blur(3px); /* Difumina un poco el fondo (efecto moderno) */
+}
+
+/* 3. Ajuste de los botones del diálogo para que se vean bien alineados */
+#custom-dialog .modal-footer {
+    border-top: none; /* Quitamos líneas divisorias feas */
+    padding-bottom: 0;
 }
