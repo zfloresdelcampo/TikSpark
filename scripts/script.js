@@ -419,44 +419,44 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         alertsListContainer.innerHTML = '';
 
+        // 1. Mensaje de vacío (Con tu estilo centrado)
         if (alerts.length === 0) {
-            alertsListContainer.innerHTML = '<div class="no-items-message">Sin alertas</div>';
+            alertsListContainer.innerHTML = '<div class="no-items-message" style="text-align: center; width: 100%; padding: 20px; color: #999;">Sin alertas</div>';
             container.classList.add('empty');
             if (alertHeader) alertHeader.style.display = 'none';
+            renderPaginationControls(container, 0, 0, handleAlertPageChange);
             return;
         }
         
         if (alertHeader) alertHeader.style.display = 'grid';
         container.classList.remove('empty');
 
-        alerts.forEach(alert => {
-            // 1. QUIÉN
+        // 2. LÓGICA DE PAGINACIÓN (Corte de array)
+        const startIndex = (currentPageAlerts - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const paginatedAlerts = alerts.slice(startIndex, endIndex);
+
+        // 3. Renderizado de filas
+        paginatedAlerts.forEach(alert => {
+            // -- Lógica de texto QUIÉN --
             let whoText = whoLabels[alert.who] || alert.who;
             if (alert.who === 'specific' && alert.specificUsers) whoText = alert.specificUsers.join(', ');
 
-            // 2. POR QUÉ
+            // -- Lógica de texto POR QUÉ (Iconos y Regalos) --
             let whyHTML = '';
             
             if (alert.why === 'gift-specific' && alert.giftId) {
                 let imgUrl = alert.giftImage; 
                 let giftPrice = '';
                 
-                // Buscar en caché
-                if (availableGiftsCache) {
+                if (typeof availableGiftsCache !== 'undefined') {
                     const found = availableGiftsCache.find(g => g.id == alert.giftId);
                     if(found) {
-                        if(!imgUrl) imgUrl = found.image.url_list[0];
-                        // AGREGADO: margin-left: 5px para separar
+                        if(!imgUrl && found.image) imgUrl = found.image.url_list[0];
                         giftPrice = `<span style="color: #ffeb3b; font-size: 0.9em; margin-left: 5px;">- ${found.diamond_count} coins</span>`;
                     }
                 }
                 
-                // Caso Heart Me
-                if (alert.giftName === 'Heart Me' || alert.giftId == 1) {
-                     // AGREGADO: margin-left: 5px para separar
-                     giftPrice = `<span style="color: #ffeb3b; font-size: 0.9em; margin-left: 5px;">- 1 coins</span>`;
-                }
-
                 const imgTag = imgUrl ? `<img src="${imgUrl}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-gift fa-lg"></i> ';
                 whyHTML = `${imgTag}${alert.giftName || `ID: ${alert.giftId}`}${giftPrice}`;
             } 
@@ -472,12 +472,13 @@ document.addEventListener('DOMContentLoaded', async function() {
                 whyHTML = `<span style="font-size: 1.2em; margin-right: 5px; color: #8a2be2;">${icon}</span> ${whyLabels[alert.why] || alert.why}`;
             }
 
-            // 3. Descripción
+            // -- Descripción (Audio/Video) --
             let descriptionParts = [];
             if (alert.audioAction) descriptionParts.push(`🔊 Audio: ${alert.audioAction.file}`);
             if (alert.mediaAction) descriptionParts.push(`🎬 Video: ${alert.mediaAction.name || 'Archivo'}`);
             let description = descriptionParts.join(' + ');
 
+            // -- Crear Elemento HTML --
             const alertDiv = document.createElement('div');
             alertDiv.className = 'list-view-row alert-row';
             alertDiv.style.gridTemplateColumns = "110px 60px 1.5fr 1.5fr 130px 2fr"; 
@@ -508,6 +509,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             `;
             alertsListContainer.appendChild(alertDiv);
         });
+
+        // 4. Renderizar controles de página al final
+        renderPaginationControls(container, currentPageAlerts, alerts.length, handleAlertPageChange);
     }
 
     async function renderLocalAudios() {
@@ -1458,6 +1462,7 @@ if (window.electronAPI) {
     const ITEMS_PER_PAGE = 20;
     let currentPageActions = 1;
     let currentPageEvents = 1;
+    let currentPageAlerts = 1; // <--- AGREGA ESTA LÍNEA
 
     async function saveAllData() {
         if (currentAppUser && activeProfileName && profiles[activeProfileName]) {
@@ -3301,6 +3306,8 @@ if (window.electronAPI) {
 
     function handleActionPageChange(page) { currentPageActions = page; renderActions(); }
     function handleEventPageChange(page) { currentPageEvents = page; renderEvents(); }
+    // AGREGA ESTA LÍNEA:
+    function handleAlertPageChange(page) { currentPageAlerts = page; renderAlerts(); }
     
     // === FUNCIONES FALTANTES PARA ALERTAS ===
     window.toggleAlertStatus = async (id) => {
@@ -3346,6 +3353,12 @@ if (window.electronAPI) {
         if (await window.showCustomConfirm('¿Borrar esta alerta?')) {
             // Filtrar globalAlerts
             globalAlerts = globalAlerts.filter(a => a.id !== id);
+            
+            // --- LÓGICA DE PAGINACIÓN AL BORRAR ---
+            const totalPages = Math.ceil(globalAlerts.length / ITEMS_PER_PAGE) || 1;
+            if (currentPageAlerts > totalPages) currentPageAlerts = totalPages;
+            // --------------------------------------
+
             renderAlerts();
             await saveAllData();
         }
