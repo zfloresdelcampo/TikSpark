@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
 
-    <style> /* ... Tu CSS existente no cambia ... */
+    <style>
         body, html { 
             margin: 0; 
             padding: 0; 
@@ -19,16 +19,11 @@
             overflow: hidden; 
             font-family: 'Luckiest Guy', cursive;
             
-            /* --- AGREGA ESTO PARA CENTRAR --- */
             display: flex;
             align-items: center;     /* Centra verticalmente */
             justify-content: center; /* Centra horizontalmente */
         }
         .preview-box { 
-            /* position: absolute;  <-- BORRA ESTO */
-            /* top: 20px;           <-- BORRA ESTO */
-            /* left: 20px;          <-- BORRA ESTO */
-            
             background-color: #000000; 
             color: white; 
             border-radius: 12px; 
@@ -40,7 +35,22 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
         }
         .preview-box img { width: 50px; height: 50px; }
-        .preview-number { background-color: white; color: black; border-radius: 8px; padding: 0px 12px; font-size: 0.9em; min-width: 30px; text-align: center; line-height: 1.4; }
+        
+        .preview-number { 
+            background-color: #1d1d1d; 
+            color: white; 
+            border-radius: 8px; 
+            padding: 0px 12px; 
+            font-size: 0.9em; 
+            min-width: 30px; 
+            text-align: center; 
+            line-height: 1.4; 
+            
+            /* --- ESTO CREA EL BORDE ALREDEDOR DEL TEXTO (NUMERO) --- */
+            -webkit-text-stroke: 2px black;
+            paint-order: stroke fill; /* Asegura que el borde no se coma el color de relleno */
+        }
+        
         .preview-separator { font-weight: normal; color: #aaa; }
     </style>
 </head>
@@ -73,8 +83,20 @@
         });
 
         function updateDisplay(data) {
-            conteoElement.textContent = data.conteo || 0;
-            metaElement.textContent = data.meta || 5;
+            // CORRECCIÓN 0 vs 5:
+            // Verificamos estrictamente si no es undefined ni null. Si es 0, se queda 0.
+            const valorMeta = (data.meta !== undefined && data.meta !== null) ? data.meta : 5;
+            const valorConteo = (data.conteo !== undefined && data.conteo !== null) ? data.conteo : 0;
+
+            conteoElement.textContent = valorConteo;
+            metaElement.textContent = valorMeta;
+
+            // LÓGICA DE COLOR (Texto rojo con borde negro si es negativo)
+            if (valorConteo < 0) {
+                conteoElement.style.color = 'red';
+            } else {
+                conteoElement.style.color = 'white';
+            }
         }
     </script>
 

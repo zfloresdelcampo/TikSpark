@@ -77,6 +77,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onJoin: (callback) => ipcRenderer.on('new-join', (_event, data) => callback(data)),
     // === AÑADE ESTA LÍNEA ===
     onUserProfile: (callback) => ipcRenderer.on('update-user-profile', (_event, data) => callback(data)),
+
+    // === ACTUALIZAR WIDGET ===
+    onWidgetUpdate: (callback) => ipcRenderer.on('widget-updated-from-back', (_event, data) => callback(data)),
+
     // ========================
     onShowToast: (callback) => ipcRenderer.on('show-toast', (_event, message) => callback(message)),
     onSetVersion: (callback) => ipcRenderer.on('set-version', (_event, version) => callback(version)),

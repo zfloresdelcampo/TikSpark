@@ -2089,22 +2089,53 @@ if (window.electronAPI) {
                 return showToastNotification('❌ No hay un perfil activo para importar los datos.');
             }
 
-            // --- INICIO DE LA LÓGICA DE FUSIÓN ---
+            // --- INICIO DE LA LÓGICA DE FUSIÓN CORREGIDA ---
+            
+            // Mapa para traducir IDs viejos a nuevos: { ID_VIEJO: ID_NUEVO }
+            const actionIdMap = {};
 
             // 1. Fusionar las ACCIONES
             if (importedProfileData.actions && importedProfileData.actions.length > 0) {
                 importedProfileData.actions.forEach(importedAction => {
-                    // Asignamos un nuevo ID único para evitar colisiones
-                    const newAction = { ...importedAction, id: currentProfile.nextActionId++ };
+                    const oldId = importedAction.id;
+                    const newId = currentProfile.nextActionId++;
+                    
+                    // Guardamos la relación: El ID viejo X ahora es el ID nuevo Y
+                    actionIdMap[oldId] = newId;
+
+                    // Creamos la acción con el NUEVO ID
+                    const newAction = { ...importedAction, id: newId };
                     currentProfile.actions.push(newAction);
                 });
             }
 
-            // 2. Fusionar los EVENTOS
+            // 2. Fusionar los EVENTOS (Actualizando las referencias de las acciones)
             if (importedProfileData.events && importedProfileData.events.length > 0) {
-                 importedProfileData.events.forEach(importedEvent => {
-                    // Asignamos un nuevo ID único para evitar colisiones
+                importedProfileData.events.forEach(importedEvent => {
+                    // Asignamos un nuevo ID único al evento
                     const newEvent = { ...importedEvent, id: currentProfile.nextEventId++ };
+                    
+                    // CORRECCIÓN CRÍTICA: Actualizar los IDs dentro de actionsAll
+                    if (newEvent.actionsAll && newEvent.actionsAll.length > 0) {
+                        newEvent.actionsAll = newEvent.actionsAll.map(actionRef => {
+                            // Si tenemos el ID mapeado, usamos el nuevo. Si no, dejamos el viejo (seguridad)
+                            return { 
+                                ...actionRef, 
+                                id: actionIdMap[actionRef.id] || actionRef.id 
+                            };
+                        });
+                    }
+
+                    // CORRECCIÓN CRÍTICA: Actualizar los IDs dentro de actionsRandom
+                    if (newEvent.actionsRandom && newEvent.actionsRandom.length > 0) {
+                        newEvent.actionsRandom = newEvent.actionsRandom.map(actionRef => {
+                            return { 
+                                ...actionRef, 
+                                id: actionIdMap[actionRef.id] || actionRef.id 
+                            };
+                        });
+                    }
+
                     currentProfile.events.push(newEvent);
                 });
             }
@@ -3537,7 +3568,7 @@ if (window.electronAPI) {
             // --- SEGURIDAD ---
             // Si la acción no tiene ni audio ni video, esperamos 1s para no saturar el carril
             if (!action.mediaAction && !action.audioAction) {
-                tasks.push(new Promise(res => setTimeout(res, 1000)));
+                tasks.push(new Promise(res => setTimeout(res, 50))); // <--- DELAY ENTRE ACIONES
             }
 
             // Esperamos a que terminen SOLO las tareas de ESTA acción en ESTE carril

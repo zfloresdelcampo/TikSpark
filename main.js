@@ -895,12 +895,18 @@ function createWindow() {
         // Mezclar datos nuevos con los viejos
         localWidgetsDB[widgetId] = { ...localWidgetsDB[widgetId], ...data };
         
-        // --- NUEVO: GUARDAR EN DISCO DURO ---
+        // --- GUARDAR EN DISCO DURO ---
         saveWidgetsData(localWidgetsDB); 
-        // ------------------------------------
-
-        // 2. Avisar a todos los overlays (OBS/Chrome)
+        
+        // 2. Avisar a los overlays (OBS/Chrome) via Socket.io
         io.emit('widget-update', { widgetId, data: localWidgetsDB[widgetId] });
+
+        // --- NUEVA LÍNEA: Avisar a la ventana del Dashboard (inputs) ---
+        // Esto hace que si una acción cambia el valor, el input lo refleje.
+        if (mainWindow) {
+            mainWindow.webContents.send('widget-updated-from-back', { widgetId, data: localWidgetsDB[widgetId] });
+        }
+        
         return true;
     });
 
