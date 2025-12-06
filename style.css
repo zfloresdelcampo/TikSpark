@@ -3547,3 +3547,237 @@ button:disabled {
     border-top: none; /* Quitamos líneas divisorias feas */
     padding-bottom: 0;
 }
+/* --- CAJA MINECRAFT FIJA (SIN ESTIRAR) --- */
+#minecraft-command {
+    /* 1. Bloquear tamaño */
+    resize: none !important;      /* Quita la esquina blanca y prohíbe estirar */
+    height: 120px !important;     /* Altura fija siempre (ajusta este número si quieres) */
+    width: 100% !important;
+    box-sizing: border-box !important;
+
+    /* 2. Scroll automático */
+    overflow-y: auto !important;  /* El scroll sale solo si el texto no cabe */
+
+    /* 3. Espaciado */
+    padding: 10px !important;     /* Espacio interno normal */
+    padding-right: 15px !important; /* Espacio extra a la derecha para no pegar texto al scroll */
+    
+    font-family: inherit;         /* Mantiene la fuente del sistema */
+}
+/* ======================================================= */
+/* --- ESTILOS MODAL PERSONALIZACIÓN (DEFINITIVO) --- */
+/* ======================================================= */
+
+/* 1. Contenedor Principal (Más espacio y centrado) */
+#config-meta-win-modal .modal-content,
+#config-meta-win-modal-2 .modal-content {
+    background-color: #1e1e1e !important;
+    border: 1px solid #444;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    color: #e0e0e0;
+    width: 550px !important;
+    padding: 0 !important; /* El padding lo manejan el header/body/footer */
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+/* 2. Cuerpo con Scroll (Aquí damos el aire a los lados) */
+.modal-body-scroll {
+    padding: 30px !important; /* <--- MÁS ESPACIO AQUÍ */
+    background-color: #1e1e1e;
+}
+
+/* 3. Filas de Inputs */
+#config-meta-win-modal .inline-inputs, 
+#config-meta-win-modal-2 .inline-inputs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0; /* Un poco más de aire vertical entre opciones */
+    border-bottom: 1px solid #333;
+}
+
+/* 4. Inputs de Texto y Números (Dark) */
+#config-meta-win-modal input[type="text"],
+#config-meta-win-modal input[type="number"],
+#config-meta-win-modal-2 input[type="text"],
+#config-meta-win-modal-2 input[type="number"] {
+    background-color: #121212 !important;
+    border: 1px solid #333 !important;
+    color: white !important;
+    padding: 8px 10px !important;
+    border-radius: 6px;
+    height: 35px;
+    outline: none;
+}
+#config-meta-win-modal input:focus,
+#config-meta-win-modal-2 input:focus {
+    border-color: #8A2BE2 !important; /* Morado al enfocar */
+}
+
+/* 5. Selectores (Dropdowns) */
+#config-meta-win-modal select, 
+#config-meta-win-modal-2 select {
+    background-color: #121212 !important;
+    color: white !important;
+    border: 1px solid #333 !important;
+    padding: 5px 10px;
+    border-radius: 6px;
+    width: 200px;
+    height: 35px;
+}
+
+/* 6. CHECKBOX (ESTILO MORADO Y LIMPIO) */
+#config-meta-win-modal input[type="checkbox"],
+#config-meta-win-modal-2 input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #222;
+    border: 1px solid #555;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Fondo MORADO al marcar */
+#config-meta-win-modal input[type="checkbox"]:checked,
+#config-meta-win-modal-2 input[type="checkbox"]:checked {
+    background-color: #8A2BE2; /* <--- TU MORADO */
+    border-color: #8A2BE2;
+}
+
+/* El Check (Dibujado con CSS, no es una letra) */
+#config-meta-win-modal input[type="checkbox"]:checked::after,
+#config-meta-win-modal-2 input[type="checkbox"]:checked::after {
+    content: '';
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    position: absolute;
+    top: 4px; /* Ajuste fino de posición */
+}
+/* ======================================================= */
+/* --- ESTILOS PARA EL MENÚ DE IMÁGENES (CUSTOM SELECT) --- */
+/* ======================================================= */
+
+.custom-select-container {
+    position: relative;
+    width: 200px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* La barra que se ve siempre */
+.selected-option {
+    background-color: #121212;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: white;
+    height: 35px; /* Misma altura que los inputs */
+    box-sizing: border-box;
+}
+
+.selected-option:hover {
+    border-color: #555;
+}
+
+/* ¡ESTO ES LO QUE ARREGLA LA IMAGEN GIGANTE! */
+.selected-option img, 
+.option-item img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* El menú desplegable */
+.options-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    margin-top: 5px;
+    z-index: 9999; /* Muy alto para que flote sobre todo */
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+}
+
+.options-list.hidden {
+    display: none;
+}
+
+/* Cada opción de la lista */
+.option-item {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: #ccc;
+    transition: background 0.2s;
+    border-bottom: 1px solid #333;
+}
+
+.option-item:hover {
+    background-color: #5c1d80;
+    color: white;
+}
+/* ======================================================= */
+/* --- ARREGLO DE ESPACIADO (HEADER Y FOOTER) --- */
+/* ======================================================= */
+
+/* Dar aire al Título (Arriba) */
+#config-meta-win-modal .modal-header,
+#config-meta-win-modal-2 .modal-header {
+    padding: 20px 30px !important; /* Espacio interno generoso */
+    margin-bottom: 0 !important;   /* Quitar margen externo que empuja feo */
+    border-bottom: 1px solid #333; /* Línea separadora elegante */
+    background-color: #1e1e1e;     /* Asegurar color de fondo */
+}
+
+/* Dar aire a los Botones (Abajo) */
+#config-meta-win-modal .modal-footer,
+#config-meta-win-modal-2 .modal-footer {
+    padding: 20px 30px !important; /* Espacio interno generoso */
+    margin-top: 0 !important;      /* Quitar margen externo */
+    border-top: 1px solid #333;    /* Línea separadora arriba */
+    background-color: #1e1e1e;     /* Asegurar color de fondo */
+    display: flex;
+    justify-content: flex-end;     /* Alinear a la derecha */
+    gap: 10px;
+}
+
+/* Asegurar que el título h3 no tenga márgenes raros */
+#config-meta-win-modal .modal-header h3,
+#config-meta-win-modal-2 .modal-header h3 {
+    margin: 0 !important;
+}
+/* --- FIX: Visibilidad de botones Pickr --- */
+.pcr-button {
+    border: 2px solid #666 !important; /* Borde gris visible */
+    border-radius: 4px !important;     /* Bordes redondeados */
+    width: 2.5em !important;           /* Un poco más ancho */
+}
+/* Quitar el mosaico de fondo de los botones de color */
+.pcr-button {
+    background: transparent !important;
+}
+/* Asegurar que el borde gris que pusimos antes siga visible */
+.pcr-button::before {
+    background: transparent !important;
+    z-index: -1;
+}

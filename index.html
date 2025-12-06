@@ -5,6 +5,7 @@
     <title>TikSpark - Detector de Regalos de TikTok</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
 </head>
 <body>
 
@@ -146,8 +147,11 @@
                 <div class="sub-nav-item" onclick="scrollToSection('card-subasta', 'btn-gallery-main')">
                     <i class="fas fa-gavel"></i> Subasta
                 </div>
-                <div class="sub-nav-item" onclick="scrollToSection('card-meta-win', 'btn-gallery-main')">
-                    <i class="fas fa-trophy"></i> Meta Win
+                <div class="sub-nav-item" onclick="scrollToSection('card-meta-win-1', 'btn-gallery-main')">
+                    <i class="fas fa-trophy"></i> Meta Win 1
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-meta-win-2', 'btn-gallery-main')">
+                    <i class="fas fa-trophy"></i> Meta Win 2
                 </div>
                 <div class="sub-nav-item" onclick="scrollToSection('card-social-rotator', 'btn-gallery-main')">
                     <i class="fas fa-share-alt"></i> Social Rotator
@@ -706,13 +710,13 @@
                 </div>
             </div>
 
-            <div class="overlay-card-container" id="card-meta-win">
+            <div class="overlay-card-container" id="card-meta-win-1">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Meta Win General 1</h3>
                 </div>
 
                 <div class="overlay-url-actions">
-                    <input type="text" value="http://127.0.0.1:5500/meta-win.html" readonly class="url-input">
+                    <input type="text" value="http://127.0.0.1:5500/meta-win1.html" readonly class="url-input">
                     <div class="action-buttons">
                         <button class="action-btn primary-btn">Copiar URL</button>
                         <button class="action-btn">Testear</button>
@@ -725,7 +729,7 @@
                     <div class="meta-win-controls">
                         <h4 class="meta-win-title">
                             <img src="images/trophy.png" alt="Trofeo">
-                            <span>Win Game</span>
+                            <span>Win Game 1</span>
                         </h4>
                         <div class="control-group-win">
                             <label for="meta-win-meta-input">META</label>
@@ -744,7 +748,59 @@
                         <!-- Contenedor para el Iframe -->
                         <div style="width: 100%; height: 120px; overflow: hidden; background-color: #333; border-radius: 8px; border: 1px solid #444;">
                             <iframe 
-                                src="http://127.0.0.1:5500/meta-win.html" 
+                                src="http://127.0.0.1:5500/meta-win1.html" 
+                                style="width: 100%; height: 100%; border: none; pointer-events: none;"
+                                scrolling="no">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COPIA ESTE BLOQUE DEBAJO DEL PRIMERO -->
+            <div class="overlay-card-container" id="card-meta-win-2">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Meta Win General 2</h3> <!-- Título cambiado -->
+                </div>
+
+                <div class="overlay-url-actions">
+                    <!-- URL cambiada a meta-win2.html -->
+                    <input type="text" value="http://127.0.0.1:5500/meta-win2.html" readonly class="url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn">Copiar URL</button>
+                        <button class="action-btn">Testear</button>
+                        <button class="action-btn personalize-btn">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- ID IMPORTANTE: meta-win-widget-2 -->
+                <div id="meta-win-widget-2" class="meta-win-content">
+                    <div class="meta-win-controls">
+                        <h4 class="meta-win-title">
+                            <img src="images/trophy.png" alt="Trofeo">
+                            <span>Win Game 2</span>
+                        </h4>
+                        <div class="control-group-win">
+                            <label for="meta-win-meta-input">META</label>
+                            <!-- OJO: data-target apunta a los inputs dentro de ESTE contenedor -->
+                            <button class="btn-win minus" data-target="meta-win-meta-input">-</button>
+                            <input type="number" id="meta-win-meta-input" value="5"> 
+                            <button class="btn-win plus" data-target="meta-win-meta-input">+</button>
+                        </div>
+                        <div class="control-group-win">
+                            <label for="meta-win-conteo-input">CONTEO</label>
+                            <button class="btn-win minus" data-target="meta-win-conteo-input">-</button>
+                            <input type="number" id="meta-win-conteo-input" value="0">
+                            <button class="btn-win plus" data-target="meta-win-conteo-input">+</button>
+                        </div>
+                    </div>
+                    <div class="meta-win-preview">
+                        <div style="width: 100%; height: 120px; overflow: hidden; background-color: #333; border-radius: 8px; border: 1px solid #444;">
+                            <!-- Iframe apuntando a meta-win2.html -->
+                            <iframe 
+                                src="http://127.0.0.1:5500/meta-win2.html" 
                                 style="width: 100%; height: 100%; border: none; pointer-events: none;"
                                 scrolling="no">
                             </iframe>
@@ -1987,14 +2043,12 @@
                         </div>
                         <div id="extra-actions-config" class="extra-actions-config">
 
-                            <div class="extra-action-group">
-                                <label>Selecciona una opción:</label>
-                                <div class="custom-select-wrapper">
-                                    <img src="images/trophy.png" alt="Icono Win">
-                                    <select id="extra-action-widget-selector">
-                                        <option value="metaWin1" selected>Contador Win</option>
-                                    </select>
-                                </div>
+                            <div class="custom-select-wrapper">
+                                <img src="images/trophy.png" alt="Icono Win">
+                                <select id="extra-action-widget-selector">
+                                    <option value="metaWin1" selected>Contador Win 1</option>
+                                    <option value="metaWin2">Contador Win 2</option>
+                                </select>
                             </div>
 
                             <div class="extra-action-group">
@@ -2291,6 +2345,226 @@
         </div>
     </div>
 
+    <!-- === MODAL PERSONALIZAR META WIN 1 (PROFESIONAL) === -->
+    <div id="config-meta-win-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>Personalizar Overlay 1</h3>
+                <button class="modal-close-button" id="close-config-meta-win">&times;</button>
+            </div>
+
+            <div class="modal-body-scroll" style="padding-right: 10px; max-height: 60vh; overflow-y: auto;">
+                
+                <!-- Fuente -->
+                <div class="config-item inline-inputs">
+                    <label>Fuente:</label>
+                    <select id="mw1-font">
+                        <option value="'Luckiest Guy', cursive">Luckiest Guy</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Impact, sans-serif">Impact</option>
+                    </select>
+                </div>
+
+                <!-- Tamaño -->
+                <div class="config-item inline-inputs">
+                    <label>Tamaño de fuente:</label>
+                    <input type="number" id="mw1-font-size" value="50" style="width: 60px;">
+                </div>
+
+                <!-- SELECTOR DE IMAGENES PERSONALIZADO -->
+                <div class="config-item inline-inputs" style="align-items: flex-start;">
+                    <label style="margin-top: 10px;">Icono Win Game:</label>
+                    <!-- Estructura Custom Select -->
+                    <div class="custom-select-container" id="mw1-icon-container">
+                        <div class="selected-option" id="mw1-selected-display">
+                            <img src="images/trophy.png" alt="icon"> <span>Win Cup</span>
+                        </div>
+                        <div class="options-list hidden">
+                            <div class="option-item" data-value="images/trophy.png">
+                                <img src="images/trophy.png"> <span>Win Cup</span>
+                            </div>
+                            <div class="option-item" data-value="images/coin-icon.png">
+                                <img src="images/coin-icon.png"> <span>Coin</span>
+                            </div>
+                            <div class="option-item" data-value="images/top1.png">
+                                <img src="images/top1.png"> <span>Medal</span>
+                            </div>
+                            <div class="option-item" data-value="images/heart.png"> <!-- Ejemplo extra -->
+                                <img src="images/heart.png" onerror="this.style.display='none'"> <span>Heart</span>
+                            </div>
+                        </div>
+                        <!-- Input oculto para guardar el valor real -->
+                        <input type="hidden" id="mw1-icon" value="images/trophy.png">
+                    </div>
+                </div>
+
+                <!-- COLORES CON PICKR -->
+                <div class="config-item inline-inputs">
+                    <label>Fondo General:</label>
+                    <div class="color-picker-btn" id="mw1-bg-main"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Contador Color Fondo:</label>
+                    <div class="color-picker-btn" id="mw1-bg-counter"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Meta Color Fondo:</label>
+                    <div class="color-picker-btn" id="mw1-bg-meta"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Win Game:</label>
+                    <input type="text" id="mw1-text" value="WIN" style="width: 150px;">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color Texto Win:</label>
+                    <div class="color-picker-btn" id="mw1-color-text"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color del Contador:</label>
+                    <div class="color-picker-btn" id="mw1-color-num"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color Contador Negativo:</label>
+                    <div class="color-picker-btn" id="mw1-color-neg"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Habilitar Borde:</label>
+                    <input type="checkbox" id="mw1-border-check" checked>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Borde:</label>
+                    <div class="color-picker-btn" id="mw1-color-border"></div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+                <button id="btn-save-meta-win-config" style="background-color: #5c1d80; color: white; border: none; padding: 8px 15px; border-radius: 4px;">Ok</button>
+                <button id="btn-reset-meta-win-config" style="background-color: #333; color: white; border: 1px solid #555; padding: 8px 15px; border-radius: 4px;">Restablecer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === MODAL PERSONALIZAR META WIN 2 (PROFESIONAL) === -->
+    <div id="config-meta-win-modal-2" class="modal-overlay">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>Personalizar Overlay 2</h3>
+                <button class="modal-close-button" id="close-config-meta-win-2">&times;</button>
+            </div>
+
+            <div class="modal-body-scroll" style="padding-right: 10px; max-height: 60vh; overflow-y: auto;">
+                
+                <!-- Fuente -->
+                <div class="config-item inline-inputs">
+                    <label>Fuente:</label>
+                    <select id="mw2-font">
+                        <option value="'Luckiest Guy', cursive">Luckiest Guy</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Impact, sans-serif">Impact</option>
+                    </select>
+                </div>
+
+                <!-- Tamaño -->
+                <div class="config-item inline-inputs">
+                    <label>Tamaño de fuente:</label>
+                    <input type="number" id="mw2-font-size" value="50" style="width: 60px;">
+                </div>
+
+                <!-- SELECTOR DE IMAGENES PERSONALIZADO -->
+                <div class="config-item inline-inputs" style="align-items: flex-start;">
+                    <label style="margin-top: 10px;">Icono Win Game:</label>
+                    <!-- Estructura Custom Select -->
+                    <div class="custom-select-container" id="mw2-icon-container">
+                        <div class="selected-option" id="mw2-selected-display">
+                            <img src="images/trophy.png" alt="icon"> <span>Win Cup</span>
+                        </div>
+                        <div class="options-list hidden">
+                            <div class="option-item" data-value="images/trophy.png">
+                                <img src="images/trophy.png"> <span>Win Cup</span>
+                            </div>
+                            <div class="option-item" data-value="images/coin-icon.png">
+                                <img src="images/coin-icon.png"> <span>Coin</span>
+                            </div>
+                            <div class="option-item" data-value="images/top1.png">
+                                <img src="images/top1.png"> <span>Medal</span>
+                            </div>
+                            <div class="option-item" data-value="images/heart.png"> <!-- Ejemplo extra -->
+                                <img src="images/heart.png" onerror="this.style.display='none'"> <span>Heart</span>
+                            </div>
+                        </div>
+                        <!-- Input oculto para guardar el valor real -->
+                        <input type="hidden" id="mw2-icon" value="images/trophy.png">
+                    </div>
+                </div>
+
+                <!-- COLORES CON PICKR -->
+                <div class="config-item inline-inputs">
+                    <label>Fondo General:</label>
+                    <div class="color-picker-btn" id="mw2-bg-main"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Contador Color Fondo:</label>
+                    <div class="color-picker-btn" id="mw2-bg-counter"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Meta Color Fondo:</label>
+                    <div class="color-picker-btn" id="mw2-bg-meta"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Win Game:</label>
+                    <input type="text" id="mw2-text" value="WIN" style="width: 150px;">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color Texto Win:</label>
+                    <div class="color-picker-btn" id="mw2-color-text"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color del Contador:</label>
+                    <div class="color-picker-btn" id="mw2-color-num"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color Contador Negativo:</label>
+                    <div class="color-picker-btn" id="mw2-color-neg"></div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Habilitar Borde:</label>
+                    <input type="checkbox" id="mw2-border-check" checked>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Borde:</label>
+                    <div class="color-picker-btn" id="mw2-color-border"></div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+                <button id="btn-save-meta-win-config-2" style="background-color: #5c1d80; color: white; border: none; padding: 8px 15px; border-radius: 4px;">Ok</button>
+                <button id="btn-reset-meta-win-config-2" style="background-color: #333; color: white; border: 1px solid #555; padding: 8px 15px; border-radius: 4px;">Restablecer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LIBRERÍAS FIREBASE (Versión Modular Compatible 8.10.1) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -2316,8 +2590,10 @@
       const db = firebase.database();
     </script>
     
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script src="scripts/script.js"></script>
-    <script src="scripts/meta-win.js"></script>
+    <script src="scripts/meta-win1.js"></script>
+    <script src="scripts/meta-win2.js"></script>
     <script src="scripts/subasta.js"></script>
     <script src="scripts/social-rotator.js"></script>
     <audio id="audio-player" style="display: none;"></audio>

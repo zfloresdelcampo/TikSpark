@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Win Overlay 1</title>
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: transparent; overflow: hidden; 
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Caja Principal */
+        .preview-box { 
+            background-color: #000000; /* Se sobrescribe con JS */
+            color: white; 
+            border-radius: 12px; 
+            padding: 10px 25px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 15px; 
+            font-size: 50px; /* Se sobrescribe con JS */
+        }
+
+        .preview-box img { 
+            height: 1em; /* Se escala con la fuente */
+            width: auto;
+        }
+        
+        /* Cajas de Números */
+        .preview-number { 
+            background-color: #1d1d1d; /* Se sobrescribe con JS */
+            color: white; 
+            border-radius: 8px; 
+            padding: 0px 0.4em; 
+            min-width: 1.2em; 
+            text-align: center; 
+            line-height: 1.4;
+        }
+        
+        .preview-separator { font-weight: normal; color: white; opacity: 1; }
+
+        /* Clase para el borde del texto */
+        .with-stroke {
+            -webkit-text-stroke: 1.5px black; /* Color se sobrescribe con JS */
+            paint-order: stroke fill;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="preview-box">
+         <img src="images/trophy.png" id="overlay-icon" alt="Icon">
+         <span class="preview-text with-stroke" id="overlay-title">WIN</span>
+         
+         <!-- Contenedor Conteo -->
+         <span class="preview-number with-stroke" id="overlay-conteo">0</span>
+         
+         <span class="preview-separator with-stroke">/</span>
+         
+         <!-- Contenedor Meta -->
+         <span class="preview-number with-stroke" id="overlay-meta">5</span>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const box = document.querySelector('.preview-box');
+        const iconElement = document.getElementById('overlay-icon');
+        const titleElement = document.getElementById('overlay-title');
+        const conteoElement = document.getElementById('overlay-conteo');
+        const metaElement = document.getElementById('overlay-meta');
+        const separator = document.querySelector('.preview-separator');
+        const allTextElements = document.querySelectorAll('.with-stroke');
+
+        const socket = io();
+
+        // Inicialización
+        socket.on('init-data', (db) => {
+            if (db && db.metaWin1) updateDisplay(db.metaWin1);
+        });
+
+        // Actualización en vivo
+        socket.on('widget-update', (msg) => {
+            if (msg.widgetId === 'metaWin1') {
+                updateDisplay(msg.data);
+            }
+        });
+
+        function updateDisplay(data) {
+            if (!data) return;
+
+            // 1. DATOS NUMÉRICOS
+            const valorMeta = (data.meta !== undefined) ? data.meta : 5;
+            const valorConteo = (data.conteo !== undefined) ? data.conteo : 0;
+            conteoElement.textContent = valorConteo;
+            metaElement.textContent = valorMeta;
+
+            // 2. ESTILOS
+            const s = data.styles || {};
+
+            // Fuente y Tamaño
+            if (s.font) box.style.fontFamily = s.font;
+            if (s.fontSize) box.style.fontSize = s.fontSize + 'px';
+
+            // Colores de Fondo
+            if (s.bgMain) box.style.backgroundColor = s.bgMain;
+            if (s.bgCounter) conteoElement.style.backgroundColor = s.bgCounter;
+            if (s.bgMeta) metaElement.style.backgroundColor = s.bgMeta;
+
+            // Textos e Icono
+            if (s.text) titleElement.textContent = s.text;
+            if (s.icon) iconElement.src = s.icon;
+
+            // Colores de Texto
+            if (s.colorText) {
+                titleElement.style.color = s.colorText;
+            }
+            if (s.colorNum) metaElement.style.color = s.colorNum;
+
+            // Lógica Color Negativo
+            if (valorConteo < 0 && s.colorNeg) {
+                conteoElement.style.color = s.colorNeg;
+            } else if (s.colorNum) {
+                conteoElement.style.color = s.colorNum;
+            }
+
+            // Borde (Stroke)
+            const borderColor = s.colorBorder || '#000000';
+            allTextElements.forEach(el => {
+                if (s.borderCheck) {
+                    el.style.webkitTextStroke = `1.5px ${borderColor}`;
+                } else {
+                    el.style.webkitTextStroke = '0px transparent';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

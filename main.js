@@ -18,6 +18,7 @@ const widgetsPath = path.join(app.getPath('userData'), 'widgets.json');
 const defaultWidgetsDB = {
     mediaOverlay: {},
     metaWin1: { conteo: 0, meta: 5 },
+    metaWin2: { conteo: 0, meta: 5 },
     subasta: { isRunning: false },
     socialRotator: { accounts: [] },
     // AQUÍ ESTÁ EL CAMBIO:
@@ -411,6 +412,13 @@ function createWindow() {
                         const translatedData = { ...message.data, nickname: message.data.nickname || message.data.uniqueId };
                         mainWindow.webContents.send(message.event === 'follow' ? 'new-follow' : 'new-share', translatedData);
                     }
+                    return;
+                }
+
+                // SOLO Suscripción real o Super Fan
+                if (message.event === 'subscribe' || message.event === 'superfan') {
+                    console.log("¡Nuevo Super Fan detectado!");
+                    mainWindow.webContents.send('new-member', message.data);
                     return;
                 }
 

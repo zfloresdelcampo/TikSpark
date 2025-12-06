@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Win Overlay 2</title>
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: transparent; overflow: hidden; 
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .preview-box { 
+            background-color: #000000; 
+            color: white; 
+            border-radius: 12px; 
+            padding: 10px 25px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 15px; 
+            font-size: 50px; 
+        }
+
+        .preview-box img { height: 1em; width: auto; }
+        
+        .preview-number { 
+            background-color: #1d1d1d; 
+            color: white; 
+            border-radius: 8px; 
+            padding: 0px 0.4em; 
+            min-width: 1.2em; 
+            text-align: center; 
+            line-height: 1.4;
+        }
+        
+        .preview-separator { font-weight: normal; color: white; opacity: 1; }
+
+        .with-stroke {
+            -webkit-text-stroke: 1.5px black;
+            paint-order: stroke fill;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="preview-box">
+         <img src="images/trophy.png" id="overlay-icon" alt="Icon">
+         <span class="preview-text with-stroke" id="overlay-title">WIN</span>
+         <span class="preview-number with-stroke" id="overlay-conteo">0</span>
+         <span class="preview-separator with-stroke">/</span>
+         <span class="preview-number with-stroke" id="overlay-meta">5</span>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const box = document.querySelector('.preview-box');
+        const iconElement = document.getElementById('overlay-icon');
+        const titleElement = document.getElementById('overlay-title');
+        const conteoElement = document.getElementById('overlay-conteo');
+        const metaElement = document.getElementById('overlay-meta');
+        const separator = document.querySelector('.preview-separator');
+        const allTextElements = document.querySelectorAll('.with-stroke');
+
+        const socket = io();
+
+        // --- CAMBIO CLAVE AQUÍ: metaWin2 ---
+        socket.on('init-data', (db) => {
+            if (db && db.metaWin2) updateDisplay(db.metaWin2);
+        });
+
+        socket.on('widget-update', (msg) => {
+            if (msg.widgetId === 'metaWin2') {
+                updateDisplay(msg.data);
+            }
+        });
+
+        function updateDisplay(data) {
+            if (!data) return;
+
+            const valorMeta = (data.meta !== undefined) ? data.meta : 5;
+            const valorConteo = (data.conteo !== undefined) ? data.conteo : 0;
+            conteoElement.textContent = valorConteo;
+            metaElement.textContent = valorMeta;
+
+            const s = data.styles || {};
+
+            if (s.font) box.style.fontFamily = s.font;
+            if (s.fontSize) box.style.fontSize = s.fontSize + 'px';
+
+            if (s.bgMain) box.style.backgroundColor = s.bgMain;
+            if (s.bgCounter) conteoElement.style.backgroundColor = s.bgCounter;
+            if (s.bgMeta) metaElement.style.backgroundColor = s.bgMeta;
+
+            if (s.text) titleElement.textContent = s.text;
+            if (s.icon) iconElement.src = s.icon;
+
+            if (s.colorText) {
+                titleElement.style.color = s.colorText;
+            }
+            if (s.colorNum) metaElement.style.color = s.colorNum;
+
+            if (valorConteo < 0 && s.colorNeg) {
+                conteoElement.style.color = s.colorNeg;
+            } else if (s.colorNum) {
+                conteoElement.style.color = s.colorNum;
+            }
+
+            const borderColor = s.colorBorder || '#000000';
+            allTextElements.forEach(el => {
+                if (s.borderCheck) {
+                    el.style.webkitTextStroke = `1.5px ${borderColor}`;
+                } else {
+                    el.style.webkitTextStroke = '0px transparent';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

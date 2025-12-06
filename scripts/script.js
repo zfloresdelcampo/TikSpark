@@ -457,19 +457,27 @@ document.addEventListener('DOMContentLoaded', async function() {
                     }
                 }
                 
-                const imgTag = imgUrl ? `<img src="${imgUrl}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-gift fa-lg"></i> ';
+                // Imagen 24px, Icono fallback 18px
+                const imgTag = imgUrl ? `<img src="${imgUrl}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-gift" style="font-size: 18px; color: #8a2be2; vertical-align: middle; margin-right: 6px;"></i> ';
                 whyHTML = `${imgTag}${alert.giftName || `ID: ${alert.giftId}`}${giftPrice}`;
             } 
             else if (alert.why === 'gift-min') {
-                whyHTML = `<i class="fas fa-gift fa-lg" style="color: #ff4d4d; margin-right: 6px;"></i> Gift (${alert.minCoins || 1}+)`;
+                // 18px Rojo
+                whyHTML = `<i class="fas fa-gift" style="color: #8a2be2; font-size: 18px; margin-right: 6px; vertical-align: middle;"></i> Gift (${alert.minCoins || 1}+)`;
+            }
+            // --- NUEVO: LÓGICA PARA SUPER FAN (18px Dorado) ---
+            else if (alert.why === 'superfan') {
+                whyHTML = `<i class="fas fa-star" style="color: #8a2be2; font-size: 18px; margin-right: 6px; vertical-align: middle;"></i> Super Fan`;
             }
             else if (alert.why === 'emote') {
-                const imgTag = alert.emoteImage ? `<img src="${alert.emoteImage}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-smile fa-lg"></i> ';
+                // Imagen 24px, Icono fallback 18px
+                const imgTag = alert.emoteImage ? `<img src="${alert.emoteImage}" style="width:24px; height:24px; vertical-align:middle; margin-right:6px;">` : '<i class="fas fa-smile" style="font-size: 18px; color: #8a2be2; vertical-align: middle; margin-right: 6px;"></i> ';
                 whyHTML = `${imgTag} Fan Club Emote`;
             }
             else {
+                // 18px Morado para el resto (Follow, Share, etc)
                 const icon = eventIcons[alert.why] || ''; 
-                whyHTML = `<span style="font-size: 1.2em; margin-right: 5px; color: #8a2be2;">${icon}</span> ${whyLabels[alert.why] || alert.why}`;
+                whyHTML = `<span style="font-size: 18px; margin-right: 6px; color: #8a2be2; vertical-align: middle;">${icon}</span> ${whyLabels[alert.why] || alert.why}`;
             }
 
             // -- Descripción (Audio/Video) --
@@ -1382,11 +1390,28 @@ if (window.electronAPI) {
         updateAuction(data);
     });
 
-    // Listener de "Se ha unido" (CORREGIDO)
+    // --- SOLUCIÓN JOIN INFINITO ---
+    
+    // 1. Creamos una lista en memoria para recordar quiénes ya entraron
+    const joinedUsersCache = new Set();
+
     window.electronAPI.onJoin(data => {
+        // 2. Si el usuario YA está en la lista, NO HACEMOS NADA (return)
+        if (joinedUsersCache.has(data.nickname)) {
+            return; 
+        }
+
+        // 3. Si NO está, lo agregamos a la lista
+        joinedUsersCache.add(data.nickname);
+
+        // (Opcional) Olvidar al usuario después de 5 minutos por si se va y vuelve
+        setTimeout(() => {
+            joinedUsersCache.delete(data.nickname);
+        }, 1800000); // 300,000 ms = 5 minutos
+
+        // 4. Ejecutamos el Log y las Acciones (Solo pasará por aquí 1 vez)
         addLogEntry(`<i class="fas fa-walking"></i> <b>${data.nickname}</b> se ha unido.`, 'join');
         processTikTokEvent('join', data);
-        // sendNicknameToGame(data.nickname);
     });
 
     // Listener de "Compartir" (NUEVO)
@@ -2817,6 +2842,12 @@ if (window.electronAPI) {
             return showToastNotification('⚠️ No se encontró la acción para duplicar.');
         }
 
+        // --- AQUI AGREGAMOS LA CONFIRMACIÓN ---
+        if (!await window.showCustomConfirm(`¿Seguro que quieres duplicar "${originalAction.name}"?`)) {
+            return; // Si dice que no, cancelamos
+        }
+        // -------------------------------------
+
         // 2. Crear una copia profunda del objeto de la acción
         const duplicatedAction = JSON.parse(JSON.stringify(originalAction));
 
@@ -3085,12 +3116,16 @@ if (window.electronAPI) {
                     triggerContent = `<div class="trigger-content"><i class="fas fa-gift"></i> Gift ID: ${event.giftId}</div>`;
                 }
             } 
-            // 2. NUEVA LÓGICA PARA LIKES
+            // 2. Lógica para Likes
             else if (event.why === 'likes') {
                 const amount = event.likesAmount || 0;
                 triggerContent = `<div class="trigger-content">${eventIcons['likes'] || ''} Likes ${amount}+</div>`;
             }
-            // 3. Resto de eventos
+            // 3. NUEVO: Lógica para Super Fan
+            else if (event.why === 'superfan') {
+                triggerContent = `<div class="trigger-content"><i class="fas fa-star" style="color: #8a2be2;"></i> Super Fan</div>`;
+            }
+            // 4. Resto de eventos
             else {
                 triggerContent = `<div class="trigger-content">${eventIcons[event.why] || ''} ${whyLabels[event.why] || event.why}</div>`;
             }
@@ -3119,7 +3154,6 @@ if (window.electronAPI) {
             eventDiv.innerHTML = `
                 <div><input type="checkbox"></div>
                 <div class="row-icons">
-                    <!-- ICONOS ACTUALIZADOS PARA EVENTOS -->
                     <span class="action-icon-bg edit" onclick="editEvent(${event.id})">
                         <i class="fas fa-pencil-alt"></i>
                     </span>
@@ -3127,8 +3161,6 @@ if (window.electronAPI) {
                         <i class="fas fa-trash-alt"></i>
                     </span>
                 </div>
-
-                <!-- ESTAS SON LAS LÍNEAS QUE FALTABAN -->
                 <div class="icon-center">
                     <input type="checkbox" onchange="toggleEventStatus(${event.id})" ${event.enabled ? 'checked' : ''}>
                 </div>
@@ -3137,7 +3169,7 @@ if (window.electronAPI) {
                 </div>
                 <div>${whoLabels[event.who] || event.who}</div>
                 <div>${triggerContent}</div> 
-                <div>${actionsSummary}</div>`; // <-- Y no te olvides del punto y coma aquí
+                <div>${actionsSummary}</div>`; 
             eventsListContainer.appendChild(eventDiv); 
         }); 
 
@@ -3381,17 +3413,31 @@ if (window.electronAPI) {
     };
 
     window.deleteAlert = async (id) => {
-        if (await window.showCustomConfirm('¿Borrar esta alerta?')) {
-            // Filtrar globalAlerts
-            globalAlerts = globalAlerts.filter(a => a.id !== id);
+        // 1. Buscar la alerta para saber su nombre
+        const currentProfile = profiles[activeProfileName];
+        let alert = currentProfile?.alerts?.find(a => a.id === id);
+
+        // Si no está en el perfil, buscar en globales
+        if (!alert && typeof globalAlerts !== 'undefined') {
+            alert = globalAlerts.find(a => a.id === id);
+        }
+
+        if (!alert) return; // Si no existe, no hacemos nada
+
+        // 2. Mostrar confirmación con el nombre
+        if (await window.showCustomConfirm(`¿Borrar la alerta "${alert.name}"?`)) {
             
-            // --- LÓGICA DE PAGINACIÓN AL BORRAR ---
-            const totalPages = Math.ceil(globalAlerts.length / ITEMS_PER_PAGE) || 1;
-            if (currentPageAlerts > totalPages) currentPageAlerts = totalPages;
-            // --------------------------------------
+            // 3. Eliminar (buscamos en ambos arrays por seguridad)
+            if (currentProfile && currentProfile.alerts) {
+                currentProfile.alerts = currentProfile.alerts.filter(a => a.id !== id);
+            }
+            if (typeof globalAlerts !== 'undefined') {
+                globalAlerts = globalAlerts.filter(a => a.id !== id);
+            }
 
             renderAlerts();
             await saveAllData();
+            showToastNotification(`🗑 Alerta "${alert.name}" eliminada.`);
         }
     };
 
@@ -4522,6 +4568,23 @@ if (window.electronAPI) {
     
     // --- LÓGICA BOTÓN PROBAR CONEXIÓN MINECRAFT (CON MODAL PROPIO) ---
     const testMcBtn = document.getElementById('test-mc-connection-btn');
+
+    // --- ARREGLO CURSOR SCROLL MINECRAFT ---
+    const mcTextarea = document.getElementById('minecraft-command');
+
+    if (mcTextarea) {
+        mcTextarea.addEventListener('mousemove', function(e) {
+            // Calculamos si el mouse está sobre la zona del scroll
+            // clientWidth es el ancho SIN scroll, offsetWidth es CON scroll
+            const isOnScrollbar = e.offsetX > this.clientWidth || e.offsetY > this.clientHeight;
+
+            if (isOnScrollbar) {
+                this.style.cursor = 'default'; // Pone la flechita
+            } else {
+                this.style.cursor = 'text';    // Pone la "I" de escribir
+            }
+        });
+    }
     
     // Referencias al modal de sistema
     const sysModal = document.getElementById('system-message-modal');
@@ -4627,6 +4690,41 @@ if (window.electronAPI) {
         if (input) {
             input.addEventListener('input', saveMcSettings);
         }
+    });
+
+    // --- LÓGICA UNIVERSAL PARA BOTONES "COPIAR URL" EN GALERÍA ---
+    // Busca todos los botones que sean "primary-btn" dentro de contenedores de acciones
+    const galleryCopyButtons = document.querySelectorAll('.overlay-url-actions .primary-btn');
+
+    galleryCopyButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // 1. Buscamos el contenedor padre
+            const container = e.target.closest('.overlay-url-actions');
+            
+            // 2. Buscamos el input dentro de ese contenedor
+            const input = container.querySelector('input.url-input');
+
+            if (input) {
+                // 3. Copiamos el texto
+                navigator.clipboard.writeText(input.value).then(() => {
+                    showToastNotification('✅ URL copiada al portapapeles');
+                    
+                    // Efecto visual en el botón
+                    /*
+                    const originalText = e.target.textContent;
+                    e.target.textContent = "¡Copiado!";
+                    e.target.style.backgroundColor = "#10c35b";
+                    
+                    setTimeout(() => {
+                        e.target.textContent = originalText;
+                        e.target.style.backgroundColor = ""; // Volver al color original
+                    }, 2000); */
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    showToastNotification('❌ Error al copiar URL');
+                });
+            }
+        });
     });
 
     // ==========================================================

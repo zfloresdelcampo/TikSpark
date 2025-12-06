@@ -221,6 +221,16 @@ function startTikTokDetector(mainWindow, username, forceGiftFetch = false, onGif
     tiktokLiveConnection.on('follow', (data) => mainWindow.webContents.send('new-follow', { ...data, nickname: data.nickname || data.uniqueId }));
     tiktokLiveConnection.on('share', (data) => mainWindow.webContents.send('new-share', { ...data, nickname: data.nickname || data.uniqueId }));
     
+    // Evento moderno
+    tiktokLiveConnection.on('superfan', (data) => {
+        mainWindow.webContents.send('new-member', data);
+    });
+
+    // Evento clásico (por si acaso)
+    tiktokLiveConnection.on('subscribe', (data) => {
+        mainWindow.webContents.send('new-member', data);
+    });
+
     tiktokLiveConnection.on('roomUser', (data) => {
         if (data.topViewers && Array.isArray(data.topViewers)) {
             data.topViewers.forEach(viewer => {
