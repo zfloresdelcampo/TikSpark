@@ -305,6 +305,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' 
     };
 
+    // --- NUEVO: RECUPERAR DATOS GUARDADOS LOCALMENTE AL INICIAR ---
+    if (window.electronAPI && window.electronAPI.getWidgetData) {
+        // Cargar Top Gift guardado
+        window.electronAPI.getWidgetData('topGift').then(savedGift => {
+            if (savedGift && savedGift.coins > 0) {
+                topGiftState = savedGift;
+                console.log("Top Gift recuperado:", topGiftState);
+            }
+        });
+
+        // Cargar Top Streak guardado
+        window.electronAPI.getWidgetData('topStreak').then(savedStreak => {
+            if (savedStreak && savedStreak.streakCount > 0) {
+                topStreakState = savedStreak;
+                console.log("Top Streak recuperado:", topStreakState);
+            }
+        });
+    }
+
     // Simulación de Base de Datos de Medios
     let mediaLibrary = [];
 
@@ -1529,8 +1548,20 @@ if (window.electronAPI) {
                 activeProfileName = data.activeProfileName || '';
                 globalAlerts = data.globalAlerts || [];
                 mediaLibrary = data.mediaLibrary || [];
-                topGift = data.topGift || { username: 'Username', coins: 0, giftName: 'Default', giftImage: '' };
-                topStreak = data.topStreak || { username: 'Username', streakCount: 0, giftName: 'Default', giftImage: '' };
+                // CORRECCIÓN: Usar los nombres de variables correctos (con 'State')
+                topGiftState = data.topGift || { 
+                    username: 'Username', 
+                    coins: 0, 
+                    giftName: 'Default', 
+                    giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
+                };
+
+                topStreakState = data.topStreak || { 
+                    username: 'Username', 
+                    streakCount: 0, 
+                    giftName: 'Default', 
+                    giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' 
+                };
                 
                 // Cargar Foto guardada
                 lastProfilePicture = data.lastProfilePicture || '';
