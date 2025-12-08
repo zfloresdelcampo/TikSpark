@@ -1536,9 +1536,23 @@ if (window.electronAPI) {
                     mediaLibrary: mediaLibrary || [],
                     topGift: topGiftState,
                     topStreak: topStreakState,
-                    lastProfilePicture: lastProfilePicture || '' // <--- ESTO GUARDA LA FOTO
+                    lastProfilePicture: lastProfilePicture || '', // <--- ESTO GUARDA LA FOTO
+                    // --- AQUÍ ESTÁ LO DE HOTKEYS ---
+                    hotkeysConfig: hotkeysConfig || {},
+                    hotkeysEnabled: document.getElementById('hotkeys-global-toggle')?.checked || false
+                    // --------------------------
                 });
                 console.log("☁️ Datos guardados en la nube.");
+                // ↓↓↓↓↓ PEGA ESTO AQUÍ ↓↓↓↓↓
+                if (window.electronAPI) {
+                    const hkEnabled = document.getElementById('hotkeys-global-toggle')?.checked || false;
+                    // Enviamos la configuración al sistema principal (Main.js)
+                    window.electronAPI.registerGlobalHotkeys({ 
+                        config: hotkeysConfig, 
+                        enabled: hkEnabled 
+                    });
+                }
+                // ↑↑↑↑↑ FIN DE LO PEGADO ↑↑↑↑↑
             } catch (e) {
                 console.error(e);
                 showToastNotification("❌ Error al guardar en la nube");
@@ -1585,6 +1599,24 @@ if (window.electronAPI) {
                         icon.style.display = 'none';
                     }
                 }
+
+                // --- CARGAR HOTKEYS (LO NUEVO) ---
+                hotkeysConfig = data.hotkeysConfig || {};
+                const hkToggle = document.getElementById('hotkeys-global-toggle');
+                if(hkToggle) hkToggle.checked = data.hotkeysEnabled || false;
+                renderHotkeysUI(); 
+                // ---------------------------------
+
+                // ↓↓↓↓↓ PEGA ESTO AQUÍ ↓↓↓↓↓
+                // Esto fuerza el registro de teclas apenas se descargan los datos de la nube
+                if (window.electronAPI && data.hotkeysEnabled) {
+                    console.log("🔄 Registrando Hotkeys al iniciar...");
+                    window.electronAPI.registerGlobalHotkeys({ 
+                        config: hotkeysConfig, 
+                        enabled: true 
+                    });
+                }
+                // ↑↑↑↑↑ FIN DE LO PEGADO ↑↑↑↑↑
 
                 // Cargar Metas
                 const currentGoals = profiles[activeProfileName]?.goals || {};
@@ -2253,6 +2285,10 @@ if (window.electronAPI) {
         // 4. ACTUALIZAR LISTAS DE ACCIONES (El paso clave)
         renderActiveProfileData(); // Pinta la lista de abajo
         
+        // --- ACTUALIZAR LISTA DE HOTKEYS TAMBIÉN ---
+        renderHotkeysUI();
+        // ------------------------------------------
+
         // Rellenamos los desplegables con las acciones de ESTE nuevo perfil
         if(typeof updateGoalActions === 'function') updateGoalActions();
         if(typeof updateGoalFollowActions === 'function') updateGoalFollowActions();
@@ -4895,6 +4931,197 @@ if (window.electronAPI) {
                 value: Math.round(finalValue) // Redondeamos para evitar decimales en el contador
             });
         }
+    }
+
+    // ==========================================
+    // LÓGICA DE HOTKEYS (V4 - FINAL CON TODO)
+    // ==========================================
+
+    // 1. Definición visual (Con Iconos)
+    const hotkeyListDef = [
+        { labelHTML: 'Alt + <i class="fas fa-arrow-up"></i>', code: 'Alt+ArrowUp', class: 'key-alt' },
+        { labelHTML: 'Alt + <i class="fas fa-arrow-down"></i>', code: 'Alt+ArrowDown', class: 'key-alt' },
+        { labelHTML: 'Alt + <i class="fas fa-arrow-left"></i>', code: 'Alt+ArrowLeft', class: 'key-alt' },
+        { labelHTML: 'Alt + <i class="fas fa-arrow-right"></i>', code: 'Alt+ArrowRight', class: 'key-alt' },
+        
+        { labelHTML: 'Shift + <i class="fas fa-arrow-up"></i>', code: 'Shift+ArrowUp', class: 'key-shift' },
+        { labelHTML: 'Shift + <i class="fas fa-arrow-down"></i>', code: 'Shift+ArrowDown', class: 'key-shift' },
+        { labelHTML: 'Shift + <i class="fas fa-arrow-left"></i>', code: 'Shift+ArrowLeft', class: 'key-shift' },
+        { labelHTML: 'Shift + <i class="fas fa-arrow-right"></i>', code: 'Shift+ArrowRight', class: 'key-shift' },
+
+        { labelHTML: 'Ctrl + <i class="fas fa-arrow-up"></i>', code: 'Control+ArrowUp', class: 'key-ctrl' },
+        { labelHTML: 'Ctrl + <i class="fas fa-arrow-down"></i>', code: 'Control+ArrowDown', class: 'key-ctrl' },
+        
+        { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-up"></i>', code: 'Control+Alt+ArrowUp', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-down"></i>', code: 'Control+Alt+ArrowDown', class: 'key-combo' }
+    ];
+
+    // 2. Acciones de Sistema (Timer, Win, etc.)
+    const systemActionsList = [
+        { id: 'sys_timer_start', name: '⏱️ Timer: Iniciar' },
+        { id: 'sys_timer_pause', name: '⏱️ Timer: Pausar' },
+        { id: 'sys_timer_reset', name: '⏱️ Timer: Reiniciar' },
+        { id: 'sys_timer_add1', name: '⏱️ Timer: +1 Minuto' },
+        { id: 'sys_timer_sub1', name: '⏱️ Timer: -1 Minuto' },
+        { id: 'sys_win1_add', name: '🏆 Win 1: Sumar' },
+        { id: 'sys_win1_sub', name: '🏆 Win 1: Restar' },
+        { id: 'sys_win2_add', name: '🏆 Win 2: Sumar' },
+        { id: 'sys_win2_sub', name: '🏆 Win 2: Restar' },
+        { id: 'sys_gvg_left', name: '🆚 GvG: Punto Izq' },
+        { id: 'sys_gvg_right', name: '🆚 GvG: Punto Der' }
+    ];
+
+    let hotkeysConfig = {}; 
+
+    // 3. Renderizar la Interfaz
+    function renderHotkeysUI() {
+        const container = document.getElementById('hotkeys-list-container');
+        if(!container) return;
+        container.innerHTML = '';
+
+        hotkeyListDef.forEach(hk => {
+            const row = document.createElement('div');
+            row.className = 'hotkey-row';
+            
+            const keyDiv = document.createElement('div');
+            keyDiv.className = `key-display ${hk.class}`;
+            keyDiv.innerHTML = hk.labelHTML; // Renderiza el icono
+
+            const select = document.createElement('select');
+            select.className = 'hotkey-select';
+            
+            let html = '<option value="">Selecciona...</option>';
+
+            // Grupo Sistema
+            html += '<optgroup label="-- Sistema --">';
+            systemActionsList.forEach(sys => {
+                html += `<option value="${sys.id}">${sys.name}</option>`;
+            });
+            html += '</optgroup>';
+
+            // Grupo Mis Acciones
+            const currentProfile = profiles[activeProfileName];
+            if (currentProfile && currentProfile.actions) {
+                html += '<optgroup label="-- Mis Acciones --">';
+                currentProfile.actions.forEach(act => {
+                    html += `<option value="${act.id}">${act.name}</option>`;
+                });
+                html += '</optgroup>';
+            }
+            
+            select.innerHTML = html;
+            if (hotkeysConfig[hk.code]) select.value = hotkeysConfig[hk.code];
+
+            select.addEventListener('change', (e) => {
+                hotkeysConfig[hk.code] = e.target.value;
+                saveAllData(); 
+            });
+
+            row.appendChild(keyDiv);
+            row.appendChild(select);
+            container.appendChild(row);
+        });
+    }
+
+    // 4. Ejecutor de Sistema
+    async function executeSystemHotkey(sysId) {
+        if (!window.electronAPI) return;
+
+        // Timer
+        if (sysId === 'sys_timer_start') await window.electronAPI.updateWidget('timer', { command: 'start' });
+        if (sysId === 'sys_timer_pause') await window.electronAPI.updateWidget('timer', { command: 'pause' });
+        if (sysId === 'sys_timer_reset') await window.electronAPI.updateWidget('timer', { command: 'restart', value: 300 });
+        if (sysId === 'sys_timer_add1') await window.electronAPI.updateWidget('timer', { command: 'add', value: 60 });
+        if (sysId === 'sys_timer_sub1') await window.electronAPI.updateWidget('timer', { command: 'sub', value: 60 });
+
+        // Wins
+        if (sysId.startsWith('sys_win1')) {
+            let data = await window.electronAPI.getWidgetData('metaWin1') || { conteo: 0, meta: 5 };
+            data.conteo = parseInt(data.conteo) || 0;
+            if (sysId === 'sys_win1_add') data.conteo++;
+            if (sysId === 'sys_win1_sub') data.conteo--;
+            await window.electronAPI.updateWidget('metaWin1', data);
+        }
+        if (sysId.startsWith('sys_win2')) {
+            let data = await window.electronAPI.getWidgetData('metaWin2') || { conteo: 0, meta: 5 };
+            data.conteo = parseInt(data.conteo) || 0;
+            if (sysId === 'sys_win2_add') data.conteo++;
+            if (sysId === 'sys_win2_sub') data.conteo--;
+            await window.electronAPI.updateWidget('metaWin2', data);
+        }
+        // GvG
+        if (sysId.startsWith('sys_gvg')) {
+            let data = await window.electronAPI.getWidgetData('giftVsGift1') || { scoreLeft: 0, scoreRight: 0 };
+            data.scoreLeft = parseInt(data.scoreLeft) || 0;
+            data.scoreRight = parseInt(data.scoreRight) || 0;
+            if (sysId === 'sys_gvg_left') data.scoreLeft++;
+            if (sysId === 'sys_gvg_right') data.scoreRight++;
+            await window.electronAPI.updateWidget('giftVsGift1', data);
+        }
+    }
+
+    // 5. Listener de Teclado (CON FIX PARA ALT)
+    window.addEventListener('keydown', (e) => {
+        // A. Bloquear el menú de Windows si se toca Alt
+        if (e.key === 'Alt' || e.key === 'Control') {
+            e.preventDefault();
+        }
+
+        const toggle = document.getElementById('hotkeys-global-toggle');
+        if (!toggle || !toggle.checked) return;
+
+        // Solo flechas
+        if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+
+        let pressedCode = '';
+        if (e.ctrlKey) pressedCode += 'Control+';
+        if (e.altKey) pressedCode += 'Alt+';
+        if (e.shiftKey) pressedCode += 'Shift+';
+        pressedCode += e.key;
+
+        const actionId = hotkeysConfig[pressedCode];
+        if (actionId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (actionId.startsWith('sys_')) {
+                executeSystemHotkey(actionId);
+                showToastNotification(`⌨️ Sistema: ${actionId}`);
+            } else {
+                playAction(parseInt(actionId), { nickname: 'HOTKEY' });
+                showToastNotification(`⌨️ Acción ejecutada`);
+            }
+        }
+    });
+
+    // Listener para liberar la tecla Alt
+    window.addEventListener('keyup', (e) => {
+        if (e.key === 'Alt' || e.key === 'Control') {
+            e.preventDefault();
+        }
+    });
+
+    const hkToggle = document.getElementById('hotkeys-global-toggle');
+    if(hkToggle) {
+        hkToggle.addEventListener('change', saveAllData);
+    }
+
+    // --- ESCUCHA GLOBAL DE HOTKEYS (REEMPLAZA EL WINDOW.ADDEVENTLISTENER QUE TENÍAS) ---
+    if (window.electronAPI) {
+        window.electronAPI.onGlobalHotkeyTriggered((actionId) => {
+            console.log("🔥 TECLA DETECTADA:", actionId);
+            
+            // Si es una acción de sistema (Timer, Win, etc)
+            if (String(actionId).startsWith('sys_')) {
+                executeSystemHotkey(actionId);
+                showToastNotification(`⌨️ Sistema: ${actionId}`);
+            } 
+            // Si es una acción normal (ID numérico)
+            else {
+                playAction(parseInt(actionId), { nickname: 'HOTKEY' });
+                showToastNotification(`⌨️ Acción ejecutada`);
+            }
+        });
     }
 
     // ==========================================================

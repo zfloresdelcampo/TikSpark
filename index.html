@@ -199,6 +199,9 @@
             <div class="nav-item" data-target="timer-section">
                 Timer
             </div>
+            <div class="nav-item" data-target="hotkeys-section">
+                Hotkeys
+            </div>
 
         </div>
         <!-- Botón Cerrar Sesión (Nuevo) -->
@@ -1423,8 +1426,14 @@
                     <div style="width: 120px;">
                         <div id="btn-select-vs" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: #ff4d4d; font-weight: bold; font-style: italic;">VS</span>
-                                <span style="color: #e0e0e0; font-size: 14px;">vs 6</span>
+                                
+                                <!-- ↓↓↓ AQUÍ ESTÁ EL CAMBIO ↓↓↓ -->
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Street_Fighter_VS_logo.png/600px-Street_Fighter_VS_logo.png" 
+                                     style="height: 20px; width: auto; object-fit: contain;" 
+                                     alt="VS Icon">
+                                <!-- ↑↑↑ FIN DEL CAMBIO ↑↑↑ -->
+
+                                <span style="color: #e0e0e0; font-size: 14px;">vs 1</span>
                             </div>
                             <i class="fas fa-chevron-down" style="color: #666;"></i>
                         </div>
@@ -1709,6 +1718,33 @@
                 </div>
             </div>
 
+        </div>
+
+        <div id="hotkeys-section" class="content-section">
+            <div class="section-container">
+                <h2>Hotkeys</h2>
+                
+                <div class="hotkeys-wrapper">
+                    <div class="hotkeys-info-box">
+                        <p>Establece atajos de teclado personalizados para ejecutar acciones de manera inmediata.</p>
+                    </div>
+
+                    <!-- Cabecera con el Switch de Activación -->
+                    <div class="hotkeys-header-row">
+                        <div class="toggle-container">
+                            <label for="hotkeys-global-toggle" style="color: #8A2BE2; font-weight: bold; margin-right: 10px;">Activar Hotkeys</label>
+                            <label class="switch">
+                                <input type="checkbox" id="hotkeys-global-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="color: #8A2BE2; font-weight: bold; margin-right: 135px;">Acciones</div> <!-- Título Morado -->
+                    </div>
+
+                    <!-- Aquí se generará la lista automáticamente -->
+                    <div id="hotkeys-list-container"></div>
+                </div>
+            </div>
         </div>
 
         <!-- SECCIONES DE JUEGOS INDIVIDUALES (VAN AFUERA DE minigames-section) -->

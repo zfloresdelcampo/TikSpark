@@ -1,6 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+
+    // 1. Enviar configuración al Main
+    registerGlobalHotkeys: (data) => ipcRenderer.invoke('register-global-hotkeys', data),
+
+    // 2. Recibir el aviso del Main cuando se presiona la tecla
+    onGlobalHotkeyTriggered: (callback) => ipcRenderer.on('global-hotkey-triggered', (_event, actionId) => callback(actionId)),
+
     // --- AGREGAR ESTA LÍNEA ---
     selectFolder: () => ipcRenderer.invoke('select-folder'),
     installMod: (data) => ipcRenderer.invoke('install-mod', data),

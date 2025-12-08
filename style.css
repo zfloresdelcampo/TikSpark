@@ -3935,3 +3935,59 @@ input[type=number]::-webkit-outer-spin-button {
     align-items: center;
     justify-content: center;
 }
+/* Contenedor de la fila de cabecera */
+.hotkeys-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+}
+
+/* Filas de cada tecla */
+.hotkey-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #111; /* Fondo oscuro fila */
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid #222;
+}
+
+/* Estilo de la tecla (Izquierda) */
+.key-display {
+    width: 180px;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+    /* Se eliminó font-family para usar la letra normal de la app */
+}
+
+/* Colores de las teclas (Texto) */
+.key-alt { color: #ffc107; }   /* Naranja */
+.key-shift { color: #ff4d4d; } /* Rojo */
+.key-ctrl { color: #00d2ff; }  /* Azul Cian */
+.key-combo { color: #e0e0e0; } /* Blanco */
+
+/* El Dropdown (Derecha) */
+.hotkey-select {
+    width: 300px;
+    background-color: #252526;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* --- SWITCH TOGGLE (Color Morado) --- */
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: #8A2BE2; } /* <--- AQUÍ ESTÁ EL MORADO */
+input:checked + .slider:before { transform: translateX(20px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }

@@ -1,6 +1,6 @@
 // --- START OF FILE main.js ---
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron'); // <-- Añade 'shell'
+const { app, BrowserWindow, ipcMain, dialog, shell, globalShortcut } = require('electron'); // <-- Añade 'shell'
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -931,13 +931,46 @@ function createWindow() {
     mainWindow.webContents.on('did-finish-load', () => { mainWindow.webContents.send('connection-status', 'Desconectado. Introduce un usuario.'); });
 }
 
+// --- GESTIÓN DE HOTKEYS GLOBALES (VERSIÓN SILENCIOSA) ---
+ipcMain.handle('register-global-hotkeys', (event, { config, enabled }) => {
+    // 1. Limpiar anteriores
+    globalShortcut.unregisterAll();
+
+    if (!enabled || !config) return;
+
+    // 2. Registrar cada tecla
+    for (const [accelerator, actionId] of Object.entries(config)) {
+        try {
+            // Traducción de teclas Web -> Electron
+            const electronKey = accelerator
+                .replace('ArrowUp', 'Up')
+                .replace('ArrowDown', 'Down')
+                .replace('ArrowLeft', 'Left')
+                .replace('ArrowRight', 'Right')
+                .replace('Control', 'Ctrl');
+
+            globalShortcut.register(electronKey, () => {
+                // Solo enviamos la señal, sin imprimir nada en consola
+                if (mainWindow) {
+                    mainWindow.webContents.send('global-hotkey-triggered', actionId);
+                }
+            });
+
+        } catch (err) {
+            // Este log lo dejamos solo por si hay un error grave de programación
+            console.error(`Error registrando ${accelerator}:`, err);
+        }
+    }
+});
+
 app.whenReady().then(createWindow);
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 // --- ESTE ES EL CÓDIGO NUEVO (COLOCADO CORRECTAMENTE FUERA) ---
 app.on('will-quit', () => {
-    if (serverInstance) {
-        serverInstance.close();
+    globalShortcut.unregisterAll(); // Limpia teclas
+    if (typeof serverInstance !== 'undefined' && serverInstance) {
+        serverInstance.close(); // Limpia servidor
         console.log('🛑 Servidor interno detenido.');
     }
 });
