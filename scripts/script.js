@@ -1407,6 +1407,13 @@ if (window.electronAPI) {
         
         // Sumar a la subasta AHORA (durante el combo)
         updateAuction(data);
+
+        // --- AGREGA ESTO: Actualizar Puntos de Gift VS Gift ---
+        if (typeof window.updateGvGScore === 'function') {
+            window.updateGvGScore(data);
+        }
+        // -----------------------------------------------------
+
     });
 
     // --- SOLUCIÓN JOIN INFINITO ---

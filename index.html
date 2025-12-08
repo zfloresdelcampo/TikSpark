@@ -1316,6 +1316,142 @@
 
                 </div>
             </div>
+
+            <!-- === NUEVA SECCIÓN: GIFT VS GIFT 1 === -->
+            <div class="overlay-card-container" id="card-gift-vs-gift">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Gift VS Gift 1 <i class="fab fa-tiktok" style="font-size: 0.8em; margin-left: 5px;"></i></h3>
+                </div>
+
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gvg-meta-input" value="9000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gvg-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion Win Left:</label>
+                        <select id="gvg-action-left-select">
+                            <option value="">Selecciona...</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion Win Right:</label>
+                        <select id="gvg-action-right-select">
+                            <option value="">Selecciona...</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gvg-active-check" checked>
+                    </div>
+                </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/gift-vs-gift1.html" readonly class="url-input" id="gvg-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gvg-copy-btn">Copiar URL</button>
+                        <!-- Botones con IDs nuevos -->
+                        <button class="action-btn icon-btn" id="btn-play-gvg" title="Iniciar/Play"><i class="fas fa-play"></i></button>
+                        <button class="action-btn icon-btn" id="btn-reset-gvg" title="Refrescar/Reset"><i class="fas fa-redo"></i></button>
+                        <button class="action-btn icon-btn" id="btn-stop-gvg" title="Detener"><i class="fas fa-stop"></i></button>
+                        
+                        <button class="action-btn personalize-btn"><i class="fas fa-cog"></i> Personalizar</button>
+                    </div>
+                </div>
+
+                <div class="subasta-controls-panel" style="margin-top: 15px; background: transparent; padding: 0; border: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                        
+                        <!-- PUNTOS IZQUIERDA -->
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="color: #e0e0e0; font-size: 14px;">Puntos Team Izquierdo:</label>
+                            <div style="display: flex; align-items: center; background: #181818; border: 1px solid #444; border-radius: 5px; padding: 3px;">
+                                <span style="color: #666; padding: 0 8px; font-size: 13px;">#</span>
+                                <!-- ID INPUT IZQUIERDA -->
+                                <input type="number" id="gvg-score-left" value="0" style="width: 50px; background: transparent; border: none; color: white; text-align: center;">
+                            </div>
+                            <!-- IDs BOTONES IZQUIERDA -->
+                            <button id="btn-add-left" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-plus"></i></button>
+                            <button id="btn-sub-left" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-minus"></i></button>
+                        </div>
+
+                        <!-- PUNTOS DERECHA -->
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="color: #e0e0e0; font-size: 14px;">Puntos Team Derecho:</label>
+                            <div style="display: flex; align-items: center; background: #181818; border: 1px solid #444; border-radius: 5px; padding: 3px;">
+                                <span style="color: #666; padding: 0 8px; font-size: 13px;">#</span>
+                                <!-- ID INPUT DERECHA -->
+                                <input type="number" id="gvg-score-right" value="0" style="width: 50px; background: transparent; border: none; color: white; text-align: center;">
+                            </div>
+                            <!-- IDs BOTONES DERECHA -->
+                            <button id="btn-add-right" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-plus"></i></button>
+                            <button id="btn-sub-right" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-minus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === NUEVA FILA DE BOTONES DE SELECCIÓN (FINAL) === -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 15px; margin: 20px 0;">
+
+                    <!-- BOTÓN IZQUIERDO (Gift Selector 1) -->
+                    <div style="flex: 1;">
+                        <div id="btn-select-gift-left" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <!-- Icono -->
+                                <img src="https://p19-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;">Rose</span>
+                                    <span style="color: #888; font-size: 11px;">1 Coins - ID:5655</span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN CENTRAL (VS Selector) -->
+                    <div style="width: 120px;">
+                        <div id="btn-select-vs" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #ff4d4d; font-weight: bold; font-style: italic;">VS</span>
+                                <span style="color: #e0e0e0; font-size: 14px;">vs 6</span>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN DERECHO (Gift Selector 2) -->
+                    <div style="flex: 1;">
+                        <div id="btn-select-gift-right" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <!-- Icono -->
+                                <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;">GG</span>
+                                    <span style="color: #888; font-size: 11px;">1 Coins - ID:6064</span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="goal-preview-box" style="min-height: 500px;">
+                    <div class="preview-iframe-wrapper">
+                        <iframe src="http://127.0.0.1:5500/gift-vs-gift1.html" class="gift-iframe-preview" scrolling="no"></iframe>
+                    </div>
+                </div>
+
+            </div>
+            
         </div>
 
         <div id="minigames-section" class="content-section">
@@ -2596,6 +2732,7 @@
     <script src="scripts/meta-win2.js"></script>
     <script src="scripts/subasta.js"></script>
     <script src="scripts/social-rotator.js"></script>
+    <script src="scripts/gift-vs-gift1.js"></script>
     <audio id="audio-player" style="display: none;"></audio>
     <input type="file" id="audio-file-input" accept=".mp3,.wav,.ogg" style="display: none;">
 </body>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gift VS Gift</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            /* 1. FONDO TRANSPARENTE PARA OBS */
+            background-color: transparent; 
+            font-family: 'Luckiest Guy', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 2. LA TARJETA NEGRA (EL RECTÁNGULO) */
+        .widget-card {
+            background-color: #000000; /* Fondo negro */
+            border-radius: 20px;       /* Bordes redondeados */
+            padding: 30px 50px;        /* Espacio adentro */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* Sombra para que se distinga del juego en OBS 
+            filter: drop-shadow(0 0 15px rgba(0,0,0,0.8)); */
+            width: 700px;
+            min-height: 400px;
+        }
+
+        .battle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px;
+        }
+
+        .gift-img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            /* Un pequeño brillo a la imagen */
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.1));
+        }
+
+        .vs-icon {
+            width: 150px;
+            margin: 0 20px;
+        }
+
+        .score {
+            font-size: 80px;
+            font-weight: 900;
+            color: white;
+            margin-top: 10px;
+            -webkit-text-stroke: 1.5px black;
+            paint-order: stroke fill;
+        }
+
+        .status-text {
+            margin-top: 20px;
+            font-size: 50px;
+            font-weight: 800;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            -webkit-text-stroke: 1.5px black;
+            paint-order: stroke fill;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ESTA ES LA TARJETA QUE SE VERÁ -->
+    <div class="widget-card">
+        
+        <div class="battle-row">
+            <!-- IZQUIERDA -->
+            <div class="team">
+                <!-- Usamos el link directo de la Rosa de TikTok -->
+                <img src="https://p19-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png" 
+                    class="gift-img" 
+                    id="img-left" 
+                    onload="this.style.display='block'" 
+                    onerror="this.style.display='none'">
+                <div class="score" id="score-left">0</div>
+            </div>
+
+            <!-- CENTRO -->
+            <!-- Usamos un link de un VS png genérico o el que tengas, si no tienes, usa este -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Street_Fighter_VS_logo.png/600px-Street_Fighter_VS_logo.png" 
+                class="vs-icon" 
+                id="img-vs">
+
+            <!-- DERECHA -->
+            <div class="team">
+                <!-- Usamos el link directo del GG de TikTok -->
+                <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp" 
+                    class="gift-img" 
+                    id="img-right" 
+                    onload="this.style.display='block'" 
+                    onerror="this.style.display='none'">
+                <div class="score" id="score-right">0</div>
+            </div>
+        </div>
+
+        <div class="status-text" id="status-text">EMPATE</div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const imgLeft = document.getElementById('img-left');
+        const imgRight = document.getElementById('img-right');
+        const scoreLeft = document.getElementById('score-left');
+        const scoreRight = document.getElementById('score-right');
+        const statusText = document.getElementById('status-text');
+
+        // FUNCIÓN ÚNICA PARA ACTUALIZAR TODO
+        function updateWidget(data) {
+            if (!data) return;
+
+            // 1. Actualizar Puntos
+            let s1 = parseInt(data.scoreLeft || 0); // Izquierda
+            let s2 = parseInt(data.scoreRight || 0); // Derecha
+            scoreLeft.textContent = s1;
+            scoreRight.textContent = s2;
+
+            // 2. Actualizar Imágenes
+            if (data.imgLeft) imgLeft.src = data.imgLeft;
+            if (data.imgRight) imgRight.src = data.imgRight;
+
+            // 3. Lógica de Texto "A Favor / En Contra"
+            const diff = Math.abs(s2 - s1); // Diferencia absoluta (siempre positiva)
+
+            if (s2 > s1) {
+                // GANA DERECHA
+                statusText.textContent = `${diff} a favor c:`;
+                statusText.style.color = "#00FF00"; // Verde (opcional, para indicar positivo)
+            } else if (s1 > s2) {
+                // GANA IZQUIERDA
+                statusText.textContent = `${diff} en contra :c`;
+                statusText.style.color = "#FF0000"; // Rojo (opcional, para indicar negativo)
+            } else {
+                // EMPATE
+                statusText.textContent = "EMPATE";
+                statusText.style.color = "white";
+            }
+        }
+
+        socket.on('init-data', (fullDb) => {
+            if (fullDb && fullDb.giftVsGift1) updateWidget(fullDb.giftVsGift1);
+        });
+
+        socket.on('widget-update', (msg) => {
+            if (msg.widgetId === 'giftVsGift1') updateWidget(msg.data);
+        });
+    </script>
+
+</body>
+</html>
