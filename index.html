@@ -196,6 +196,9 @@
             <div class="nav-item" data-target="minigames-section">
                 Mini-Juegos
             </div>
+            <div class="nav-item" data-target="timer-section">
+                Timer
+            </div>
 
         </div>
         <!-- Botón Cerrar Sesión (Nuevo) -->
@@ -1531,6 +1534,183 @@
             </div>
         </div>
 
+        <div id="timer-section" class="content-section">
+            
+            <!-- CABECERA E INFORMACIÓN -->
+            <div class="section-container">
+                <h2>Timer</h2>
+                <div class="info-box">
+                    <p>
+                        Aquí puedes crear una cuenta regresiva que tus espectadores pueden controlar.<br>
+                        Los espectadores pueden extender o acortar la cuenta regresiva mediante interacciones.
+                    </p>
+                </div>
+            </div>
+
+            <!-- TARJETA 1: OVERLAY (PREVIEW) -->
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Overlay</h3>
+                </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/timer.html" readonly class="url-input" id="timer-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="btn-copy-timer-url">Copiar URL</button>
+                        <button class="action-btn personalize-btn" id="btn-config-timer-visual">
+                            <i class="fas fa-cog"></i> Personalizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overlay-content-layout">
+                    <!-- PREVIEW VISUAL CON IFRAME -->
+                    <div class="overlay-preview" style="background: #111; height: 180px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #333; overflow: hidden;">
+                        <!-- IFRAME QUE CARGA LA PÁGINA REAL -->
+                        <iframe 
+                            src="http://127.0.0.1:5500/timer.html" 
+                            style="width: 100%; height: 100%; border: none; pointer-events: none; transform: scale(0.8);">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETA 2: CONTROL -->
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Control</h3>
+                </div>
+                
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; padding: 10px 0;">
+                    <!-- Botones Principales -->
+                    <div class="button-group" style="display: flex; gap: 5px;">
+                        <button id="btn-timer-start" class="btn" style="width: auto; padding: 0 20px;"><i class="fas fa-play"></i> Iniciar</button>
+                        <button id="btn-timer-pause" class="btn secondary-btn" style="width: auto; padding: 0 20px;"><i class="fas fa-pause"></i> Pausa</button>
+                        <button id="btn-timer-restart" class="btn secondary-btn" style="width: auto; padding: 0 20px;"><i class="fas fa-redo"></i> Reiniciar</button>
+                    </div>
+
+                    <!-- Añadir tiempo manual -->
+                    <div style="display: flex; align-items: center; gap: 5px; margin-left: auto;">
+                        <input type="number" id="timer-manual-input" value="60" style="width: 80px; text-align: center;">
+                        <span style="color: #888; font-size: 14px;">Segundos</span>
+                        <button id="btn-timer-add" class="action-btn icon-btn"><i class="fas fa-plus"></i></button>
+                        <button id="btn-timer-sub" class="action-btn icon-btn"><i class="fas fa-minus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETA 3: CONFIGURACIÓN -->
+            <div class="overlay-card-container">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Configuración</h3>
+                </div>
+
+                <div class="config-section" style="display: flex; flex-direction: column; gap: 15px;">
+                    
+                    <!-- Configuración Básica -->
+                    <div class="config-item inline-inputs" style="justify-content: space-between;">
+                        <label>Valor inicial predeterminado</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="timer-cfg-start" value="300">
+                            <span>Segundos</span>
+                        </div>
+                    </div>
+
+                    <div class="config-item inline-inputs" style="justify-content: space-between;">
+                        <label>Acción al terminar</label>
+                        <select id="timer-cfg-action" style="width: 200px;">
+                            <option value="">Selecciona...</option>
+                            <!-- Se llenará con JS igual que las metas -->
+                        </select>
+                    </div>
+
+                    <div class="config-item checkbox-row">
+                        <input type="checkbox" id="timer-cfg-cap-enable">
+                        <label for="timer-cfg-cap-enable">¿Establecer Tiempo Máximo?</label>
+                    </div>
+
+                    <div class="config-item inline-inputs" style="justify-content: space-between;">
+                        <label>Valor Maximo Extensible</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="timer-cfg-cap-value" value="180">
+                            <span>Minutos</span>
+                        </div>
+                    </div>
+
+                    <div class="config-item inline-inputs" style="justify-content: space-between;">
+                        <label>Tiempo Extensible (Hotkeys)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="timer-cfg-hotkey" value="10">
+                            <span>Segundos</span>
+                        </div>
+                    </div>
+
+                    <!-- Caja Informativa Interacciones -->
+                    <div class="info-box" style="margin: 10px 0; background: #252526; border: 1px solid #444;">
+                        <p style="font-size: 13px; color: #ccc; margin: 0;">
+                            Define cuántos segundos aumenta o disminuye el temporizador para cada tipo de interacción.<br>
+                            Utiliza valores positivos para aumentar y negativos (ej. -5) para disminuir.
+                        </p>
+                    </div>
+
+                    <!-- Configuración Interacciones -->
+                    <div class="config-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                        
+                        <div class="config-item inline-inputs" style="justify-content: space-between;">
+                            <label>Por moneda (Gift)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="timer-add-coins" value="0">
+                                <span>Segundos</span>
+                            </div>
+                        </div>
+
+                        <div class="config-item inline-inputs" style="justify-content: space-between;">
+                            <label>Por suscribirse</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="timer-add-sub" value="0">
+                                <span>Segundos</span>
+                            </div>
+                        </div>
+
+                        <div class="config-item inline-inputs" style="justify-content: space-between;">
+                            <label>Por Follow</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="timer-add-follow" value="0">
+                                <span>Segundos</span>
+                            </div>
+                        </div>
+
+                        <div class="config-item inline-inputs" style="justify-content: space-between;">
+                            <label>Por Share</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="timer-add-share" value="0">
+                                <span>Segundos</span>
+                            </div>
+                        </div>
+
+                        <div class="config-item inline-inputs" style="justify-content: space-between;">
+                            <label>Por Like</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="timer-add-like" value="0" step="0.01">
+                                <span>Segundos</span>
+                            </div>
+                        </div>
+
+                        <div class="config-item inline-inputs" style="justify-content: space-between;">
+                            <label>Por Mensaje de Chat</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="timer-add-chat" value="0">
+                                <span>Segundos</span>
+                            </div>
+                        </div>
+
+                    </div> <!-- Fin Grid Interacciones -->
+
+                </div>
+            </div>
+
+        </div>
+
         <!-- SECCIONES DE JUEGOS INDIVIDUALES (VAN AFUERA DE minigames-section) -->
 
         <div id="section-cubo-tnt" class="content-section">
@@ -2184,6 +2364,8 @@
                                 <select id="extra-action-widget-selector">
                                     <option value="metaWin1" selected>Contador Win 1</option>
                                     <option value="metaWin2">Contador Win 2</option>
+                                    <option value="giftVsGift1">Gift VS Gift 1</option>
+                                    <option value="timer">Timer</option>
                                 </select>
                             </div>
 
@@ -2733,6 +2915,7 @@
     <script src="scripts/subasta.js"></script>
     <script src="scripts/social-rotator.js"></script>
     <script src="scripts/gift-vs-gift1.js"></script>
+    <script src="scripts/timer.js"></script>
     <audio id="audio-player" style="display: none;"></audio>
     <input type="file" id="audio-file-input" accept=".mp3,.wav,.ogg" style="display: none;">
 </body>

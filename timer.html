@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Timer Overlay</title>
+    
+    <!-- Fuente Luckiest Guy -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: transparent; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .timer-container {
+            background-color: #272727bb; /* ANTES: #1a1a1a*/
+            padding: 20px 40px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #timer-display {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 90px;
+            color: #ffffff;
+            letter-spacing: 4px;
+            line-height: 1;
+            text-shadow: 2px 2px 0px #000000;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Animaciones */
+        .time-added { animation: pulse-green 0.5s ease-in-out; }
+        .time-removed { animation: pulse-red 0.5s ease-in-out; }
+
+        @keyframes pulse-green {
+            0%, 100% { color: white; transform: scale(1); }
+            50% { color: #00ff00; transform: scale(1.1); }
+        }
+        @keyframes pulse-red {
+            0%, 100% { color: white; transform: scale(1); }
+            50% { color: #ff0000; transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="timer-container">
+        <span id="timer-display">05:00</span>
+    </div>
+
+    <!-- AQUÍ ESTÁ LA CLAVE: EL CEREBRO DEL OVERLAY -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const display = document.getElementById('timer-display');
+        
+        let countdownInterval = null;
+        let totalSeconds = 300; // 5 minutos por defecto
+
+        // Función para pintar el tiempo
+        function updateDisplay() {
+            if (totalSeconds < 0) totalSeconds = 0;
+            
+            const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const s = (totalSeconds % 60).toString().padStart(2, '0');
+            display.textContent = `${m}:${s}`;
+        }
+
+        // Función para animar colores
+        function triggerAnimation(className) {
+            display.classList.remove('time-added', 'time-removed');
+            void display.offsetWidth; // Reinicia la animación
+            display.classList.add(className);
+        }
+
+        // ESCUCHAR AL SERVIDOR (Igual que en gift-vs-gift1.html)
+        socket.on('widget-update', (msg) => {
+            // Filtramos para que solo haga caso a mensajes del 'timer'
+            if (msg.widgetId === 'timer') {
+                const command = msg.data.command;
+                const value = msg.data.value;
+
+                console.log("Timer recibió orden:", command, value);
+
+                if (command === 'start') {
+                    if (!countdownInterval) {
+                        countdownInterval = setInterval(() => {
+                            if (totalSeconds > 0) {
+                                totalSeconds--;
+                                updateDisplay();
+                            } else {
+                                clearInterval(countdownInterval);
+                                countdownInterval = null;
+                                // Aquí puedes poner un sonido de final
+                            }
+                        }, 1000);
+                    }
+                }
+
+                if (command === 'pause') {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+
+                if (command === 'restart') {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                    totalSeconds = parseInt(value) || 300;
+                    updateDisplay();
+                }
+
+                if (command === 'add') {
+                    totalSeconds += parseInt(value) || 0;
+                    updateDisplay();
+                    triggerAnimation('time-added');
+                }
+
+                if (command === 'sub') {
+                    totalSeconds -= parseInt(value) || 0;
+                    updateDisplay();
+                    triggerAnimation('time-removed');
+                }
+            }
+        });
+
+        // Pintar el estado inicial
+        updateDisplay();
+    </script>
+</body>
+</html>

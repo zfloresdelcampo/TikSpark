@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (loadedData) {
                 currentData = { ...currentData, ...loadedData };
                 updateDashboardInputs();
+                updateModalInputs();
             }
             if (window.electronAPI.onWidgetUpdate) {
                 window.electronAPI.onWidgetUpdate((evt) => {

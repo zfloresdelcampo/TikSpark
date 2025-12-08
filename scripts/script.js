@@ -1336,6 +1336,7 @@ if (window.electronAPI) {
             // Disparamos el evento específico de tipo 'emote'
             processTikTokEvent('emote', data);
         }
+        updateTimerFromEvent('chat');
     });
 
     // Listener de Regalos (CORREGIDO FINAL)
@@ -1414,6 +1415,8 @@ if (window.electronAPI) {
         }
         // -----------------------------------------------------
 
+        updateTimerFromEvent('coins', data.diamondCount);
+
     });
 
     // --- SOLUCIÓN JOIN INFINITO ---
@@ -1444,6 +1447,7 @@ if (window.electronAPI) {
     window.electronAPI.onShare(data => {
         addLogEntry(`<i class="fas fa-share-square" style="color: #38c172;"></i> <b>${data.nickname}</b> ha compartido el directo.`, 'share');
         processTikTokEvent('share', data);
+        updateTimerFromEvent('share');
     });
 
     // === PEGA ESTO JUSTO AQUÍ DEBAJO ===
@@ -2729,12 +2733,6 @@ if (window.electronAPI) {
 
     document.getElementById('action-webhook').addEventListener('change', (e) => {
         document.getElementById('webhook-config').classList.toggle('open', e.target.checked);
-        if (e.target.checked) {
-            document.getElementById('action-extra').checked = false;
-            document.getElementById('extra-actions-config').classList.remove('open');
-            document.getElementById('action-simulate-keystrokes').checked = false; // ADDED
-            document.getElementById('keystroke-config').classList.remove('open'); // ADDED
-        }
     });
 
     const actionExtraCheckbox = document.getElementById('action-extra');
@@ -2745,12 +2743,6 @@ if (window.electronAPI) {
 
     actionExtraCheckbox.addEventListener('change', (e) => {
         extraActionsConfig.classList.toggle('open', e.target.checked);
-        if (e.target.checked) {
-            document.getElementById('action-webhook').checked = false;
-            document.getElementById('webhook-config').classList.remove('open');
-            document.getElementById('action-simulate-keystrokes').checked = false; // ADDED
-            document.getElementById('keystroke-config').classList.remove('open'); // ADDED
-        }
     });
 
     operationSelector.addEventListener('change', (e) => {
@@ -2760,6 +2752,62 @@ if (window.electronAPI) {
         if (quantityGroup) quantityGroup.style.display = e.target.value === 'reset' ? 'none' : 'flex';
     });
     
+    // --- NUEVO: Lógica Dinámica para cambiar opciones según el Widget ---
+    const widgetSelector = document.getElementById('extra-action-widget-selector');
+    
+    widgetSelector.addEventListener('change', (e) => {
+        const widget = e.target.value;
+        let prefix = "";
+        let options = [];
+
+        // 1. Definir qué opciones mostrar
+        if (widget === 'metaWin1') {
+            prefix = "1 Contador Win";
+            options = [
+                { val: 'sumar', text: 'Sumar', icon: 'images/sumar_icon.png' },
+                { val: 'quitar', text: 'Quitar', icon: 'images/quitar_icon.png' },
+                { val: 'reset', text: 'Reset', icon: 'images/reset_icon.png' }
+            ];
+        } else if (widget === 'metaWin2') {
+            prefix = "2 Contador Win";
+            options = [
+                { val: 'sumar', text: 'Sumar', icon: 'images/sumar_icon.png' },
+                { val: 'quitar', text: 'Quitar', icon: 'images/quitar_icon.png' },
+                { val: 'reset', text: 'Reset', icon: 'images/reset_icon.png' }
+            ];
+        } else if (widget === 'giftVsGift1') {
+            prefix = "1 Gift vs Gift";
+            options = [
+                { val: 'sumar_left', text: 'Sumar Izquierda', icon: 'images/sumar_icon.png' },
+                { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/sumar_icon.png' },
+                { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/reset_icon.png' }
+            ];
+        } else if (widget === 'timer') {
+            prefix = "Timer";
+            options = [
+                { val: 'add', text: 'Sumar Tiempo', icon: 'images/sumar_icon.png' },
+                { val: 'sub', text: 'Quitar Tiempo', icon: 'images/quitar_icon.png' },
+                { val: 'restart', text: 'Reset (Reiniciar)', icon: 'images/reset_icon.png' },
+                { val: 'start', text: 'Iniciar (Play)', icon: 'images/play_icon.png' }, // Opcional pero útil
+                { val: 'pause', text: 'Pausar', icon: 'images/pause_icon.png' }      // Opcional pero útil
+            ];
+        }
+
+        // 2. Borrar las opciones viejas y poner las nuevas
+        operationSelector.innerHTML = '';
+        
+        options.forEach(opt => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt.val;
+            optionEl.textContent = `${prefix} - ${opt.text}`; 
+            optionEl.setAttribute('data-icon', opt.icon);
+            operationSelector.appendChild(optionEl);
+        });
+
+        // 3. Simular un cambio para que se actualice el icono visual
+        operationSelector.dispatchEvent(new Event('change'));
+    });
+
     // Keystroke checkbox listener is now in SECCIÓN 5
 
     window.playAction = (id, eventData = {}) => {
@@ -2819,10 +2867,18 @@ if (window.electronAPI) {
                 const cb = document.getElementById('action-extra');
                 cb.checked = true;
                 cb.dispatchEvent(new Event('change'));
-                document.getElementById('extra-action-widget-selector').value = action.extraAction.widgetId;
+                
+                // 1. Poner el Widget correcto (Win1, Win2, o GvG)
+                const wSelector = document.getElementById('extra-action-widget-selector');
+                wSelector.value = action.extraAction.widgetId;
+                // ¡IMPORTANTE! Forzamos la actualización de las opciones de texto
+                wSelector.dispatchEvent(new Event('change'));
+
+                // 2. Ahora sí ponemos la operación
                 const opSelector = document.getElementById('extra-action-operation-selector');
                 opSelector.value = action.extraAction.operation;
                 opSelector.dispatchEvent(new Event('change'));
+                
                 document.getElementById('extra-action-quantity').value = action.extraAction.quantity;
             }
 
@@ -3534,17 +3590,57 @@ if (window.electronAPI) {
         const { widgetId, operation, quantity } = extraAction;
         if (!window.electronAPI) return;
 
-        let currentData = await window.electronAPI.getWidgetData(widgetId);
-        if (!currentData) currentData = { conteo: 0, meta: 5 };
-        if (typeof currentData.conteo !== 'number') currentData.conteo = 0;
+        // --- OPCIÓN A: GIFT VS GIFT 1 ---
+        if (widgetId === 'giftVsGift1') {
+            let gvgData = await window.electronAPI.getWidgetData('giftVsGift1');
+            // Si no existe data previa, iniciamos en 0
+            if (!gvgData) gvgData = { scoreLeft: 0, scoreRight: 0 };
 
-        const qty = parseInt(quantity) || 1;
-        switch (operation) {
-            case 'sumar': currentData.conteo += qty; break;
-            case 'quitar': currentData.conteo -= qty; break;
-            case 'reset': currentData.conteo = 0; break;
+            const qty = parseInt(quantity) || 1;
+
+            if (operation === 'sumar_left') {
+                gvgData.scoreLeft = (gvgData.scoreLeft || 0) + qty;
+            } else if (operation === 'sumar_right') {
+                gvgData.scoreRight = (gvgData.scoreRight || 0) + qty;
+            } else if (operation === 'reset') {
+                gvgData.scoreLeft = 0;
+                gvgData.scoreRight = 0;
+            }
+            
+            // Actualizamos el widget y guardamos
+            await window.electronAPI.updateWidget('giftVsGift1', gvgData);
+            // Truco: Guardamos en localStorage para que la pantalla principal se entere si está abierta
+            localStorage.setItem('tikspark_gvg1_data', JSON.stringify(gvgData));
         }
-        await window.electronAPI.updateWidget(widgetId, currentData);
+        
+        // --- OPCIÓN B: CONTADORES WIN (1 y 2) ---
+        // Cambiamos 'else' por 'else if' para ser específicos
+        else if (widgetId === 'metaWin1' || widgetId === 'metaWin2') {
+            let currentData = await window.electronAPI.getWidgetData(widgetId);
+            if (!currentData) currentData = { conteo: 0, meta: 5 };
+            if (typeof currentData.conteo !== 'number') currentData.conteo = 0;
+
+            const qty = parseInt(quantity) || 1;
+            switch (operation) {
+                case 'sumar': currentData.conteo += qty; break;
+                case 'quitar': currentData.conteo -= qty; break;
+                case 'reset': currentData.conteo = 0; break;
+            }
+            await window.electronAPI.updateWidget(widgetId, currentData);
+        }
+
+        // --- OPCIÓN C: TIMER (ESTO ES LO NUEVO) ---
+        else if (widgetId === 'timer') {
+            // En el timer, 'operation' trae el comando (add, sub, start...) 
+            // y 'quantity' trae el tiempo en segundos
+            const cmd = operation;
+            const val = parseInt(quantity) || 0;
+
+            await window.electronAPI.updateWidget('timer', {
+                command: cmd,
+                value: val
+            });
+        }
     }
 
     // --- EL MOTOR DE EJECUCIÓN PRINCIPAL ---
@@ -4340,6 +4436,7 @@ if (window.electronAPI) {
             
             // Aquí enviamos AMBOS datos. El script decidirá cuál usar.
             addLikesToGoal(data.likeCount, data.totalLikeCount); 
+            updateTimerFromEvent('like', data.likeCount);
         });
     }
 
@@ -4501,6 +4598,7 @@ if (window.electronAPI) {
         
         // Sumar a la meta (1 follow = 1 punto)
         addFollowsToGoal(1);
+        updateTimerFromEvent('follow');
     });
 
     // 6. Listeners de la Interfaz (Follows)
@@ -4764,6 +4862,40 @@ if (window.electronAPI) {
             }
         });
     });
+
+    // --- FUNCIÓN GLOBAL PARA ACTUALIZAR EL TIMER DESDE EVENTOS ---
+    function updateTimerFromEvent(type, multiplier = 1) {
+        // 1. Leer configuración guardada
+        const rawConfig = localStorage.getItem('tikspark_timer_config');
+        if (!rawConfig) return;
+        const config = JSON.parse(rawConfig);
+
+        let secondsToAdd = 0;
+
+        // 2. Determinar valor base según el tipo
+        switch (type) {
+            case 'coins': secondsToAdd = (config.valCoins || 0) * multiplier; break; // AQUI SE HACE LA MULTIPLICACION (Ej: 1000 monedas * 5 seg)
+            case 'sub': secondsToAdd = (config.valSub || 0) * multiplier; break;
+            case 'follow': secondsToAdd = (config.valFollow || 0); break;
+            case 'share': secondsToAdd = (config.valShare || 0); break;
+            case 'like': secondsToAdd = (config.valLike || 0) * multiplier; break;
+            case 'chat': secondsToAdd = (config.valChat || 0); break;
+        }
+
+        // 3. Si el valor es 0, no hacemos nada
+        if (secondsToAdd === 0) return;
+
+        // 4. Enviar comando (Add o Sub dependiendo del signo)
+        const command = secondsToAdd > 0 ? 'add' : 'sub';
+        const finalValue = Math.abs(secondsToAdd); // Enviamos siempre positivo, el comando decide el color
+
+        if (window.electronAPI) {
+            window.electronAPI.updateWidget('timer', {
+                command: command,
+                value: Math.round(finalValue) // Redondeamos para evitar decimales en el contador
+            });
+        }
+    }
 
     // ==========================================================
     // INICIALIZACIÓN FINAL

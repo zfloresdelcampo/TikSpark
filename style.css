@@ -3781,3 +3781,157 @@ button:disabled {
     background: transparent !important;
     z-index: -1;
 }
+/* =========================================================
+   ESTILOS TIMER: VERSIÓN FINAL (FLECHAS ACTIVAS + ESTILO PRO)
+   ========================================================= */
+
+/* 1. RESTAURAR FLECHAS (SPINNERS) */
+/* La referencia las tiene, así que las dejamos visibles y las estilizamos si es posible */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: auto !important;
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* 2. CONTENEDOR DEL INPUT COMPUESTO */
+.input-with-unit {
+    display: flex;
+    align-items: center;
+    background-color: #181818; /* Gris oscuro, no negro puro */
+    border: 1px solid #444;    /* Borde sutil */
+    border-radius: 4px;
+    width: 160px;              /* Ancho suficiente para flechas y texto */
+    height: 35px;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.input-with-unit:focus-within {
+    border-color: #8A2BE2; /* Morado TikSpark */
+    box-shadow: 0 0 0 1px rgba(138, 43, 226, 0.5);
+}
+
+/* 3. EL CAMPO DE NÚMERO */
+.input-with-unit input {
+    flex: 1; /* Ocupa el espacio disponible */
+    background: transparent;
+    border: none;
+    color: #e0e0e0;
+    padding-left: 10px;
+    padding-right: 5px; /* Espacio para no pegar con las flechas */
+    font-size: 13px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 600;
+    outline: none;
+    height: 100%;
+    /* Alineamos a la izquierda para dejar espacio a las flechas a la derecha */
+    text-align: left; 
+}
+
+/* 4. LA ETIQUETA DE UNIDAD (Segundos/Minutos) */
+.input-with-unit span {
+    background-color: #252526; /* Un tono más claro para diferenciar */
+    color: #999;
+    font-size: 11px;
+    padding: 0 12px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #444;
+    user-select: none;
+    min-width: 65px;
+}
+
+/* 5. ESTILO PARA EL SELECT (Acción al terminar) - Igual que los demás */
+#timer-cfg-action {
+    background-color: #181818;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0 10px;
+    height: 35px;
+    width: 200px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    appearance: none; /* Quitamos flecha nativa para poner una personalizada si quisieras, pero por ahora nativa oscura */
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23999" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+#timer-cfg-action:focus {
+    border-color: #8A2BE2;
+}
+
+/* Opciones del select */
+#timer-cfg-action option {
+    background-color: #181818;
+    color: white;
+    padding: 10px;
+}
+
+/* 6. CAJA DE CONFIGURACIÓN */
+.config-grid {
+    background-color: #1e1e1e; /* Gris base, no negro */
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 20px;
+    margin-top: 10px;
+}
+
+/* 7. FILAS ALINEADAS */
+.config-item.inline-inputs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.config-item.inline-inputs:last-child {
+    border-bottom: none;
+}
+
+.config-item label {
+    color: #ccc;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 8. INPUT MANUAL EN LA BARRA DE CONTROL */
+#timer-manual-input {
+    background-color: #181818;
+    border: 1px solid #444;
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    height: 30px;
+    outline: none;
+    font-weight: bold;
+}
+#timer-manual-input:focus {
+    border-color: #8A2BE2;
+}
+
+/* 9. PREVIEW */
+#timer-preview-display {
+    font-family: 'Consolas', monospace;
+    font-size: 55px;
+    font-weight: bold;
+    color: #f0f0f0;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(138, 43, 226, 0.2); /* Sombra morada muy sutil */
+}
+/* Botones de Control (Iniciar, Pausa, Reiniciar) y los de (+ / -) */
+#timer-section .button-group button,
+#timer-section .icon-btn {
+    height: 45px !important;
+    font-size: 16px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
