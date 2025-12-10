@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Memoria de combos (No se guarda en localStorage para evitar errores con combos viejos)
     let comboTracker = {}; 
 
-    // --- CARGAR DATOS (Persistencia) ---
+    // --- CARGAR DATOS (Persistencia LocalStorage) ---
     function loadSavedState() {
         const saved = localStorage.getItem('tikspark_gvg1_data');
         if (saved) {
@@ -43,15 +43,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fusionar lo guardado con el estado actual
                 gvgState = { ...gvgState, ...parsed };
                 
-                // Actualizar inputs visuales
-                if(inputLeft) inputLeft.value = gvgState.scoreLeft;
-                if(inputRight) inputRight.value = gvgState.scoreRight;
+                // CORRECCIÓN 1: Al iniciar la app, forzamos los inputs a 0 siempre.
+                if(inputLeft) inputLeft.value = 0;
+                if(inputRight) inputRight.value = 0;
 
                 // Actualizar botones de regalos
                 updateButtonVisual('left', gvgState.left);
                 updateButtonVisual('right', gvgState.right);
                 
                 console.log("[GvG] Datos restaurados.");
+            } catch (e) { console.error(e); }
+        }
+    }
+
+    // --- CORRECCIÓN 3: CARGAR DATOS REALES (Corrige el error de Thumbs Up vs GG) ---
+    async function loadFromBackend() {
+        if (window.electronAPI) {
+            try {
+                const backendData = await window.electronAPI.getWidgetData('giftVsGift1');
+                if (backendData) {
+                    // Si la base de datos tiene info distinta, la usamos (ej: GG en vez de Thumbs Up)
+                    gvgState = { ...gvgState, ...backendData };
+                    
+                    // Actualizamos visualmente los botones de nuevo con la data real
+                    updateButtonVisual('left', gvgState.left);
+                    updateButtonVisual('right', gvgState.right);
+                    
+                    // Guardamos la corrección en local
+                    saveState();
+                    syncWidget();
+                }
             } catch (e) { console.error(e); }
         }
     }
@@ -88,7 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- SINCRONIZAR CON OBS ---
     async function syncWidget() {
         if(window.electronAPI) {
+            // Enviamos el estado completo + las imágenes planas para el HTML
             const dataToSend = {
+                ...gvgState, 
                 imgLeft: gvgState.left.img,
                 imgRight: gvgState.right.img,
                 scoreLeft: gvgState.scoreLeft,
@@ -115,12 +138,13 @@ document.addEventListener('DOMContentLoaded', () => {
             gvgState.scoreRight = 0;
             comboTracker = {}; // Borrar memoria de combos para evitar errores matemáticos
             
-            if(inputLeft) inputLeft.value = 0;
-            if(inputRight) inputRight.value = 0;
+            // CORRECCIÓN 2: NO reseteamos los inputs a 0 aquí. 
+            // Se quedan con el valor que el usuario puso (ej: 20).
+            // if(inputLeft) inputLeft.value = 0;  <-- ELIMINADO
+            // if(inputRight) inputRight.value = 0; <-- ELIMINADO
 
             saveState(); // Guardar el reset
             syncWidget();
-            // showLocalToast("Reset"); // Comentado para que sea silencioso
         });
     }
 
@@ -171,8 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     window.updateGvGScore = function(giftData) {
         // MEJORA 1: Usar groupId si existe para diferenciar combos.
-        // Si mandas 1 rosa, y luego un pack de 5, tienen groupId distinto, 
-        // así que se tratan como nuevos y no se restan.
         let uniqueComboId = 'no_group';
         if (giftData.groupId) uniqueComboId = giftData.groupId;
         
@@ -181,9 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentCount = parseInt(giftData.repeatCount) || 1;
         let previousCount = comboTracker[comboKey] || 0;
 
-        // MEJORA 2: Condición <= para capturar spam de clicks individuales (1, 1, 1...)
-        // Si el conteo actual es menor o IGUAL al anterior, asumimos que es un evento nuevo
-        // o un reinicio de combo, por lo que reseteamos la base a 0.
+        // MEJORA 2: Condición <= para capturar spam de clicks individuales
         if (currentCount <= previousCount) {
             previousCount = 0; 
         }
@@ -317,9 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INICIO ---
     loadSavedState();
     
-    setTimeout(async () => {
-        if(window.electronAPI) {
-            syncWidget();
-        }
-    }, 1500);
+    // Forzar lectura de la base de datos un momento después para corregir posibles errores de caché (Thumbs Up)
+    setTimeout(() => {
+        loadFromBackend();
+    }, 500);
 });
