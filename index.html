@@ -431,12 +431,17 @@
                     </div>
                 </div>
                 <div class="list-view-header action-header">
-                    <input type="checkbox" class="header-checkbox">
-                    <div></div>
-                    <div>Nombre ↕</div>
-                    <div>Pantalla ↕</div>
-                    <div>Duración (seg) ↕</div>
-                    <div>Descripción ↕</div>
+                    <div class="chk-container">
+                        <input type="checkbox" class="header-checkbox custom-chk" onchange="toggleAllSelection('actions', this.checked)">
+                    </div>
+                    
+                    <div></div> <!-- Iconos -->
+                    <!-- CORRECCIÓN 1: 'name' está bien -->
+                    <div style="cursor:pointer;" onclick="sortList('actions', 'name')">Nombre ↕</div>
+                    <!-- CORRECCIÓN 2: Cambiado 'screen' por 'queue' que es como se llama la variable en JS -->
+                    <div style="cursor:pointer;" onclick="sortList('actions', 'queue')">Pantalla ↕</div>
+                    <div style="cursor:pointer;" onclick="sortList('actions', 'duration')">Duración ↕</div>
+                    <div style="cursor:pointer;" onclick="sortList('actions', 'description')">Descripción ↕</div>
                 </div>
                 <div id="actions-list-container"></div>
                 <div class="list-view-pagination"></div>
@@ -456,13 +461,23 @@
                     </div>
                 </div>
                 <div class="list-view-header event-header">
-                    <input type="checkbox" class="header-checkbox">
-                    <div>All</div>
-                    <div>Activo ↕</div>
-                    <div>Type ↕</div>
-                    <div>Usuario ↕</div>
-                    <div>Trigger ↕</div>
-                    <div>Acciones ↕</div>
+                    <div class="chk-container">
+                        <input type="checkbox" class="header-checkbox custom-chk" onchange="toggleAllSelection('events', this.checked)">
+                    </div>
+
+                    <div>All</div> <!-- Iconos -->
+                    
+                    <!-- CORRECCIÓN 3: Agregado onclick para 'enabled' y cursor -->
+                    <div style="cursor:pointer;" onclick="sortList('events', 'enabled')">Activo ↕</div>
+                    
+                    <!-- CORRECCIÓN 4: Quitadas las flechas de Type (es solo un icono fijo) -->
+                    <div>Type</div>
+                    
+                    <div style="cursor:pointer;" onclick="sortList('events', 'who')">Usuario ↕</div>
+                    <div style="cursor:pointer;" onclick="sortList('events', 'why')">Trigger ↕</div>
+                    
+                    <!-- CORRECCIÓN 5: Quitadas las flechas de Acciones (es texto generado dinámicamente, no se puede ordenar fácil) -->
+                    <div>Acciones</div>
                 </div>
                 <div id="events-list-container"></div>
                 <div class="list-view-pagination"></div>
@@ -485,12 +500,17 @@
                     </div>
                 </div>
                 <div class="list-view-header alert-header" style="display: grid; grid-template-columns: 110px 60px 1.5fr 1.5fr 130px 2fr; align-items: center;">
-                    <div style="text-align: center;"></div> <!-- Columna botones (sin título) -->
-                    <div style="text-align: center;">Activo</div>
-                    <div>Acciones</div> <!-- Aquí va el Nombre de la Alerta -->
-                    <div>Eventos</div>
-                    <div style="text-align: center;">Duración (seg)</div>
-                    <div>Descripción</div> <!-- Nombre del video -->
+                    <div style="text-align: center;"></div> <!-- Columna botones -->
+                    
+                    <div style="text-align: center; cursor: pointer;" onclick="sortList('alerts', 'enabled')">Activo ↕</div>
+                    
+                    <div style="cursor: pointer;" onclick="sortList('alerts', 'name')">Nombre ↕</div>
+                    
+                    <div style="cursor: pointer;" onclick="sortList('alerts', 'why')">Eventos ↕</div>
+                    
+                    <div style="text-align: center; cursor: pointer;" onclick="sortList('alerts', 'duration')">Duración ↕</div>
+                    
+                    <div>Descripción</div> <!-- Descripción es compleja de ordenar, mejor dejarla fija -->
                 </div>
                 <div id="alerts-list-container"></div>
                 <div class="list-view-pagination" id="alerts-pagination"></div>
@@ -1274,6 +1294,13 @@
                         </div>
                         <p class="overlay-description">El usuario que envió el regalo más grande.</p>
 
+                        <!-- AGREGAR ESTO -->
+                        <div class="config-item checkbox-row" style="margin-bottom: 10px; padding: 0;">
+                            <input type="checkbox" id="chk-enable-top-gift" checked>
+                            <label for="chk-enable-top-gift" style="font-size: 13px; color: #ccc;">Activar Widget</label>
+                        </div>
+                        <!-- FIN AGREGADO -->
+
                         <div class="overlay-url-actions compact">
                             <input type="text" value="http://127.0.0.1:5500/top-gift.html" readonly class="url-input" id="top-gift-url-input">
                                 <button class="action-btn primary-btn copy-goal-btn" data-target="top-gift-url-input">Copiar</button>
@@ -1300,6 +1327,13 @@
                             <div class="premium-tag small">PRO</div>
                         </div>
                         <p class="overlay-description">El usuario que ha enviado la racha más larga.</p>
+
+                        <!-- AGREGAR ESTO -->
+                        <div class="config-item checkbox-row" style="margin-bottom: 10px; padding: 0;">
+                            <input type="checkbox" id="chk-enable-top-streak" checked>
+                            <label for="chk-enable-top-streak" style="font-size: 13px; color: #ccc;">Activar Widget</label>
+                        </div>
+                        <!-- FIN AGREGADO -->
 
                         <div class="overlay-url-actions compact">
                             <input type="text" value="http://127.0.0.1:5500/top-streak.html" readonly class="url-input" id="top-streak-url-input">
@@ -1574,7 +1608,7 @@
 
                 <div class="overlay-content-layout">
                     <!-- PREVIEW VISUAL CON IFRAME -->
-                    <div class="overlay-preview" style="background: #111; height: 180px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #333; overflow: hidden;">
+                    <div class="overlay-preview" style="background: #252526; height: 180px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #333; overflow: hidden;">
                         <!-- IFRAME QUE CARGA LA PÁGINA REAL -->
                         <iframe 
                             src="http://127.0.0.1:5500/timer.html" 
@@ -1724,11 +1758,12 @@
             <div class="section-container">
                 <h2>Hotkeys</h2>
                 
+                <div class="info-box">
+                    <p>Establece atajos de teclado personalizados para ejecutar acciones de manera inmediata.</p>
+                </div>
+                <h3 style="color: #8A2BE2;">Configurar Hotkeys</h3>
+                
                 <div class="hotkeys-wrapper">
-                    <div class="hotkeys-info-box">
-                        <p>Establece atajos de teclado personalizados para ejecutar acciones de manera inmediata.</p>
-                    </div>
-
                     <!-- Cabecera con el Switch de Activación -->
                     <div class="hotkeys-header-row">
                         <div class="toggle-container">

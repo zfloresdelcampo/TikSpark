@@ -71,21 +71,26 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 }
 /* --- FIN DE LA CORRECCIÓN --- */
 
-.action-header { grid-template-columns: 40px 120px 2fr 1.5fr 1.5fr 2fr; }
-.event-header { grid-template-columns: 40px 100px 80px 80px 1.5fr 2fr 2fr; }
+.action-header { grid-template-columns: 50px 140px 2fr 1.5fr 1.5fr 2fr; }
+.event-header { grid-template-columns: 50px 100px 80px 80px 1.5fr 2fr 2fr; }
 .action-header > div:first-of-type, .event-header > div:first-of-type { visibility: hidden; }
 
 .list-view-row:last-child { border-bottom: none; }
-.action-row { grid-template-columns: 40px 120px 2fr 1.5fr 1.5fr 2fr; }
-.event-row { grid-template-columns: 40px 100px 80px 80px 1.5fr 2fr 2fr; }
-.header-checkbox, .list-view-row input[type="checkbox"] { margin: 0 auto; }
+.action-row { grid-template-columns: 50px 140px 2fr 1.5fr 1.5fr 2fr; }
+.event-row { grid-template-columns: 50px 100px 80px 80px 1.5fr 2fr 2fr; }
+.header-checkbox, .list-view-row input[type="checkbox"] { 
+    margin: 0; /* Quitamos el auto */
+    display: block; /* Aseguramos que sea bloque */
+}
 .row-icons { gap: 10px; }
 .action-icon { cursor: pointer; font-size: 16px; transition: color 0.2s; }
 .action-icon.play:hover { color: #10c35b; } .action-icon.edit:hover { color: #4a90e2; } .action-icon.delete:hover { color: #d9534f; }
 
 /* Centrado de iconos y texto de cabecera */
 .icon-center, .event-row > div:nth-child(3), .event-row > div:nth-child(4) { 
-    justify-content: center; 
+    display: flex;              /* <--- ESTA FALTABA */
+    justify-content: center;
+    align-items: center;        /* <--- ESTA FALTABA (Centrado vertical) */
 }
 .event-header > div:nth-child(3), .event-header > div:nth-child(4) {
     text-align: center;
@@ -1460,69 +1465,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     font-size: 20px;
     color: #8A2BE2; /* O el color que prefieras */
 }
-/* --- ESTILOS PERSONALIZADOS PARA CHECKBOXES (CORREGIDO Y ESPECÍFICO) --- */
 
-/* 
-   Estilo Base: Se aplica a los checkboxes de la columna 'Activo' en Eventos 
-   Y a los checkboxes principales de los modales.
-*/
-.event-row .icon-center input[type="checkbox"],
-.checkbox-item input[type="checkbox"],
-.input-group-row input[type="checkbox"],
-.config-item input[type="checkbox"] {    /* <--- ¡AÑADIMOS ESTE! */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: #23272a;
-    border: 1px solid #555;
-    border-radius: 4px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    position: relative;
-    display: inline-block;
-    vertical-align: middle;
-    margin: 0;
-}
-
-/* Estado Marcado: para los mismos checkboxes */
-.event-row .icon-center input[type="checkbox"]:checked,
-.checkbox-item input[type="checkbox"]:checked,
-.input-group-row input[type="checkbox"]:checked,
-.config-item input[type="checkbox"]:checked { /* <-- AÑADIDO AQUÍ */
-    background-color: #8A2BE2; /* TU COLOR MORADO */
-    border-color: #8A2BE2;
-}
-
-/* La Marca de Verificación: para los mismos checkboxes */
-.event-row .icon-center input[type="checkbox"]:checked::after,
-.checkbox-item input[type="checkbox"]:checked::after,
-.input-group-row input[type="checkbox"]:checked::after,
-.config-item input[type="checkbox"]:checked::after { /* <-- AÑADIDO AQUÍ */
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 4px;
-    height: 9px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-/* 
-   RESTAURACIÓN: Devolvemos el estilo por defecto a los checkboxes de selección de fila,
-   que habíamos roto sin querer.
-*/
-.list-view-row > div:first-child input[type="checkbox"],
-.list-view-header input[type="checkbox"] {
-    -webkit-appearance: checkbox; /* ¡LA CLAVE! Volvemos al estilo nativo */
-    -moz-appearance: checkbox;
-    appearance: checkbox;
-    width: auto;  /* Dejamos que el navegador decida el tamaño */
-    height: auto;
-    accent-color: #8A2BE2; /* Damos el color morado de forma nativa */
-}
 /* --- ESTILOS ADICIONALES PARA LA LISTA DE PARTICIPANTES DE LA SUBASTA --- */
 
 .participant-row-content {
@@ -2423,7 +2366,7 @@ input[type="range"].volume-slider::-moz-range-thumb {
 /* === NUEVO: ESTILOS PARA LA TABLA DE ALERTAS === */
 
 .alert-header, .alert-row {
-    grid-template-columns: 40px 80px 120px 2fr 1fr 2fr;
+    grid-template-columns: 50px 80px 120px 2fr 1fr 2fr;
 }
 
 .alert-header > div:first-of-type {
@@ -2979,7 +2922,7 @@ input[type="range"].volume-slider::-moz-range-thumb {
 .gift-preview-box {
     margin-top: 0;
     border: 1px solid #444;
-    background-color: #151515; /* Fondo negro suave */
+    background-color: #252526; /* Fondo negro suave */
     padding: 10px;
     border-radius: 8px;
     height: 250px; /* Altura ajustada para que quepa en pantalla */
@@ -3991,3 +3934,316 @@ input:checked + .slider { background-color: #8A2BE2; } /* <--- AQUÍ ESTÁ EL MO
 input:checked + .slider:before { transform: translateX(20px); }
 .slider.round { border-radius: 34px; }
 .slider.round:before { border-radius: 50%; }
+/* ================================================================= */
+/* --- ARREGLO FINAL Y DEFINITIVO DE CHECKBOXES --- */
+/* ================================================================= */
+
+/* 1. ARREGLAR VISIBILIDAD DE LA CABECERA (IMPORTANTE) */
+/* Antes ocultaba el primer div (que ahora es el checkbox). Lo corregimos para que oculte el SEGUNDO div (el hueco de los iconos) */
+.action-header > div:first-of-type, 
+.event-header > div:first-of-type { 
+    visibility: visible !important; /* Mostrar checkbox */
+}
+.action-header > div:nth-child(2), 
+.event-header > div:nth-child(2) { 
+    visibility: hidden !important; /* Ocultar hueco de iconos */
+}
+
+/* 2. CONTENEDOR PARA CENTRAR (Grid Cell) */
+.chk-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+    height: 100%;
+}
+
+/* 3. ESTILO DEL CHECKBOX (Gris bonito, no negro) */
+input.custom-chk {
+    /* Reset total */
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    
+    /* Caja Gris Suave (Igual que el sidebar) */
+    background-color: #2d2d2d !important; 
+    border: 2px solid #666 !important; 
+    border-radius: 4px !important;
+    
+    /* Tamaño Estandarizado */
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    
+    cursor: pointer !important;
+    position: relative !important;
+    display: block !important;
+    margin: 0 !important;
+    outline: none !important;
+    transition: all 0.2s ease;
+}
+
+/* Hover: Borde morado al pasar el mouse */
+input.custom-chk:hover {
+    border-color: #8A2BE2 !important;
+    background-color: #363636 !important;
+}
+
+/* Activado: Fondo Morado */
+input.custom-chk:checked {
+    background-color: #8A2BE2 !important;
+    border-color: #8A2BE2 !important;
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.4) !important;
+}
+
+/* El Check (Palomita) */
+input.custom-chk:checked::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 5px !important;
+    top: 1px !important;
+    width: 4px !important;
+    height: 9px !important;
+    border: solid white !important;
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+    display: block !important;
+}
+/* ======================================================= */
+/* --- CORRECCIÓN DE ESPACIADO (EVITA QUE SE ROMPA EL GRID) --- */
+/* ======================================================= */
+
+/* 1. Quitamos el padding de 15px SOLO a la primera columna (el checkbox) */
+/* Esto evita que la columna se desborde y empuje los iconos */
+.list-view-row > .chk-container,
+.list-view-header > .chk-container {
+    padding: 0 !important; 
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+    height: 100%;
+    border-right: 1px solid #3c3c3c; /* Restauramos la línea divisoria */
+}
+
+/* 2. Ajuste fino para la columna de iconos (la segunda) */
+.list-view-row > .row-icons {
+    padding-left: 5px !important; /* Reducimos espacio para que entren los botones */
+    padding-right: 5px !important;
+    justify-content: center !important; /* Aseguramos que estén centrados */
+}
+
+/* 3. Asegurar que el checkbox no tenga márgenes extraños */
+input.custom-chk {
+    margin: 0 !important; /* Sin márgenes externos */
+}
+/* ================================================================= */
+/* --- UNIFICACIÓN TOTAL: APLICAR ESTILO A TODOS LOS DEMÁS --- */
+/* ================================================================= */
+
+/* 
+   Esto selecciona CUALQUIER checkbox dentro de:
+   - Configuración de Widgets (.config-item)
+   - Modales (.checkbox-item)
+   - Grupos de inputs (.input-group-row)
+   - Sección de metas (.goal-input-item)
+   - Columna "Activo" de eventos (.icon-center)
+*/
+.config-item input[type="checkbox"],
+.checkbox-item input[type="checkbox"],
+.input-group-row input[type="checkbox"],
+.goal-input-item input[type="checkbox"],
+.icon-center input[type="checkbox"] {
+    
+    /* 1. Resetear estilo nativo */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    
+    /* 2. La Caja (Gris bonita) */
+    background-color: #2d2d2d !important; 
+    border: 2px solid #666 !important; 
+    border-radius: 4px !important;
+    
+    /* 3. Tamaño (Igual que los de la tabla) */
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    
+    /* 4. Posición */
+    cursor: pointer !important;
+    position: relative !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important; /* Separación del texto "Activar Widget" */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    outline: none !important;
+    transition: all 0.2s ease;
+}
+
+/* Hover (Efecto al pasar el mouse) */
+.config-item input[type="checkbox"]:hover,
+.checkbox-item input[type="checkbox"]:hover,
+.input-group-row input[type="checkbox"]:hover,
+.goal-input-item input[type="checkbox"]:hover,
+.icon-center input[type="checkbox"]:hover {
+    border-color: #8A2BE2 !important;
+    background-color: #363636 !important;
+}
+
+/* Checked (Fondo Morado) */
+.config-item input[type="checkbox"]:checked,
+.checkbox-item input[type="checkbox"]:checked,
+.input-group-row input[type="checkbox"]:checked,
+.goal-input-item input[type="checkbox"]:checked,
+.icon-center input[type="checkbox"]:checked {
+    background-color: #8A2BE2 !important;
+    border-color: #8A2BE2 !important;
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.4) !important;
+}
+
+/* El Check (Palomita Blanca) */
+.config-item input[type="checkbox"]:checked::after,
+.checkbox-item input[type="checkbox"]:checked::after,
+.input-group-row input[type="checkbox"]:checked::after,
+.goal-input-item input[type="checkbox"]:checked::after,
+.icon-center input[type="checkbox"]:checked::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 5px !important;
+    top: 1px !important;
+    width: 4px !important;
+    height: 9px !important;
+    border: solid white !important;
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+    display: block !important;
+}
+
+/* ================================================================= */
+/* --- PROTECCIÓN PARA LOS SLIDERS (SWITCHES) --- */
+/* ================================================================= */
+/* ¡CRÍTICO! Esto evita que los botones deslizantes de Hotkeys se conviertan en cuadrados */
+.switch input[type="checkbox"] {
+    appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    display: block !important;
+}
+/* =========================================
+   ESTILOS PARA LA SECCIÓN DE HOTKEYS (VERSIÓN FINAL AJUSTADA)
+   ========================================= */
+
+/* 1. CONTENEDOR PRINCIPAL (Más estrecho para acortar los selectores) */
+.hotkeys-wrapper {
+    max-width: 550px; /* <--- REDUCIDO: Esto hace que los selectores no se estiren tanto */
+    margin: 0 auto;   
+    width: 100%;
+}
+
+/* 2. CABECERA (Alineación) */
+.hotkeys-header-row {
+    display: flex;
+    justify-content: space-between; /* Separa los dos grupos a los extremos */
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+}
+
+/* Grupo Izquierdo (Switch + Texto) */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: auto; /* <--- CAMBIO: Deja que ocupe el espacio que necesite el texto */
+}
+
+/* Estilo específico para el texto "Activar Hotkeys" */
+.toggle-container label {
+    white-space: nowrap; /* <--- OBLIGATORIO: Fuerza el texto en una sola línea */
+    margin-right: 0;
+    font-size: 14px;
+    color: #8A2BE2;
+    font-weight: bold;
+}
+
+/* Título Derecho ("Acciones") */
+.hotkeys-header-row > div:last-child {
+    /* Lo alineamos visualmente con la columna derecha */
+    flex: 1;
+    text-align: center;
+    padding-left: 150px; /* Empujamos el texto para que quede sobre los selectores */
+    color: #8A2BE2;
+    font-weight: bold;
+}
+
+/* 3. FILAS (Botón + Selector) */
+.hotkey-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    gap: 15px; /* Espacio entre el botón y el selector */
+}
+
+/* --- ESTILO BOTÓN IZQUIERDO --- */
+.key-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    
+    /* Tamaño fijo del botón */
+    width: 140px;       
+    min-width: 140px; /* Asegura que no se encoja */
+    height: 32px;
+    padding: 0 5px;
+    border-radius: 4px;
+    
+    font-weight: 800; 
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase; 
+    
+    background-color: #1a1a1a; 
+    border: 1px solid #333;    
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+    transition: all 0.2s ease;
+}
+
+.key-display i { font-size: 1.1em; }
+
+/* COLORES */
+.key-alt { color: #ffc107; border-color: #ffc107; background: rgba(255, 193, 7, 0.08); }
+.key-shift { color: #ff4d4d; border-color: #ff4d4d; background: rgba(255, 77, 77, 0.08); }
+.key-ctrl { color: #00d2ff; border-color: #00d2ff; background: rgba(0, 210, 255, 0.08); }
+.key-combo { color: #ff9f43; border-color: #ff9f43; background: rgba(255, 159, 67, 0.08); font-size: 10px; }
+
+/* --- ESTILO SELECTOR DERECHO --- */
+.hotkey-select {
+    flex: 1; /* Ocupa el espacio restante (ahora limitado por los 550px del wrapper) */
+    width: 100%;
+    
+    background-color: #252526;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    
+    height: 32px;
+    padding: 0 10px;
+    
+    border-radius: 4px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    margin: 0; /* Quitamos márgenes extra */
+}
+
+.hotkey-select:hover { border-color: #666; background-color: #2d2d2d; }
+.hotkey-select:focus { border-color: #8A2BE2; background-color: #1e1e1e; }

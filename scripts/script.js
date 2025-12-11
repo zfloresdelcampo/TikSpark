@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     // -----------------------------------------------------
 
+    // --- REFERENCIAS A CHECKBOXES DE WIDGETS ---
+    const checkTopGiftActive = document.getElementById('activate-widget-topgifters');
+    const checkSubastaActive = document.getElementById('activate-widget-subasta');
+    const checkGvGActive = document.getElementById('gvg-active-check');
+    const checkTopGiftRecord = document.getElementById('chk-enable-top-gift');
+    const checkTopStreakRecord = document.getElementById('chk-enable-top-streak');
+
     // --- SISTEMA DE DIÁLOGOS PERSONALIZADOS ---
     const customDialog = document.getElementById('custom-dialog');
     const dialogTitle = document.getElementById('dialog-title');
@@ -1343,48 +1350,54 @@ if (window.electronAPI) {
     window.electronAPI.onGift(data => {
         
         // =================================================================
-        // 1. LÓGICA DE RÉCORDS (Se ejecuta SIEMPRE, incluso al final)
+        // 1. LÓGICA DE RÉCORDS (INDEPENDIENTE AHORA)
         // =================================================================
 
         // A) MEJOR REGALO (Por precio unitario)
-        if (data.diamondCount > topGiftState.coins) {
-            let finalGiftImage = data.giftPictureUrl; 
-            const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
-            if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
-                finalGiftImage = cachedGift.image.url_list[0];
-            }
+        // CORRECCIÓN: Usamos 'checkTopGiftRecord' (el de Gifts Overlays) en vez del de la galería
+        if (checkTopGiftRecord && checkTopGiftRecord.checked) { 
+            if (data.diamondCount > topGiftState.coins) {
+                let finalGiftImage = data.giftPictureUrl; 
+                const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
+                if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
+                    finalGiftImage = cachedGift.image.url_list[0];
+                }
 
-            topGiftState = {
-                username: data.nickname,
-                coins: data.diamondCount, // Valor unitario
-                giftName: data.giftName,
-                giftImage: finalGiftImage
-            };
-            
-            if(window.electronAPI) {
-                window.electronAPI.updateWidget('topGift', topGiftState);
-                saveAllData();
+                topGiftState = {
+                    username: data.nickname,
+                    coins: data.diamondCount, 
+                    giftName: data.giftName,
+                    giftImage: finalGiftImage
+                };
+                
+                if(window.electronAPI) {
+                    window.electronAPI.updateWidget('topGift', topGiftState);
+                    saveAllData();
+                }
             }
         }
 
         // B) MEJOR RACHA (Por cantidad de combo)
-        if (data.repeatCount > topStreakState.streakCount) {
-            let finalGiftImage = data.giftPictureUrl; 
-            const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
-            if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
-                finalGiftImage = cachedGift.image.url_list[0];
-            }
+        // CORRECCIÓN: Agregamos el IF para que respete su propio checkbox
+        if (checkTopStreakRecord && checkTopStreakRecord.checked) {
+            if (data.repeatCount > topStreakState.streakCount) {
+                let finalGiftImage = data.giftPictureUrl; 
+                const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
+                if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
+                    finalGiftImage = cachedGift.image.url_list[0];
+                }
 
-            topStreakState = {
-                username: data.nickname,
-                streakCount: data.repeatCount, // Cantidad acumulada
-                giftName: data.giftName,
-                giftImage: finalGiftImage
-            };
+                topStreakState = {
+                    username: data.nickname,
+                    streakCount: data.repeatCount, // Cantidad acumulada
+                    giftName: data.giftName,
+                    giftImage: finalGiftImage
+                };
 
-            if(window.electronAPI) {
-                window.electronAPI.updateWidget('topStreak', topStreakState);
-                saveAllData();
+                if(window.electronAPI) {
+                    window.electronAPI.updateWidget('topStreak', topStreakState);
+                    saveAllData();
+                }
             }
         }
 
@@ -1409,9 +1422,12 @@ if (window.electronAPI) {
         // Sumar a la subasta AHORA (durante el combo)
         updateAuction(data);
 
-        // --- AGREGA ESTO: Actualizar Puntos de Gift VS Gift ---
-        if (typeof window.updateGvGScore === 'function') {
-            window.updateGvGScore(data);
+        // --- LÓGICA GIFT VS GIFT 1 ---
+        // Solo entra si el checkbox existe Y está marcado
+        if (checkGvGActive && checkGvGActive.checked) {
+            if (typeof window.updateGvGScore === 'function') {
+                window.updateGvGScore(data);
+            }
         }
         // -----------------------------------------------------
 
@@ -1452,18 +1468,38 @@ if (window.electronAPI) {
 
     // === PEGA ESTO JUSTO AQUÍ DEBAJO ===
     
-    // Listener para Datos Iniciales (Carga el total al conectar)
+    // Listener para Datos Iniciales y Detección de Nuevo Stream
     if (window.electronAPI.onRoomInfo) {
-        window.electronAPI.onRoomInfo((roomInfo) => {
-            console.log("Datos iniciales de la sala recibidos:", roomInfo);
+        window.electronAPI.onRoomInfo(async (roomInfo) => {
+            console.log("Datos de sala recibidos. ID:", roomInfo.id);
             
-            // TikTok a veces usa 'likes_count' o 'like_count' en la info de la sala
-            const totalLikes = roomInfo.likes_count || roomInfo.like_count || 0;
+            // 1. Lógica Reset on New Stream
+            const resetCheck = document.getElementById('reset-stream-check');
+            const lastRoomId = localStorage.getItem('last_connected_room_id');
+            const currentRoomId = String(roomInfo.id); // Asegurar que es texto
 
+            // Si hay una ID nueva (nuevo directo) Y el usuario quiere resetear
+            if (resetCheck && resetCheck.checked && lastRoomId !== currentRoomId) {
+                console.log("🔄 Nuevo Stream detectado: Reseteando récords...");
+                
+                // Resetear Mejor Regalo
+                topGiftState = { username: 'Nadie', coins: 0, giftName: 'Esperando...', giftImage: '' };
+                if (window.electronAPI) await window.electronAPI.updateWidget('topGift', topGiftState);
+
+                // Resetear Mejor Racha
+                topStreakState = { username: 'Nadie', streakCount: 0, giftName: 'Esperando...', giftImage: '' };
+                if (window.electronAPI) await window.electronAPI.updateWidget('topStreak', topStreakState);
+                
+                showToastNotification("🔄 Nuevo directo: Récords reiniciados.");
+            }
+
+            // Guardamos la ID actual para la próxima vez
+            localStorage.setItem('last_connected_room_id', currentRoomId);
+
+            // 2. Lógica de Likes (la que ya tenías)
+            const totalLikes = roomInfo.likes_count || roomInfo.like_count || 0;
             if (totalLikes > 0) {
-                // Forzamos la actualización de la barra con el total real
                 addLikesToGoal(0, totalLikes);
-                showToastNotification(`Likes sincronizados: ${totalLikes}`);
             }
         });
     }
@@ -2478,7 +2514,9 @@ if (window.electronAPI) {
 
             // --- ESTE ES EL INNERHTML CORRECTO PARA LAS ACCIONES ---
             actionDiv.innerHTML = `
-                <div><input type="checkbox"></div>
+                <div class="chk-container">
+                    <input type="checkbox" class="custom-chk" ${selectedActionIds.has(action.id) ? 'checked' : ''} onchange="toggleActionSelection(${action.id})">
+                </div>
                 <div class="row-icons">
                     <span class="action-icon-bg play" onclick="playAction(${action.id}, { nickname: 'Test' })">
                         <i class="fas fa-play"></i>
@@ -3282,7 +3320,9 @@ if (window.electronAPI) {
             const eventDiv = document.createElement('div'); 
             eventDiv.className = 'list-view-row event-row'; 
             eventDiv.innerHTML = `
-                <div><input type="checkbox"></div>
+                <div class="chk-container">
+                    <input type="checkbox" class="custom-chk" ${selectedEventIds.has(event.id) ? 'checked' : ''} onchange="toggleEventSelection(${event.id})">
+                </div>
                 <div class="row-icons">
                     <span class="action-icon-bg edit" onclick="editEvent(${event.id})">
                         <i class="fas fa-pencil-alt"></i>
@@ -3502,17 +3542,28 @@ if (window.electronAPI) {
     // AGREGA ESTA LÍNEA:
     function handleAlertPageChange(page) { currentPageAlerts = page; renderAlerts(); }
     
-    // === FUNCIONES FALTANTES PARA ALERTAS ===
+    // === FUNCIÓN CORREGIDA PARA ACTIVAR/DESACTIVAR ALERTAS ===
     window.toggleAlertStatus = async (id) => {
-        const currentProfile = profiles[activeProfileName];
-        if (!currentProfile) return;
-        const alert = currentProfile.alerts.find(a => a.id === id);
-        if (alert) {
-            alert.enabled = !alert.enabled;
-            await saveAllData();
-            // No necesitamos re-renderizar todo, el checkbox ya cambió visualmente, 
-            // pero si quieres asegurar consistencia:
-            // renderAlerts(); 
+        let alertFound = null;
+
+        // 1. Primero buscamos en la lista global (que es la que se muestra en pantalla)
+        if (globalAlerts) {
+            alertFound = globalAlerts.find(a => a.id === id);
+        }
+
+        // 2. Si no está ahí, buscamos en el perfil activo (por seguridad)
+        if (!alertFound && profiles[activeProfileName]?.alerts) {
+            alertFound = profiles[activeProfileName].alerts.find(a => a.id === id);
+        }
+
+        // 3. Si la encontramos, cambiamos el estado y guardamos
+        if (alertFound) {
+            alertFound.enabled = !alertFound.enabled; // Invertir estado (true/false)
+            console.log(`Alerta ${alertFound.name} cambiada a: ${alertFound.enabled}`);
+            
+            await saveAllData(); // Guardar en la base de datos/archivo
+        } else {
+            console.error("No se encontró la alerta con ID:", id);
         }
     };
 
@@ -3905,6 +3956,9 @@ if (window.electronAPI) {
     // --- INICIO DEL CAMBIO ---
     // --- FUNCIÓN SUBASTA (CORREGIDA PARA SUMA UNITARIA) ---
     async function updateAuction(giftData) {
+        // 1. REGLA NUEVA: Si el checkbox de la UI está apagado, no hacemos nada.
+        if (checkSubastaActive && !checkSubastaActive.checked) return;
+
         let subastaState = await window.electronAPI.getWidgetData('subasta');
         if (!subastaState || !subastaState.isRunning) return;
 
@@ -4937,23 +4991,49 @@ if (window.electronAPI) {
     // LÓGICA DE HOTKEYS (V4 - FINAL CON TODO)
     // ==========================================
 
-    // 1. Definición visual (Con Iconos)
+    // 1. Definición visual (Con Iconos) - LISTA COMPLETA
     const hotkeyListDef = [
+        // --- 1. ALT + FLECHAS ---
         { labelHTML: 'Alt + <i class="fas fa-arrow-up"></i>', code: 'Alt+ArrowUp', class: 'key-alt' },
         { labelHTML: 'Alt + <i class="fas fa-arrow-down"></i>', code: 'Alt+ArrowDown', class: 'key-alt' },
         { labelHTML: 'Alt + <i class="fas fa-arrow-left"></i>', code: 'Alt+ArrowLeft', class: 'key-alt' },
         { labelHTML: 'Alt + <i class="fas fa-arrow-right"></i>', code: 'Alt+ArrowRight', class: 'key-alt' },
         
+        // --- 2. SHIFT + FLECHAS ---
         { labelHTML: 'Shift + <i class="fas fa-arrow-up"></i>', code: 'Shift+ArrowUp', class: 'key-shift' },
         { labelHTML: 'Shift + <i class="fas fa-arrow-down"></i>', code: 'Shift+ArrowDown', class: 'key-shift' },
         { labelHTML: 'Shift + <i class="fas fa-arrow-left"></i>', code: 'Shift+ArrowLeft', class: 'key-shift' },
         { labelHTML: 'Shift + <i class="fas fa-arrow-right"></i>', code: 'Shift+ArrowRight', class: 'key-shift' },
 
+        // --- 3. CTRL + FLECHAS ---
         { labelHTML: 'Ctrl + <i class="fas fa-arrow-up"></i>', code: 'Control+ArrowUp', class: 'key-ctrl' },
         { labelHTML: 'Ctrl + <i class="fas fa-arrow-down"></i>', code: 'Control+ArrowDown', class: 'key-ctrl' },
+        { labelHTML: 'Ctrl + <i class="fas fa-arrow-left"></i>', code: 'Control+ArrowLeft', class: 'key-ctrl' },
+        { labelHTML: 'Ctrl + <i class="fas fa-arrow-right"></i>', code: 'Control+ArrowRight', class: 'key-ctrl' },
         
+        // --- 4. CTRL + ALT + FLECHAS ---
         { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-up"></i>', code: 'Control+Alt+ArrowUp', class: 'key-combo' },
-        { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-down"></i>', code: 'Control+Alt+ArrowDown', class: 'key-combo' }
+        { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-down"></i>', code: 'Control+Alt+ArrowDown', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-left"></i>', code: 'Control+Alt+ArrowLeft', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Alt + <i class="fas fa-arrow-right"></i>', code: 'Control+Alt+ArrowRight', class: 'key-combo' },
+
+        // --- 5. CTRL + SHIFT + FLECHAS (NUEVO) ---
+        { labelHTML: 'Ctrl + Shift + <i class="fas fa-arrow-up"></i>', code: 'Control+Shift+ArrowUp', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Shift + <i class="fas fa-arrow-down"></i>', code: 'Control+Shift+ArrowDown', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Shift + <i class="fas fa-arrow-left"></i>', code: 'Control+Shift+ArrowLeft', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Shift + <i class="fas fa-arrow-right"></i>', code: 'Control+Shift+ArrowRight', class: 'key-combo' },
+
+        // --- 6. ALT + SHIFT + FLECHAS (NUEVO) ---
+        { labelHTML: 'Alt + Shift + <i class="fas fa-arrow-up"></i>', code: 'Alt+Shift+ArrowUp', class: 'key-combo' },
+        { labelHTML: 'Alt + Shift + <i class="fas fa-arrow-down"></i>', code: 'Alt+Shift+ArrowDown', class: 'key-combo' },
+        { labelHTML: 'Alt + Shift + <i class="fas fa-arrow-left"></i>', code: 'Alt+Shift+ArrowLeft', class: 'key-combo' },
+        { labelHTML: 'Alt + Shift + <i class="fas fa-arrow-right"></i>', code: 'Alt+Shift+ArrowRight', class: 'key-combo' },
+
+        // --- 7. CTRL + ALT + SHIFT + FLECHAS (NUEVO - COMPLEJO) ---
+        { labelHTML: 'Ctrl + Alt + Shift + <i class="fas fa-arrow-up"></i>', code: 'Control+Alt+Shift+ArrowUp', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Alt + Shift + <i class="fas fa-arrow-down"></i>', code: 'Control+Alt+Shift+ArrowDown', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Alt + Shift + <i class="fas fa-arrow-left"></i>', code: 'Control+Alt+Shift+ArrowLeft', class: 'key-combo' },
+        { labelHTML: 'Ctrl + Alt + Shift + <i class="fas fa-arrow-right"></i>', code: 'Control+Alt+Shift+ArrowRight', class: 'key-combo' }
     ];
 
     // 2. Acciones de Sistema (Timer, Win, etc.)
@@ -5060,7 +5140,7 @@ if (window.electronAPI) {
         }
     }
 
-    // 5. Listener de Teclado (CON FIX PARA ALT)
+    // 5. Listener de Teclado (CON FIX PARA ALT Y ORDEN CORRECTO)
     window.addEventListener('keydown', (e) => {
         // A. Bloquear el menú de Windows si se toca Alt
         if (e.key === 'Alt' || e.key === 'Control') {
@@ -5074,17 +5154,20 @@ if (window.electronAPI) {
         if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
 
         let pressedCode = '';
+        // El orden es CRÍTICO: Control -> Alt -> Shift -> Flecha
         if (e.ctrlKey) pressedCode += 'Control+';
         if (e.altKey) pressedCode += 'Alt+';
         if (e.shiftKey) pressedCode += 'Shift+';
         pressedCode += e.key;
 
         const actionId = hotkeysConfig[pressedCode];
+        
         if (actionId) {
             e.preventDefault();
             e.stopPropagation();
 
-            if (actionId.startsWith('sys_')) {
+            // Usamos String() aquí por seguridad
+            if (String(actionId).startsWith('sys_')) {
                 executeSystemHotkey(actionId);
                 showToastNotification(`⌨️ Sistema: ${actionId}`);
             } else {
@@ -5123,6 +5206,142 @@ if (window.electronAPI) {
             }
         });
     }
+
+    // =================================================
+    // LÓGICA DE SELECCIÓN Y BORRADO MASIVO
+    // =================================================
+    let selectedActionIds = new Set();
+    let selectedEventIds = new Set();
+
+    // Función que se llama al clicar un checkbox de ACCIÓN
+    window.toggleActionSelection = (id) => {
+        if (selectedActionIds.has(id)) selectedActionIds.delete(id);
+        else selectedActionIds.add(id);
+        updateDeleteButtonsUI();
+    };
+
+    // Función que se llama al clicar un checkbox de EVENTO
+    window.toggleEventSelection = (id) => {
+        if (selectedEventIds.has(id)) selectedEventIds.delete(id);
+        else selectedEventIds.add(id);
+        updateDeleteButtonsUI();
+    };
+
+    // Función para el checkbox "Seleccionar Todo" de la cabecera
+    window.toggleAllSelection = (type, isChecked) => {
+        const currentProfile = profiles[activeProfileName];
+        if (!currentProfile) return;
+
+        if (type === 'actions') {
+            selectedActionIds.clear();
+            if (isChecked) currentProfile.actions.forEach(a => selectedActionIds.add(a.id));
+            renderActions(); // Re-render para marcar los checks visualmente
+        } else if (type === 'events') {
+            selectedEventIds.clear();
+            if (isChecked) currentProfile.events.forEach(e => selectedEventIds.add(e.id));
+            renderEvents();
+        }
+        updateDeleteButtonsUI();
+    };
+
+    // Actualiza el texto de los botones "Eliminar acciones (0)"
+    function updateDeleteButtonsUI() {
+        // Acciones
+        const btnDelActions = document.querySelector('.list-view-controls .action-button.secondary');
+        if (btnDelActions) {
+            const count = selectedActionIds.size;
+            btnDelActions.textContent = `Eliminar acciones (${count})`;
+            btnDelActions.disabled = count === 0;
+            // Asignar el evento onclick dinámicamente
+            btnDelActions.onclick = deleteSelectedActions; 
+        }
+
+        // Eventos
+        // NOTA: Tienes que asegurarte de que el botón de eliminar eventos tenga la clase correcta en el HTML
+        // Buscamos el segundo botón secondary en la página (el de eventos)
+        const btnsSecondary = document.querySelectorAll('.action-button.secondary');
+        if (btnsSecondary.length > 1) {
+            const btnDelEvents = btnsSecondary[1]; 
+            const count = selectedEventIds.size;
+            btnDelEvents.textContent = `Eliminar eventos (${count})`;
+            btnDelEvents.disabled = count === 0;
+            btnDelEvents.onclick = deleteSelectedEvents;
+        }
+    }
+
+    async function deleteSelectedActions() {
+        if (await window.showCustomConfirm(`¿Borrar ${selectedActionIds.size} acciones?`)) {
+            profiles[activeProfileName].actions = profiles[activeProfileName].actions.filter(a => !selectedActionIds.has(a.id));
+            selectedActionIds.clear();
+            await saveAllData();
+            renderActions();
+            updateDeleteButtonsUI();
+        }
+    }
+
+    async function deleteSelectedEvents() {
+        if (await window.showCustomConfirm(`¿Borrar ${selectedEventIds.size} eventos?`)) {
+            profiles[activeProfileName].events = profiles[activeProfileName].events.filter(e => !selectedEventIds.has(e.id));
+            selectedEventIds.clear();
+            await saveAllData();
+            renderEvents();
+            updateDeleteButtonsUI();
+        }
+    }
+
+    // =================================================
+    // LÓGICA DE ORDENAMIENTO (SORTING) - ACTUALIZADA
+    // =================================================
+    let sortConfig = { field: null, direction: 'asc' };
+
+    window.sortList = (type, field) => {
+        // 1. Alternar dirección
+        if (sortConfig.field === field) {
+            sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortConfig.field = field;
+            sortConfig.direction = 'asc';
+        }
+
+        // 2. Determinar qué lista vamos a ordenar
+        let list = null;
+
+        if (type === 'actions') {
+            if (profiles[activeProfileName]) list = profiles[activeProfileName].actions;
+        } else if (type === 'events') {
+            if (profiles[activeProfileName]) list = profiles[activeProfileName].events;
+        } else if (type === 'alerts') {
+            // Las alertas son globales (variable globalAlerts definida al inicio del script)
+            list = globalAlerts; 
+        }
+
+        if (!list) return;
+
+        // 3. Ejecutar el ordenamiento
+        list.sort((a, b) => {
+            let valA = a[field] !== undefined && a[field] !== null ? a[field] : '';
+            let valB = b[field] !== undefined && b[field] !== null ? b[field] : '';
+            
+            // Convertir a minúsculas si es texto para ordenar bien (A=a)
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            
+            // Manejo especial para números (Duración, IDs, o booleanos como enabled)
+            if (field === 'duration' || field === 'enabled' || field === 'id') {
+                valA = Number(valA);
+                valB = Number(valB);
+            }
+
+            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // 4. Renderizar la lista correspondiente
+        if (type === 'actions') renderActions();
+        else if (type === 'events') renderEvents();
+        else if (type === 'alerts') renderAlerts(); // <--- IMPORTANTE
+    };
 
     // ==========================================================
     // INICIALIZACIÓN FINAL
