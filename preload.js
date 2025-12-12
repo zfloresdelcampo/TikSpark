@@ -9,7 +9,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onGlobalHotkeyTriggered: (callback) => ipcRenderer.on('global-hotkey-triggered', (_event, actionId) => callback(actionId)),
 
     // --- AGREGAR ESTA LÍNEA ---
-    selectFolder: () => ipcRenderer.invoke('select-folder'),
+    selectFolder: (startPath) => ipcRenderer.invoke('select-folder', startPath),
+    detectGamePath: (folderName) => ipcRenderer.invoke('detect-game-path', folderName),
     installMod: (data) => ipcRenderer.invoke('install-mod', data),
     deleteMod: (data) => ipcRenderer.invoke('delete-mod', data),
 

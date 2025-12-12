@@ -982,27 +982,44 @@ document.addEventListener('DOMContentLoaded', async function() {
         const btnInstall = document.getElementById(`btn-install-${gameId}`);
         const btnDelete = document.getElementById(`btn-delete-${gameId}`);
         
-        let gamePath = ""; // Variable local para este juego
+        let gamePath = ""; 
 
-        // 1. Selección de Carpeta
-        if (btnSelect) {
-            btnSelect.addEventListener('click', async () => {
-                if (!window.electronAPI) return;
-                const selectedPath = await window.electronAPI.selectFolder();
-                if (selectedPath) {
-                    gamePath = selectedPath;
-                    textPath.textContent = selectedPath;
-                    textPath.style.color = "#ffffff";
-                    showToastNotification(`📂 Ruta de ${modFolderName} seleccionada`);
+        // --- 1. AUTODETECCIÓN (NUEVO) ---
+        if (window.electronAPI && window.electronAPI.detectGamePath) {
+            // Intenta buscar el juego automáticamente al cargar la página
+            window.electronAPI.detectGamePath(modFolderName).then(result => {
+                if (result.success && result.path) {
+                    gamePath = result.path;
+                    if (textPath) {
+                        textPath.textContent = gamePath;
+                    }
+                    console.log(`✅ Juego detectado: ${modFolderName}`);
                 }
             });
         }
 
-        // 2. Instalar
+        // 2. Selección Manual (Mantenemos la opción manual por si falla la auto)
+        if (btnSelect) {
+            btnSelect.addEventListener('click', async () => {
+                if (!window.electronAPI) return;
+                
+                // CAMBIO AQUÍ: Pasamos 'gamePath' como argumento
+                const selectedPath = await window.electronAPI.selectFolder(gamePath);
+                
+                if (selectedPath) {
+                    gamePath = selectedPath;
+                    textPath.textContent = selectedPath;
+                    textPath.style.color = "#ffffff";
+                    showToastNotification(`📂 Ruta seleccionada`);
+                }
+            });
+        }
+
+        // 3. Instalar
         if (btnInstall) {
             btnInstall.addEventListener('click', async () => {
-                if (!gamePath) return showToastNotification("⚠️ Primero selecciona la carpeta del juego.");
-                showToastNotification(`⏳ Instalando ${modFolderName}...`);
+                if (!gamePath) return showToastNotification("⚠️ No se ha detectado ni seleccionado la carpeta del juego.");
+                showToastNotification(`⏳ Instalando mod en: ${modFolderName}...`);
                 
                 const result = await window.electronAPI.installMod({ 
                     gamePath: gamePath, 
@@ -1012,13 +1029,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
 
-        // 3. Borrar
+        // 4. Borrar
         if (btnDelete) {
             btnDelete.addEventListener('click', async () => {
-                if (!gamePath) return showToastNotification("⚠️ Primero selecciona la carpeta del juego.");
+                if (!gamePath) return showToastNotification("⚠️ Ruta del juego desconocida.");
                 
                 if(confirm(`¿Borrar mod de ${modFolderName}?`)) {
-                    showToastNotification(`⏳ Eliminando ${modFolderName}...`);
+                    showToastNotification(`⏳ Eliminando...`);
                     const result = await window.electronAPI.deleteMod({ 
                         gamePath: gamePath, 
                         modName: modFolderName 
@@ -3955,43 +3972,73 @@ if (window.electronAPI) {
 
     // --- INICIO DEL CAMBIO ---
     // --- FUNCIÓN SUBASTA (CORREGIDA PARA SUMA UNITARIA) ---
-    async function updateAuction(giftData) {
-        // 1. REGLA NUEVA: Si el checkbox de la UI está apagado, no hacemos nada.
+    // --- VARIABLES GLOBALES (Pégalas afuera, arriba) ---
+    let auctionQueue = Promise.resolve();
+    let comboTracker = {}; // <--- ESTO ES LO NUEVO: Memoria para saber en qué número iba el combo
+
+    // --- FUNCIÓN SUBASTA CORREGIDA (CÁLCULO DIFERENCIAL) ---
+    function updateAuction(giftData) {
         if (checkSubastaActive && !checkSubastaActive.checked) return;
 
-        let subastaState = await window.electronAPI.getWidgetData('subasta');
-        if (!subastaState || !subastaState.isRunning) return;
+        auctionQueue = auctionQueue.then(async () => {
+            
+            // 1. Identificar el combo único (Usuario + ID del regalo)
+            const comboKey = `${giftData.userId}_${giftData.giftId}`;
+            const currentRepeat = giftData.repeatCount || 1; // En qué número va el combo (ej: 7)
+            const giftPrice = giftData.diamondCount || 0;    // Precio unitario
 
-        // IMPORTANTE: Sumamos solo el valor de ESTE regalo individual.
-        // Como la función se ejecuta varias veces en el combo, sumará 1+1+1...
-        const coinsToAdd = (giftData.diamondCount || 0); 
-        const userId = giftData.userId;
+            // 2. Ver en qué número nos quedamos la última vez
+            let lastRepeat = comboTracker[comboKey] || 0;
 
-        if (coinsToAdd <= 0 || !userId) return;
+            // 3. Si el nuevo número es menor (ej: nuevo regalo), reseteamos la memoria
+            if (currentRepeat <= lastRepeat) {
+                lastRepeat = 0;
+            }
 
-        if (!subastaState.participants) subastaState.participants = {};
+            // 4. CALCULAR LA DIFERENCIA (Lo que faltaba sumar)
+            // Ej: Si salta de 4 a 7, la diferencia es 3.
+            const diff = currentRepeat - lastRepeat;
 
-        let participant = subastaState.participants[userId];
-        if (!participant) {
-            participant = {
-                userId: userId,
-                nickname: giftData.nickname,
-                uniqueId: giftData.uniqueId,
-                profilePictureUrl: giftData.profilePictureUrl,
-                coins: 0
-            };
-        }
-        
-        participant.coins += coinsToAdd;
-        
-        // Actualizar datos visuales
-        participant.nickname = giftData.nickname;
-        participant.profilePictureUrl = giftData.profilePictureUrl;
+            // Si no hay nada nuevo, salimos
+            if (diff <= 0) return;
 
-        subastaState.participants[userId] = participant;
+            // 5. Actualizamos la memoria para la próxima
+            comboTracker[comboKey] = currentRepeat;
 
-        await window.electronAPI.updateWidget('subasta', subastaState);
-        console.log(`[Subasta] ${giftData.nickname} +${coinsToAdd} (Total: ${participant.coins})`);
+            // 6. Calculamos valor real a sumar (Cantidad nueva * Precio)
+            const coinsToAdd = diff * giftPrice;
+
+            if (coinsToAdd <= 0) return;
+
+            // --- LÓGICA DE BASE DE DATOS ---
+            let subastaState = await window.electronAPI.getWidgetData('subasta');
+            
+            if (!subastaState || !subastaState.isRunning) return;
+
+            if (!subastaState.participants) subastaState.participants = {};
+
+            let participant = subastaState.participants[giftData.userId];
+            if (!participant) {
+                participant = {
+                    userId: giftData.userId,
+                    nickname: giftData.nickname,
+                    uniqueId: giftData.uniqueId,
+                    profilePictureUrl: giftData.profilePictureUrl,
+                    coins: 0
+                };
+            }
+            
+            participant.coins += coinsToAdd; // <--- AQUI SUMAMOS LA DIFERENCIA CORRECTA
+            
+            participant.nickname = giftData.nickname;
+            participant.profilePictureUrl = giftData.profilePictureUrl;
+
+            subastaState.participants[giftData.userId] = participant;
+
+            await window.electronAPI.updateWidget('subasta', subastaState);
+            console.log(`[Subasta] ${giftData.nickname} combo ${currentRepeat} (+${diff} items) Total sumado: ${participant.coins}`);
+
+        }).catch(err => console.error("Error en cola de subasta:", err));
     }
 
 // ==========================================================
@@ -5341,6 +5388,64 @@ if (window.electronAPI) {
         if (type === 'actions') renderActions();
         else if (type === 'events') renderEvents();
         else if (type === 'alerts') renderAlerts(); // <--- IMPORTANTE
+    };
+
+    // ==========================================================
+    // LÓGICA GIFT VS GIFT 1 (CON COLA Y ANTI-PÉRDIDA)
+    // ==========================================================
+
+    let gvgQueue = Promise.resolve(); 
+    let gvgComboTracker = {};         
+
+    window.updateGvGScore = function(giftData) {
+        // 1. Verificar si el widget está activo
+        const checkGvG = document.getElementById('gvg-active-check');
+        if (checkGvG && !checkGvG.checked) return;
+
+        // 2. Entrar a la cola
+        gvgQueue = gvgQueue.then(async () => {
+            
+            // A) Obtener datos actuales
+            let gvgData = await window.electronAPI.getWidgetData('giftVsGift1');
+            if (!gvgData) gvgData = { scoreLeft: 0, scoreRight: 0 };
+
+            // B) Identificar qué regalo es para cada equipo
+            const leftId = gvgData.leftGiftId;   
+            const rightId = gvgData.rightGiftId; 
+
+            const incomingId = String(giftData.giftId);
+            if (incomingId !== String(leftId) && incomingId !== String(rightId)) return;
+
+            // C) Lógica de Combo (Matemática diferencial)
+            const comboKey = `gvg_${giftData.userId}_${giftData.giftId}`;
+            const currentRepeat = giftData.repeatCount || 1;
+            let lastRepeat = gvgComboTracker[comboKey] || 0;
+
+            if (currentRepeat <= lastRepeat) lastRepeat = 0; // Reset si es nuevo combo
+            const diff = currentRepeat - lastRepeat;
+
+            if (diff <= 0) return; 
+
+            gvgComboTracker[comboKey] = currentRepeat;
+
+            // D) Sumar puntos
+            const pointsToAdd = diff; 
+            let changed = false;
+
+            if (String(leftId) === incomingId) {
+                gvgData.scoreLeft = (gvgData.scoreLeft || 0) + pointsToAdd;
+                changed = true;
+            } else if (String(rightId) === incomingId) {
+                gvgData.scoreRight = (gvgData.scoreRight || 0) + pointsToAdd;
+                changed = true;
+            }
+
+            // E) Guardar
+            if (changed) {
+                await window.electronAPI.updateWidget('giftVsGift1', gvgData);
+            }
+
+        }).catch(err => console.error("Error GvG Queue:", err));
     };
 
     // ==========================================================

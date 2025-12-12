@@ -191,6 +191,39 @@ function createWindow() {
         });
     });
 
+    // --- NUEVO: LÓGICA DE DETECCIÓN DE JUEGOS ---
+    function getSteamLibraryFolders() {
+        const potentialSteamPaths = [
+            'C:\\Program Files (x86)\\Steam',
+            'C:\\Program Files\\Steam',
+            'D:\\Steam',
+            'E:\\Steam' 
+        ];
+
+        let steamPath = potentialSteamPaths.find(p => fs.existsSync(p));
+        if (!steamPath) return [];
+
+        const vdfPath = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
+        const libraries = [path.join(steamPath, 'steamapps')]; 
+
+        if (fs.existsSync(vdfPath)) {
+            try {
+                const content = fs.readFileSync(vdfPath, 'utf8');
+                // Busca patrones tipo "path" "C:\\juegos"
+                const regex = /"path"\s+"(.+?)"/g;
+                let match;
+                while ((match = regex.exec(content)) !== null) {
+                    // Limpia las barras dobles
+                    let libPath = match[1].replace(/\\\\/g, '\\');
+                    libraries.push(path.join(libPath, 'steamapps'));
+                }
+            } catch (e) {
+                console.error("Error leyendo librerías de Steam:", e);
+            }
+        }
+        return libraries;
+    }
+
     // --- MANEJADORES DE IPC ---
     ipcMain.handle('get-username', () => currentUsername);
     
@@ -740,12 +773,27 @@ function createWindow() {
     
     ipcMain.handle('force-fetch-gifts', async () => { if (!currentUsername) { mainWindow.webContents.send('show-toast', '⚠️ Introduce un usuario para poder actualizar la lista.'); return false; } startDetector(true); return true; });
 
-    ipcMain.handle('select-folder', async () => { 
+    ipcMain.handle('select-folder', async (event, startPath) => { 
         const result = await dialog.showOpenDialog(mainWindow, { 
             properties: ['openDirectory'],
-            title: 'Selecciona la carpeta de instalación del juego'
+            title: 'Selecciona la carpeta de instalación del juego',
+            defaultPath: startPath || undefined // <--- CAMBIO AQUÍ: Si hay ruta, abre ahí
         }); 
         return result.canceled ? null : result.filePaths[0]; 
+    });
+
+    ipcMain.handle('detect-game-path', async (event, folderName) => {
+        // 1. Obtener bibliotecas de Steam
+        const libraries = getSteamLibraryFolders();
+        
+        // 2. Buscar la carpeta específica del juego
+        for (const lib of libraries) {
+            const fullPath = path.join(lib, 'common', folderName);
+            if (fs.existsSync(fullPath)) {
+                return { success: true, path: fullPath };
+            }
+        }
+        return { success: false, path: null };
     });
 
     // --- FUNCIÓN HELPER PARA COPIAR CARPETAS RECURSIVAMENTE ---

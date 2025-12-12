@@ -354,12 +354,26 @@
       function updateSubasta(data) {
             if (!data) return;
 
-            // Temporizador
-            if (data.inSnipeMode) {
+            // Temporizador (MODIFICADO)
+            if (!data.isRunning && data.timeLeft <= 0 && !data.winnerInfo) {
+                // Caso: Terminó todo (ni corre, ni hay ganador en pantalla, tiempo 0)
+                timerElement.textContent = "🏁 FINALIZADO";
+                timerElement.style.fontSize = "35px"; // Letra más pequeña para que quepa
+                timerElement.style.color = "#FFFF00"; // <--- COLOR ROJO AQUÍ
+                timerElement.classList.remove('snipe-mode');
+            } 
+            else if (data.inSnipeMode) {
+                // Caso: Modo Snipe (Segundos rojos)
                 timerElement.textContent = data.timeLeft;
+                timerElement.style.fontSize = "5em"; // Letra grande original
+                timerElement.style.color = "#FFFFFF"; // Volver a blanco
                 timerElement.classList.add('snipe-mode');
-            } else {
+            } 
+            else {
+                // Caso: Normal (Reloj)
                 timerElement.textContent = formatTime(data.timeLeft);
+                timerElement.style.fontSize = "5em"; // Letra grande original
+                timerElement.style.color = "#FFFFFF"; // Volver a blanco
                 timerElement.classList.remove('snipe-mode');
             }
 
