@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================
-    // 3. CONTROLES MANUALES Y RESET
+    // 3. CONTROLES MANUALES Y RESET (CORREGIDO PARA SINCRONIZACIÓN)
     // ==========================================================
 
     function validateInput(input) {
@@ -131,26 +131,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if(inputLeft) inputLeft.addEventListener('input', () => validateInput(inputLeft));
     if(inputRight) inputRight.addEventListener('input', () => validateInput(inputRight));
 
-    // BOTÓN RESET (Silencioso y completo)
+    // Función auxiliar para refrescar datos antes de operar
+    async function refreshStateBeforeAction() {
+        if (window.electronAPI) {
+            const freshData = await window.electronAPI.getWidgetData('giftVsGift1');
+            if (freshData) {
+                gvgState.scoreLeft = parseInt(freshData.scoreLeft) || 0;
+                gvgState.scoreRight = parseInt(freshData.scoreRight) || 0;
+            }
+        }
+    }
+
+    // BOTÓN RESET
     if (btnReset) {
-        btnReset.addEventListener('click', () => {
+        btnReset.addEventListener('click', async () => {
+            // Aquí no hace falta leer, forzamos el 0
             gvgState.scoreLeft = 0;
             gvgState.scoreRight = 0;
-            comboTracker = {}; // Borrar memoria de combos para evitar errores matemáticos
-            
-            // CORRECCIÓN 2: NO reseteamos los inputs a 0 aquí. 
-            // Se quedan con el valor que el usuario puso (ej: 20).
-            // if(inputLeft) inputLeft.value = 0;  <-- ELIMINADO
-            // if(inputRight) inputRight.value = 0; <-- ELIMINADO
-
-            saveState(); // Guardar el reset
+            comboTracker = {}; 
+            saveState(); 
             syncWidget();
         });
     }
 
-    // IZQUIERDA
+    // IZQUIERDA - SUMAR
     if (btnAddLeft && inputLeft) {
-        btnAddLeft.addEventListener('click', () => {
+        btnAddLeft.addEventListener('click', async () => {
+            await refreshStateBeforeAction(); // <--- ESTO ARREGLA EL BUG
             const val = parseInt(inputLeft.value) || 0;
             if (val <= 0) return;
             gvgState.scoreLeft += val;
@@ -158,20 +165,24 @@ document.addEventListener('DOMContentLoaded', () => {
             syncWidget();
         });
     }
+    // IZQUIERDA - RESTAR
     if (btnSubLeft && inputLeft) {
-        btnSubLeft.addEventListener('click', () => {
+        btnSubLeft.addEventListener('click', async () => {
+            await refreshStateBeforeAction(); // <--- ESTO ARREGLA EL BUG
             const val = parseInt(inputLeft.value) || 0;
             if (val <= 0) return;
-            if (gvgState.scoreLeft - val < 0) return; 
+            // Permitimos restar aunque baje de 0 si quieres, o lo limitamos:
+            // if (gvgState.scoreLeft - val < 0) return; 
             gvgState.scoreLeft -= val;
             saveState();
             syncWidget();
         });
     }
 
-    // DERECHA
+    // DERECHA - SUMAR
     if (btnAddRight && inputRight) {
-        btnAddRight.addEventListener('click', () => {
+        btnAddRight.addEventListener('click', async () => {
+            await refreshStateBeforeAction(); // <--- ESTO ARREGLA EL BUG
             const val = parseInt(inputRight.value) || 0;
             if (val <= 0) return;
             gvgState.scoreRight += val;
@@ -179,11 +190,12 @@ document.addEventListener('DOMContentLoaded', () => {
             syncWidget();
         });
     }
+    // DERECHA - RESTAR
     if (btnSubRight && inputRight) {
-        btnSubRight.addEventListener('click', () => {
+        btnSubRight.addEventListener('click', async () => {
+            await refreshStateBeforeAction(); // <--- ESTO ARREGLA EL BUG
             const val = parseInt(inputRight.value) || 0;
             if (val <= 0) return;
-            if (gvgState.scoreRight - val < 0) return;
             gvgState.scoreRight -= val;
             saveState();
             syncWidget();
@@ -191,55 +203,85 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================
-    // 4. LÓGICA DE PUNTUACIÓN REFINADA (EL CORAZÓN)
+    // 4. LÓGICA DE PUNTUACIÓN (CON COLA DE PROCESAMIENTO ANTI-PÉRDIDA)
     // ==========================================================
+    
+    // Variable global para formar la fila (cola)
+    let gvgQueue = Promise.resolve();
+
     window.updateGvGScore = function(giftData) {
-        // MEJORA 1: Usar groupId si existe para diferenciar combos.
-        let uniqueComboId = 'no_group';
-        if (giftData.groupId) uniqueComboId = giftData.groupId;
-        
-        const comboKey = `${giftData.userId}_${giftData.giftId}_${uniqueComboId}`;
-        
-        const currentCount = parseInt(giftData.repeatCount) || 1;
-        let previousCount = comboTracker[comboKey] || 0;
+        // Añadimos este regalo al final de la fila
+        gvgQueue = gvgQueue.then(async () => {
+            
+            // --- 1. LÓGICA DE COMBO (Calcular cuánto sumar) ---
+            let uniqueComboId = 'no_group';
+            if (giftData.groupId) uniqueComboId = giftData.groupId;
+            
+            const comboKey = `${giftData.userId}_${giftData.giftId}_${uniqueComboId}`;
+            const currentCount = parseInt(giftData.repeatCount) || 1;
+            let previousCount = comboTracker[comboKey] || 0;
 
-        // MEJORA 2: Condición <= para capturar spam de clicks individuales
-        if (currentCount <= previousCount) {
-            previousCount = 0; 
-        }
+            // Si el combo se reinició
+            if (currentCount <= previousCount) {
+                previousCount = 0; 
+            }
 
-        const diff = currentCount - previousCount;
+            const diff = currentCount - previousCount;
 
-        // Si por alguna razón de lag llega duplicado exacto, salimos.
-        if (diff <= 0) return;
+            // Si no hay nada nuevo que sumar, terminamos aquí
+            if (diff <= 0) return;
 
-        // Guardamos en memoria
-        comboTracker[comboKey] = currentCount;
+            // Actualizamos el tracker inmediatamente
+            comboTracker[comboKey] = currentCount;
 
-        // Calculamos valor
-        const unitPrice = parseInt(giftData.diamondCount) || 0;
-        const totalValueToAdd = diff * unitPrice;
+            // Calculamos el valor a sumar
+            const unitPrice = parseInt(giftData.diamondCount) || 0;
+            const totalValueToAdd = diff * unitPrice;
 
-        let updated = false;
-        const incomingId = String(giftData.giftId);
-        const leftId = String(gvgState.left.id);
-        const rightId = String(gvgState.right.id);
+            // --- 2. LECTURA Y ESCRITURA SEGURA EN BASE DE DATOS ---
+            if (window.electronAPI) {
+                try {
+                    // A) LEER EL VALOR MÁS RECIENTE (Ahora nadie más está escribiendo a la vez)
+                    const freshData = await window.electronAPI.getWidgetData('giftVsGift1');
+                    if (freshData) {
+                        gvgState.scoreLeft = parseInt(freshData.scoreLeft) || 0;
+                        gvgState.scoreRight = parseInt(freshData.scoreRight) || 0;
+                        
+                        // Sincronizar info de regalos por si cambiaron
+                        if (freshData.left) gvgState.left = freshData.left;
+                        if (freshData.right) gvgState.right = freshData.right;
+                    }
+                } catch (e) {
+                    console.error("[GvG] Error leyendo datos:", e);
+                }
+            }
 
-        if (incomingId === leftId) {
-            gvgState.scoreLeft += totalValueToAdd;
-            updated = true;
-            console.log(`[GvG] Izq +${totalValueToAdd} (Diff:${diff} Count:${currentCount})`);
-        } 
-        else if (incomingId === rightId) {
-            gvgState.scoreRight += totalValueToAdd;
-            updated = true;
-            console.log(`[GvG] Der +${totalValueToAdd} (Diff:${diff} Count:${currentCount})`);
-        }
+            // B) APLICAR LA SUMA
+            let updated = false;
+            const incomingId = String(giftData.giftId);
+            const leftId = String(gvgState.left.id);
+            const rightId = String(gvgState.right.id);
 
-        if (updated) {
-            saveState(); // Guardamos el cambio
-            syncWidget();
-        }
+            if (incomingId === leftId) {
+                gvgState.scoreLeft += totalValueToAdd;
+                updated = true;
+                console.log(`[GvG] Izq +${totalValueToAdd} => Total: ${gvgState.scoreLeft}`);
+            } 
+            else if (incomingId === rightId) {
+                gvgState.scoreRight += totalValueToAdd;
+                updated = true;
+                console.log(`[GvG] Der +${totalValueToAdd} => Total: ${gvgState.scoreRight}`);
+            }
+
+            // C) GUARDAR (Ahora es seguro porque estamos dentro de la cola)
+            if (updated) {
+                saveState(); // Guardar local
+                await syncWidget(); // Guardar en DB/Electron (Esperamos a que termine)
+            }
+
+        }).catch(err => {
+            console.error("Error en la cola de GvG:", err);
+        });
     };
 
     // ==========================================================
