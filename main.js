@@ -435,6 +435,27 @@ function createWindow() {
 
                 if (message.event === 'chat' || message.event === 'like') {
                     if (message.data.nickname) {
+                        
+                        if (message.event === 'chat') {
+                            // --- FIX 1: EVITAR EL ERROR DE 'REPLACE' ---
+                            // Si TikFinity manda el emote sin texto, nos inventamos uno para que la app no falle
+                            if (!message.data.comment) {
+                                message.data.comment = "Emote"; 
+                            }
+
+                            // --- FIX 2: LECTURA CORRECTA DE ARRAY DE EMOTES ---
+                            if (message.data.emotes && message.data.emotes.length > 0) {
+                                console.log(`[TIKFINITY] 🟢 Emote encontrado en array! ID: ${message.data.emotes[0].emoteId}`);
+
+                                // Convertimos el formato de TikFinity al formato nativo
+                                message.data.emotes = message.data.emotes.map(tikFinityEmote => ({
+                                    id: String(tikFinityEmote.emoteId),      
+                                    emoteId: String(tikFinityEmote.emoteId), 
+                                    image: { url_list: [tikFinityEmote.emoteImageUrl || ''] }
+                                }));
+                            }
+                        }
+
                         mainWindow.webContents.send(message.event === 'chat' ? 'new-chat' : 'new-like', message.data);
                     }
                     return;

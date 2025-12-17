@@ -3949,7 +3949,22 @@ if (window.electronAPI) {
                 const totalValue = (eventData.diamondCount || 0) * (eventData.repeatCount || 1);
                 if (totalValue >= (alertRule.minCoins || 1)) triggerMatch = true;
             } else if (alertRule.why === 'emote' && triggerType === 'emote') {
-                if (eventData.emotes?.some(e => String(e.id) === String(alertRule.emoteId))) triggerMatch = true;
+                
+                // --- DEBUG VISUAL PARA ENCONTRAR EL ERROR ---
+                console.log("🔍 Revisando Alerta Emote:", alertRule.name);
+                
+                const match = eventData.emotes?.some(e => {
+                    // 1. Obtenemos el ID que llega (probamos todos los nombres posibles)
+                    const incomingId = String(e.id || e.emoteId || e.emote_id || '').trim();
+                    // 2. Obtenemos el ID guardado en la alerta
+                    const targetId = String(alertRule.emoteId || '').trim();
+                    
+                    console.log(`   👉 Comparando: Llegó [${incomingId}] vs Alerta [${targetId}]`);
+                    
+                    return incomingId === targetId;
+                });
+
+                if (match) triggerMatch = true;
             } else if (alertRule.why === triggerType) {
                 triggerMatch = true;
             }
