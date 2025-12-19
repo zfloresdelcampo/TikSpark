@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Gift VS Gift</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            /* 1. FONDO TRANSPARENTE PARA OBS */
+            margin: 0; padding: 0;
             background-color: transparent; 
             font-family: 'Luckiest Guy', cursive;
             overflow: hidden;
@@ -21,20 +20,32 @@
             align-items: center;
         }
 
-        /* 2. LA TARJETA NEGRA (EL RECTÁNGULO) */
         .widget-card {
-            background-color: #000000; /* Fondo negro */
-            border-radius: 20px;       /* Bordes redondeados */
-            padding: 30px 50px;        /* Espacio adentro */
+            background-color: #000000;
+            border-radius: 20px;
+            padding: 30px 50px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* Sombra para que se distinga del juego en OBS 
-            filter: drop-shadow(0 0 15px rgba(0,0,0,0.8)); */
             width: 700px;
             min-height: 400px;
+            position: relative;
         }
+
+        #overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        #overlay-img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; }
+        #overlay-text { font-size: 80px; color: white; }
 
         .battle-row {
             display: flex;
@@ -48,27 +59,18 @@
             flex-direction: column;
             align-items: center;
             width: 200px;
+            padding: 10px;
+            border-radius: 15px;
         }
 
-        .gift-img {
-            width: 150px;
-            height: 150px;
-            object-fit: contain;
-            /* Un pequeño brillo a la imagen */
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.1));
-        }
-
-        .vs-icon {
-            width: 150px;
-            margin: 0 20px;
-        }
+        .gift-img { width: 150px; height: 150px; object-fit: contain; }
+        .vs-icon { width: 150px; margin: 0 20px; }
 
         .score {
             font-size: 80px;
             font-weight: 900;
             color: white;
             margin-top: 10px;
-            -webkit-text-stroke: 1.5px black;
             paint-order: stroke fill;
         }
 
@@ -78,107 +80,143 @@
             font-weight: 800;
             color: white;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            -webkit-text-stroke: 1.5px black;
+            letter-spacing: 2px; /* Restaurado el espaciado original */
             paint-order: stroke fill;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
+        .with-stroke { -webkit-text-stroke: 1.5px black; }
     </style>
 </head>
 <body>
 
-    <!-- ESTA ES LA TARJETA QUE SE VERÁ -->
-    <div class="widget-card">
+    <div class="widget-card" id="main-card">
         
+        <div id="overlay-screen">
+            <img src="" id="overlay-img" style="display: none;">
+            <div id="overlay-text" class="with-stroke">3</div>
+        </div>
+
         <div class="battle-row">
-            <!-- IZQUIERDA -->
-            <div class="team">
-                <!-- Usamos el link directo de la Rosa de TikTok -->
-                <img src="https://p19-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png" 
-                    class="gift-img" 
-                    id="img-left" 
-                    onload="this.style.display='block'" 
-                    onerror="this.style.display='none'">
-                <div class="score" id="score-left">0</div>
+            <div class="team" id="bg-team-left">
+                <img src="" class="gift-img" id="img-left">
+                <div class="score with-stroke" id="score-left">0</div>
             </div>
 
-            <!-- CENTRO -->
-            <!-- Usamos un link de un VS png genérico o el que tengas, si no tienes, usa este -->
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Street_Fighter_VS_logo.png/600px-Street_Fighter_VS_logo.png" 
-                class="vs-icon" 
-                id="img-vs">
+                class="vs-icon" id="img-vs">
 
-            <!-- DERECHA -->
-            <div class="team">
-                <!-- Usamos el link directo del GG de TikTok -->
-                <img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp" 
-                    class="gift-img" 
-                    id="img-right" 
-                    onload="this.style.display='block'" 
-                    onerror="this.style.display='none'">
-                <div class="score" id="score-right">0</div>
+            <div class="team" id="bg-team-right">
+                <img src="" class="gift-img" id="img-right">
+                <div class="score with-stroke" id="score-right">0</div>
             </div>
         </div>
 
-        <div class="status-text" id="status-text">EMPATE</div>
-
+        <div class="status-text with-stroke" id="status-text">EMPATE</div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-
-        const imgLeft = document.getElementById('img-left');
-        const imgRight = document.getElementById('img-right');
-        const scoreLeft = document.getElementById('score-left');
-        const scoreRight = document.getElementById('score-right');
+        const mainCard = document.getElementById('main-card');
+        const scoreL = document.getElementById('score-left');
+        const scoreR = document.getElementById('score-right');
         const statusText = document.getElementById('status-text');
+        const overlay = document.getElementById('overlay-screen');
+        const overlayImg = document.getElementById('overlay-img');
+        const overlayText = document.getElementById('overlay-text');
 
-        // FUNCIÓN ÚNICA PARA ACTUALIZAR TODO
         function updateWidget(data) {
             if (!data) return;
 
-            // 1. Actualizar Puntos
-            let s1 = parseInt(data.scoreLeft || 0); // Izquierda
-            let s2 = parseInt(data.scoreRight || 0); // Derecha
-            scoreLeft.textContent = s1;
-            scoreRight.textContent = s2;
+            let s1 = parseInt(data.scoreLeft || 0);
+            let s2 = parseInt(data.scoreRight || 0);
+            scoreL.textContent = s1;
+            scoreR.textContent = s2;
+            if (data.imgLeft) document.getElementById('img-left').src = data.imgLeft;
+            if (data.imgRight) document.getElementById('img-right').src = data.imgRight;
 
-            // 2. Actualizar Imágenes
-            if (data.imgLeft) imgLeft.src = data.imgLeft;
-            if (data.imgRight) imgRight.src = data.imgRight;
+            const s = data.styles || {};
+            mainCard.style.backgroundColor = s.bgMain || "#000000";
+            document.getElementById('bg-team-left').style.backgroundColor = s.bgGift1 || "transparent";
+            document.getElementById('bg-team-right').style.backgroundColor = s.bgGift2 || "transparent";
+            
+            if (s.font) document.body.style.fontFamily = s.font;
+            
+            // Espaciado de letras manual (si no hay nada, no toca el CSS)
+            if (s.fontSpacing) {
+                document.body.style.letterSpacing = s.fontSpacing + 'px';
+            } else {
+                document.body.style.letterSpacing = ""; // Vuelve al default (2px en status-text)
+            }
+            
+            const numColor = s.colorNum || "white";
+            scoreL.style.color = numColor;
+            scoreR.style.color = numColor;
 
-            // 3. Lógica de Texto "A Favor / En Contra"
-            const diff = Math.abs(s2 - s1); // Diferencia absoluta (siempre positiva)
+            const bCol = s.colorBorder || "black";
+            const stroke = s.borderCheck !== false ? `1.5px ${bCol}` : "0px transparent";
+            document.querySelectorAll('.with-stroke').forEach(el => el.style.webkitTextStroke = stroke);
+
+            const diff = Math.abs(s2 - s1);
+            const labelL = s.textLeft || "en contra :c";
+            const labelR = s.textRight || "a favor c:";
 
             if (s2 > s1) {
-                // GANA DERECHA
-                statusText.textContent = `${diff} a favor c:`;
-                statusText.style.color = "#00FF00"; // Verde (opcional, para indicar positivo)
+                statusText.textContent = `${diff} ${labelR}`;
+                statusText.style.color = "#00FF00";
             } else if (s1 > s2) {
-                // GANA IZQUIERDA
-                statusText.textContent = `${diff} en contra :c`;
-                statusText.style.color = "#FF0000"; // Rojo (opcional, para indicar negativo)
+                statusText.textContent = `${diff} ${labelL}`;
+                statusText.style.color = "#FF0000";
             } else {
-                // EMPATE
                 statusText.textContent = "EMPATE";
                 statusText.style.color = "white";
             }
+
+            if (data.command === 'start') {
+                runStartFlow(s.textStart || "Iniciar Batalla");
+            } else if (data.command === 'stop') {
+                runStopFlow(s1, s2, s.textWin || "GANA");
+            } else if (data.command === 'reset') {
+                overlay.style.display = 'none';
+            }
         }
 
-        socket.on('init-data', (fullDb) => {
-            if (fullDb && fullDb.giftVsGift1) updateWidget(fullDb.giftVsGift1);
-        });
+        function runStartFlow(txt) {
+            overlay.style.display = 'flex';
+            overlayImg.style.display = 'none';
+            let count = 3;
+            overlayText.textContent = count;
+            let timer = setInterval(() => {
+                count--;
+                if (count > 0) overlayText.textContent = count;
+                else {
+                    clearInterval(timer);
+                    overlayText.textContent = txt;
+                    setTimeout(() => overlay.style.display = 'none', 1500);
+                }
+            }, 1000);
+        }
 
-        socket.on('widget-update', (msg) => {
-            if (msg.widgetId === 'giftVsGift1') updateWidget(msg.data);
-        });
+        function runStopFlow(s1, s2, txtWin) {
+            overlay.style.display = 'flex';
+            if (s1 === s2) {
+                overlayImg.style.display = 'none';
+                overlayText.textContent = "EMPATE";
+            } else {
+                overlayImg.style.display = 'block';
+                overlayImg.src = (s1 > s2) ? document.getElementById('img-left').src : document.getElementById('img-right').src;
+                overlayText.textContent = txtWin;
+            }
+
+            // --- AGREGA ESTO AQUÍ ABAJO ---
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 5000); // 5000 milisegundos = 5 segundos
+
+        }
+
+        socket.on('init-data', (db) => { if (db && db.giftVsGift1) updateWidget(db.giftVsGift1); });
+        socket.on('widget-update', (msg) => { if (msg.widgetId === 'giftVsGift1') updateWidget(msg.data); });
     </script>
-
 </body>
 </html>

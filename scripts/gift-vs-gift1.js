@@ -20,6 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddRight = document.getElementById('btn-add-right');
     const btnSubRight = document.getElementById('btn-sub-right');
 
+    // --- REFERENCIAS MODAL PERSONALIZAR ---
+    const btnPersonalizar = document.querySelector('#card-gift-vs-gift .personalize-btn');
+    const modalGvG = document.getElementById('config-gvg-modal');
+    const btnCloseGvG = document.getElementById('close-config-gvg');
+    const btnSaveGvG = document.getElementById('btn-save-gvg-config');
+    const btnResetGvG = document.getElementById('btn-reset-gvg-config');
+
     // ==========================================================
     // 2. ESTADO, PERSISTENCIA Y VARIABLES
     // ==========================================================
@@ -28,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
         left: { id: 5655, name: 'Rose', coins: 1, img: 'https://p19-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
         right: { id: 6064, name: 'GG', coins: 1, img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp' },
         scoreLeft: 0,
-        scoreRight: 0
+        scoreRight: 0,
+        styles: {} // <--- AGREGA ESTA LÍNEA
     };
 
     // Memoria de combos (No se guarda en localStorage para evitar errores con combos viejos)
@@ -378,6 +386,137 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INICIO ---
     loadSavedState();
+
+    // ==========================================================
+    // SECCIÓN NUEVA: LÓGICA DE PERSONALIZACIÓN (PICKR Y EVENTOS)
+    // ==========================================================
+    const gvgColorIds = ['gvg-bg-main', 'gvg-color-num', 'gvg-color-border', 'gvg-bg-gift1', 'gvg-bg-gift2'];
+    const gvgPickers = {};
+
+    gvgColorIds.forEach(id => {
+        gvgPickers[id] = Pickr.create({
+            el: `#${id}`,
+            theme: 'nano',
+            default: '#ffffff',
+            components: {
+                preview: true, opacity: true, hue: true,
+                interaction: { hex: true, rgba: true, input: true, save: true }
+            }
+        });
+        gvgPickers[id].on('change', (color) => {
+            const hex = color.toHEXA().toString();
+            const span = document.getElementById(`hex-${id}`);
+            if(span) span.textContent = hex;
+        });
+    });
+
+    function updateModalInputs() {
+        const s = gvgState.styles || {};
+        if (s.font) document.getElementById('gvg-font').value = s.font;
+        if (s.fontSize) document.getElementById('gvg-font-size').value = s.fontSize;
+        if (s.fontSpacing !== undefined) document.getElementById('gvg-font-spacing').value = s.fontSpacing;
+        document.getElementById('gvg-border-check').checked = s.borderCheck !== false;
+        document.getElementById('gvg-show-bottom').checked = s.showBottomText !== false;
+        if (s.vsOffset) document.getElementById('gvg-vs-offset').value = s.vsOffset;
+        
+        document.getElementById('gvg-txt-left').value = s.textLeft || "en contra :c";
+        document.getElementById('gvg-txt-right').value = s.textRight || "a favor c:";
+        document.getElementById('gvg-txt-start').value = s.textStart || "Iniciar Batalla";
+        document.getElementById('gvg-txt-win').value = s.textWin || "GANA";
+
+        if(s.bgMain) gvgPickers['gvg-bg-main'].setColor(s.bgMain);
+        if(s.colorNum) gvgPickers['gvg-color-num'].setColor(s.colorNum);
+        if(s.colorBorder) gvgPickers['gvg-color-border'].setColor(s.colorBorder);
+        if(s.bgGift1) gvgPickers['gvg-bg-gift1'].setColor(s.bgGift1);
+        if(s.bgGift2) gvgPickers['gvg-bg-gift2'].setColor(s.bgGift2);
+    }
+
+    if(btnPersonalizar) {
+        btnPersonalizar.addEventListener('click', () => {
+            updateModalInputs();
+            modalGvG.classList.add('open');
+        });
+    }
+
+    if(btnCloseGvG) btnCloseGvG.addEventListener('click', () => modalGvG.classList.remove('open'));
+
+    if(btnSaveGvG) {
+        btnSaveGvG.addEventListener('click', async () => {
+            const getCol = (id) => gvgPickers[id].getColor().toRGBA().toString(0);
+            
+            gvgState.styles = {
+                font: document.getElementById('gvg-font').value,
+                fontSize: parseInt(document.getElementById('gvg-font-size').value),
+                fontSpacing: parseInt(document.getElementById('gvg-font-spacing').value),
+                bgMain: getCol('gvg-bg-main'),
+                colorNum: getCol('gvg-color-num'),
+                colorBorder: getCol('gvg-color-border'),
+                bgGift1: getCol('gvg-bg-gift1'),
+                bgGift2: getCol('gvg-bg-gift2'),
+                borderCheck: document.getElementById('gvg-border-check').checked,
+                showBottomText: document.getElementById('gvg-show-bottom').checked,
+                vsOffset: parseInt(document.getElementById('gvg-vs-offset').value),
+                textLeft: document.getElementById('gvg-txt-left').value,
+                textRight: document.getElementById('gvg-txt-right').value,
+                textStart: document.getElementById('gvg-txt-start').value,
+                textWin: document.getElementById('gvg-txt-win').value
+            };
+
+            saveState();
+            await syncWidget();
+            modalGvG.classList.remove('open');
+            showLocalToast("🎨 Estilo actualizado");
+        });
+    }
+
+     // --- LOGICA DE BOTONES START / STOP ---
+    const btnPlayGVG = document.getElementById('btn-play-gvg');
+    const btnStopGVG = document.getElementById('btn-stop-gvg');
+
+    if (btnPlayGVG) {
+        btnPlayGVG.addEventListener('click', async () => {
+            if (window.electronAPI) {
+                await window.electronAPI.updateWidget('giftVsGift1', { ...gvgState, command: 'start' });
+            }
+        });
+    }
+
+    if (btnStopGVG) {
+        btnStopGVG.addEventListener('click', async () => {
+            if (window.electronAPI) {
+                await window.electronAPI.updateWidget('giftVsGift1', { ...gvgState, command: 'stop' });
+            }
+        });
+    }
+
+    // --- CORRECCIÓN BOTÓN RESTABLECER (MODAL) ---
+    if(btnResetGvG) {
+        btnResetGvG.addEventListener('click', async () => {
+            // 1. Valores por defecto
+            document.getElementById('gvg-font').value = "'Luckiest Guy', cursive";
+            document.getElementById('gvg-font-size').value = 50;
+            document.getElementById('gvg-font-spacing').value = 0;
+            document.getElementById('gvg-border-check').checked = true;
+            document.getElementById('gvg-show-bottom').checked = true;
+            document.getElementById('gvg-vs-offset').value = 10;
+            document.getElementById('gvg-txt-left').value = "en contra :c";
+            document.getElementById('gvg-txt-right').value = "a favor c:";
+            document.getElementById('gvg-txt-start').value = "Iniciar Batalla";
+            document.getElementById('gvg-txt-win').value = "GANA";
+
+            // 2. Resetear Pickers de color
+            gvgPickers['gvg-bg-main'].setColor('#000000');
+            gvgPickers['gvg-color-num'].setColor('#ffffff');
+            gvgPickers['gvg-color-border'].setColor('#000000');
+            gvgPickers['gvg-bg-gift1'].setColor('#00000000');
+            gvgPickers['gvg-bg-gift2'].setColor('#00000000');
+
+            // 3. Limpiar estado y sincronizar
+            gvgState.styles = {};
+            await syncWidget();
+            showLocalToast("🔄 Valores restablecidos");
+        });
+    }
     
     // Forzar lectura de la base de datos un momento después para corregir posibles errores de caché (Thumbs Up)
     setTimeout(() => {

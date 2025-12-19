@@ -3725,11 +3725,10 @@ button:disabled {
     z-index: -1;
 }
 /* =========================================================
-   ESTILOS TIMER: VERSIÓN FINAL (FLECHAS ACTIVAS + ESTILO PRO)
+   REDISEÑO TOTAL TIMER (ESTILO GRID / INTERACTIVE)
    ========================================================= */
 
 /* 1. RESTAURAR FLECHAS (SPINNERS) */
-/* La referencia las tiene, así que las dejamos visibles y las estilizamos si es posible */
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button { 
   -webkit-appearance: auto !important;
@@ -3737,137 +3736,82 @@ input[type=number]::-webkit-outer-spin-button {
   cursor: pointer;
 }
 
-/* 2. CONTENEDOR DEL INPUT COMPUESTO */
+/* 2. INPUT CON UNIDAD (Arreglado: Ancho 100%) */
 .input-with-unit {
     display: flex;
     align-items: center;
-    background-color: #181818; /* Gris oscuro, no negro puro */
-    border: 1px solid #444;    /* Borde sutil */
+    background-color: #181818; 
+    border: 1px solid #444;    
     border-radius: 4px;
-    width: 160px;              /* Ancho suficiente para flechas y texto */
+    width: 100%; /* <--- ESTO ARREGLA QUE SE VEAN CORTOS */
     height: 35px;
     transition: all 0.2s ease;
     overflow: hidden;
 }
+.input-with-unit:focus-within { border-color: #8A2BE2; box-shadow: 0 0 0 1px rgba(138, 43, 226, 0.5); }
 
-.input-with-unit:focus-within {
-    border-color: #8A2BE2; /* Morado TikSpark */
-    box-shadow: 0 0 0 1px rgba(138, 43, 226, 0.5);
-}
-
-/* 3. EL CAMPO DE NÚMERO */
 .input-with-unit input {
-    flex: 1; /* Ocupa el espacio disponible */
-    background: transparent;
-    border: none;
-    color: #e0e0e0;
-    padding-left: 10px;
-    padding-right: 5px; /* Espacio para no pegar con las flechas */
-    font-size: 13px;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 600;
-    outline: none;
-    height: 100%;
-    /* Alineamos a la izquierda para dejar espacio a las flechas a la derecha */
-    text-align: left; 
+    flex: 1; background: transparent; border: none; color: #e0e0e0;
+    padding-left: 10px; font-size: 13px; font-weight: 600; outline: none; height: 100%; text-align: left;
 }
-
-/* 4. LA ETIQUETA DE UNIDAD (Segundos/Minutos) */
 .input-with-unit span {
-    background-color: #252526; /* Un tono más claro para diferenciar */
-    color: #999;
-    font-size: 11px;
-    padding: 0 12px;
-    height: 100%;
-    display: flex;
+    background-color: #252526; color: #999; font-size: 11px; padding: 0 12px; height: 100%;
+    display: flex; align-items: center; border-left: 1px solid #444; user-select: none; min-width: 65px; justify-content: center;
+}
+
+/* 3. ESTRUCTURA DE TABLA (GRID) SOLO PARA TIMER */
+#timer-section .config-item.inline-inputs {
+    display: grid !important;
+    grid-template-columns: 35% 65%; /* 35% Texto - 65% Input */
     align-items: center;
-    justify-content: center;
-    border-left: 1px solid #444;
-    user-select: none;
-    min-width: 65px;
+    padding: 15px 10px !important;
+    border-bottom: 1px solid #333; /* Línea separadora */
+    margin-bottom: 0 !important;
+    background-color: transparent;
 }
 
-/* 5. ESTILO PARA EL SELECT (Acción al terminar) - Igual que los demás */
-#timer-cfg-action {
-    background-color: #181818;
-    color: #e0e0e0;
-    border: 1px solid #444;
-    border-radius: 4px;
-    padding: 0 10px;
-    height: 35px;
-    width: 200px;
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
-    appearance: none; /* Quitamos flecha nativa para poner una personalizada si quisieras, pero por ahora nativa oscura */
-    background-image: url('data:image/svg+xml;utf8,<svg fill="%23999" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-}
+/* El último elemento no lleva línea */
+#timer-section .config-item.inline-inputs:last-child { border-bottom: none; }
 
-#timer-cfg-action:focus {
-    border-color: #8A2BE2;
-}
-
-/* Opciones del select */
-#timer-cfg-action option {
-    background-color: #181818;
-    color: white;
-    padding: 10px;
-}
-
-/* 6. CAJA DE CONFIGURACIÓN */
-.config-grid {
-    background-color: #1e1e1e; /* Gris base, no negro */
-    border: 1px solid #333;
-    border-radius: 6px;
-    padding: 20px;
-    margin-top: 10px;
-}
-
-/* 7. FILAS ALINEADAS */
-.config-item.inline-inputs {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #2a2a2a;
-}
-
-.config-item.inline-inputs:last-child {
-    border-bottom: none;
-}
-
-.config-item label {
-    color: #ccc;
-    font-size: 13px;
+/* Texto de la izquierda */
+#timer-section .config-item label {
+    font-size: 14px;
+    color: #b0b0b0;
     font-weight: 500;
+    margin: 0;
+    text-align: left;
 }
 
-/* 8. INPUT MANUAL EN LA BARRA DE CONTROL */
+/* Inputs de la derecha (Oscuros y anchos) */
+#timer-section .input-with-unit,
+#timer-section select,
+#timer-section input[type="number"]:not(.input-with-unit input) { 
+    width: 100% !important;
+    background-color: #111 !important; /* Fondo negro profundo */
+    border: 1px solid #333 !important;
+    height: 40px; /* Más altos */
+    border-radius: 6px;
+}
+
+/* Ajuste visual para el select */
+#timer-cfg-action {
+    background-color: #111; color: #e0e0e0; border: 1px solid #333; padding: 0 10px; height: 40px; width: 100%; border-radius: 6px;
+}
+
+
+/* 5. CAJA DE INFORMACIÓN */
+#timer-section .info-box {
+    margin: 20px 0;
+    background-color: #202225;
+    border: 1px solid #333;
+    border-left: 4px solid #5c1d80;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+/* 6. INPUT MANUAL DE CONTROL */
 #timer-manual-input {
-    background-color: #181818;
-    border: 1px solid #444;
-    color: white;
-    padding: 5px;
-    border-radius: 4px;
-    height: 30px;
-    outline: none;
-    font-weight: bold;
-}
-#timer-manual-input:focus {
-    border-color: #8A2BE2;
-}
-
-/* 9. PREVIEW */
-#timer-preview-display {
-    font-family: 'Consolas', monospace;
-    font-size: 55px;
-    font-weight: bold;
-    color: #f0f0f0;
-    letter-spacing: 3px;
-    text-shadow: 0 0 10px rgba(138, 43, 226, 0.2); /* Sombra morada muy sutil */
+    background-color: #181818; border: 1px solid #444; color: white; padding: 5px; border-radius: 4px; height: 30px; outline: none; font-weight: bold;
 }
 /* Botones de Control (Iniciar, Pausa, Reiniciar) y los de (+ / -) */
 #timer-section .button-group button,
@@ -4247,3 +4191,215 @@ input.custom-chk {
 
 .hotkey-select:hover { border-color: #666; background-color: #2d2d2d; }
 .hotkey-select:focus { border-color: #8A2BE2; background-color: #1e1e1e; }
+/* --- ESTANDARIZACIÓN DE MODALES DE PERSONALIZACIÓN --- */
+
+/* 1. Definir la fila como una rejilla (Grid) */
+.modal-body-scroll .config-item.inline-inputs {
+    display: grid !important;
+    grid-template-columns: 40% 60%; /* La clave de la alineación */
+    align-items: center;            /* Centrado vertical */
+    padding: 15px 0 !important;     /* Aire arriba y abajo */
+    border-bottom: 1px solid #333;  /* La línea separadora */
+    margin-bottom: 0 !important;
+    gap: 10px;                      /* Espacio entre texto e input */
+}
+
+/* El último item no lleva línea */
+.modal-body-scroll .config-item.inline-inputs:last-child {
+    border-bottom: none;
+}
+/* 2. Obligar a TODOS los controles a ser idénticos */
+.modal-body-scroll input[type="text"],
+.modal-body-scroll input[type="number"],
+.modal-body-scroll select,
+.modal-body-scroll .custom-select-container, /* Para tu selector de iconos */
+.modal-body-scroll .selected-option {        /* Para tu selector de iconos */
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 38px !important;       /* Altura uniforme para todos */
+    background-color: #111 !important; /* Fondo casi negro */
+    border: 1px solid #444 !important;
+    border-radius: 6px;
+    box-sizing: border-box;        /* Para que el padding no rompa el tamaño */
+    color: white;
+}
+
+/* Ajuste específico para que el texto dentro no quede pegado */
+.modal-body-scroll input {
+    padding: 0 10px;
+}
+/* 3. Estirar el botón de color */
+.modal-body-scroll .color-picker-btn, 
+.modal-body-scroll .pcr-button {
+    width: 100% !important;
+    height: 38px !important;
+    border-radius: 6px !important;
+    border: 1px solid #444 !important;
+    background-position: center; /* Si usas la librería, esto centra el color */
+}
+/* --- ESTILO DE COLOR (VERSIÓN COMPATIBLE CON TEMA NANO) --- */
+
+/* 1. La barra larga (Contenedor) */
+.modal-body-scroll .color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100% !important;
+    height: 45px !important;
+    background-color: #111 !important;
+    border: 1px solid #444 !important;
+    border-radius: 6px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+    gap: 15px; 
+}
+
+/* 2. El contenedor que crea la librería (Pickr) */
+.modal-body-scroll .color-picker-wrapper .pickr {
+    /* Forzamos al contenedor de la librería a tener el tamaño del cuadro */
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 3. El botón dentro del cuadro */
+.modal-body-scroll .color-picker-wrapper .pcr-button {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 4px !important;
+    /* Le ponemos el borde gris al botón */
+    border: 2px solid #555 !important; 
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden; /* Para que el color no se salga de las esquinas redondeadas */
+    position: relative;
+}
+
+/* 4. Asegurar que los elementos internos (color) llenen el botón */
+.modal-body-scroll .color-picker-wrapper .pcr-button::before,
+.modal-body-scroll .color-picker-wrapper .pcr-button::after {
+    border-radius: 0 !important; /* Cuadrados perfectos dentro del botón */
+    content: '' !important;
+    position: absolute !important;
+    top: 0; left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    /* IMPORTANTE: Quitamos display: none para que se VEA el color */
+    display: block !important; 
+}
+
+/* 5. El texto Hexadecimal */
+.modal-body-scroll .color-hex-text {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e0e0e0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+/* =========================================================
+   FIX CHECKBOX: COLOR MORADO Y PALOMITA VISIBLE
+   ========================================================= */
+
+/* 1. La Caja del Checkbox (Estado Normal) */
+.modal-body-scroll input[type="checkbox"] {
+    /* Forzamos que se comporte como bloque para poder dibujarlo */
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    
+    /* Tamaño y forma */
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important; /* Evita que se aplaste */
+    border-radius: 6px !important;
+    
+    /* Colores base (Apagado) */
+    background-color: #111 !important;
+    border: 2px solid #555 !important;
+    cursor: pointer;
+    
+    /* Posicionamiento */
+    position: relative;
+    display: inline-block;
+    justify-self: start;
+    margin: 0 !important;
+}
+
+/* 2. Estado ACTIVADO (Fondo Morado) */
+.modal-body-scroll input[type="checkbox"]:checked {
+    background-color: #8A2BE2 !important; /* <-- TU MORADO */
+    border-color: #8A2BE2 !important;
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.4);
+}
+
+/* 3. La Palomita / Flecha (Dibujo) */
+.modal-body-scroll input[type="checkbox"]:checked::after {
+    content: '' !important;
+    position: absolute !important;
+    display: block !important;
+    
+    /* Forma de la L virada (Check) */
+    width: 5px !important;
+    height: 10px !important;
+    border: solid white !important;
+    border-width: 0 3px 3px 0 !important; /* Grosor de la línea */
+    
+    /* Posición exacta para centrarlo en 24px */
+    left: 6px !important;
+    top: 2px !important;
+    
+    /* Rotación */
+    transform: rotate(45deg) !important;
+}
+/* --- ESTILO DARK PARA EL SELECTOR DE COLORES (PICKR) --- */
+.pcr-app {
+    background: #1e1e1e !important; /* Fondo del selector */
+    border: 1px solid #333 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+}
+
+/* Estilo para los cuadros de resultados (HEX, RGB, HSV) */
+.pcr-interaction .pcr-result {
+    background: #111 !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+}
+
+/* Estilo para los botones inferiores */
+.pcr-interaction input {
+    border-radius: 4px !important;
+}
+
+/* Botón "Aplicar" (el de guardar) */
+.pcr-interaction .pcr-save {
+    background: #2d2d2d !important;
+    border: 1px solid #444 !important;
+    color: white !important;
+    transition: all 0.2s !important;
+}
+.pcr-interaction .pcr-save:hover {
+    background: #3d3d3d !important;
+    border-color: #555 !important;
+}
+
+/* Botón "Cancelar" */
+.pcr-interaction .pcr-cancel {
+    background: transparent !important;
+    border: 1px solid #444 !important;
+    color: #aaa !important;
+}
+.pcr-interaction .pcr-cancel:hover {
+    color: white !important;
+    border-color: #666 !important;
+}
+
+/* Ocultar etiquetas innecesarias si aparecen */
+.pcr-interaction .pcr-type {
+    display: none !important;
+}

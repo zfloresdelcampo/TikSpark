@@ -44,6 +44,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+        pickers[id].on('change', (color, source, instance) => {
+            const hexColor = color.toHEXA().toString();
+            const textSpan = document.getElementById(`hex-${id}`);
+            if (textSpan) {
+                textSpan.textContent = hexColor;
+            }
+            saveData(); 
+        });
     });
 
     // --- 2. CONFIGURACIÓN CUSTOM SELECT (Imágenes) ---
@@ -129,7 +137,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputs.borderCheck.checked = (s.borderCheck !== false);
 
         // Actualizar Pickers
-        if (s.bgMain) pickers['mw1-bg-main'].setColor(s.bgMain);
+        if (s.bgMain) {
+            pickers['mw1-bg-main'].setColor(s.bgMain);
+            document.getElementById('hex-mw1-bg-main').textContent = s.bgMain; // <--- NUEVO
+        }
         else pickers['mw1-bg-main'].setColor('#000000');
 
         if (s.bgCounter) pickers['mw1-bg-counter'].setColor(s.bgCounter);

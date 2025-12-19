@@ -2738,7 +2738,7 @@
     <div id="config-meta-win-modal" class="modal-overlay">
         <div class="modal-content" style="width: 500px;">
             <div class="modal-header">
-                <h3>Personalizar Overlay 1</h3>
+                <h3>Personalizar Overlay</h3>
                 <button class="modal-close-button" id="close-config-meta-win">&times;</button>
             </div>
 
@@ -2789,40 +2789,60 @@
                     </div>
                 </div>
 
-                <!-- COLORES CON PICKR -->
+                <!-- COLORES CON PICKR (ESTRUCTURA NUEVA) -->
+                
                 <div class="config-item inline-inputs">
                     <label>Fondo General:</label>
-                    <div class="color-picker-btn" id="mw1-bg-main"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-bg-main"></div>
+                        <span class="color-hex-text" id="hex-mw1-bg-main">#000000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Contador Color Fondo:</label>
-                    <div class="color-picker-btn" id="mw1-bg-counter"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-bg-counter"></div>
+                        <span class="color-hex-text" id="hex-mw1-bg-counter">#000000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Meta Color Fondo:</label>
-                    <div class="color-picker-btn" id="mw1-bg-meta"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-bg-meta"></div>
+                        <span class="color-hex-text" id="hex-mw1-bg-meta">#000000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Texto Win Game:</label>
-                    <input type="text" id="mw1-text" value="WIN" style="width: 150px;">
+                    <!-- Quitamos el style="width" porque el CSS nuevo ya lo controla -->
+                    <input type="text" id="mw1-text" value="WIN">
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Color Texto Win:</label>
-                    <div class="color-picker-btn" id="mw1-color-text"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-color-text"></div>
+                        <span class="color-hex-text" id="hex-mw1-color-text">#ffffff</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Color del Contador:</label>
-                    <div class="color-picker-btn" id="mw1-color-num"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-color-num"></div>
+                        <span class="color-hex-text" id="hex-mw1-color-num">#ffffff</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Color Contador Negativo:</label>
-                    <div class="color-picker-btn" id="mw1-color-neg"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-color-neg"></div>
+                        <span class="color-hex-text" id="hex-mw1-color-neg">#ff0000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
@@ -2832,7 +2852,10 @@
 
                 <div class="config-item inline-inputs">
                     <label>Color de Borde:</label>
-                    <div class="color-picker-btn" id="mw1-color-border"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw1-color-border"></div>
+                        <span class="color-hex-text" id="hex-mw1-color-border">#000000</span>
+                    </div>
                 </div>
 
             </div>
@@ -2848,7 +2871,7 @@
     <div id="config-meta-win-modal-2" class="modal-overlay">
         <div class="modal-content" style="width: 500px;">
             <div class="modal-header">
-                <h3>Personalizar Overlay 2</h3>
+                <h3>Personalizar Overlay</h3>
                 <button class="modal-close-button" id="close-config-meta-win-2">&times;</button>
             </div>
 
@@ -2899,40 +2922,60 @@
                     </div>
                 </div>
 
-                <!-- COLORES CON PICKR -->
+                <!-- COLORES CON PICKR (ESTRUCTURA NUEVA) -->
+                
                 <div class="config-item inline-inputs">
                     <label>Fondo General:</label>
-                    <div class="color-picker-btn" id="mw2-bg-main"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-bg-main"></div>
+                        <span class="color-hex-text" id="hex-mw2-bg-main">#000000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Contador Color Fondo:</label>
-                    <div class="color-picker-btn" id="mw2-bg-counter"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-bg-counter"></div>
+                        <span class="color-hex-text" id="hex-mw2-bg-counter">#000000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Meta Color Fondo:</label>
-                    <div class="color-picker-btn" id="mw2-bg-meta"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-bg-meta"></div>
+                        <span class="color-hex-text" id="hex-mw2-bg-meta">#000000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Texto Win Game:</label>
-                    <input type="text" id="mw2-text" value="WIN" style="width: 150px;">
+                    <!-- Quitamos el style="width" porque el CSS nuevo ya lo controla -->
+                    <input type="text" id="mw2-text" value="WIN">
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Color Texto Win:</label>
-                    <div class="color-picker-btn" id="mw2-color-text"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-color-text"></div>
+                        <span class="color-hex-text" id="hex-mw2-color-text">#ffffff</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Color del Contador:</label>
-                    <div class="color-picker-btn" id="mw2-color-num"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-color-num"></div>
+                        <span class="color-hex-text" id="hex-mw2-color-num">#ffffff</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
                     <label>Color Contador Negativo:</label>
-                    <div class="color-picker-btn" id="mw2-color-neg"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-color-neg"></div>
+                        <span class="color-hex-text" id="hex-mw2-color-neg">#ff0000</span>
+                    </div>
                 </div>
 
                 <div class="config-item inline-inputs">
@@ -2942,7 +2985,10 @@
 
                 <div class="config-item inline-inputs">
                     <label>Color de Borde:</label>
-                    <div class="color-picker-btn" id="mw2-color-border"></div>
+                    <div class="color-picker-wrapper">
+                        <div class="color-preview-box" id="mw2-color-border"></div>
+                        <span class="color-hex-text" id="hex-mw2-color-border">#000000</span>
+                    </div>
                 </div>
 
             </div>
@@ -2950,6 +2996,129 @@
             <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
                 <button id="btn-save-meta-win-config-2" style="background-color: #5c1d80; color: white; border: none; padding: 8px 15px; border-radius: 4px;">Ok</button>
                 <button id="btn-reset-meta-win-config-2" style="background-color: #333; color: white; border: 1px solid #555; padding: 8px 15px; border-radius: 4px;">Restablecer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === MODAL PERSONALIZAR GIFT VS GIFT 1 === -->
+    <div id="config-gvg-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 550px; background-color: #1e1e1e; border: 1px solid #444; border-radius: 12px; overflow: hidden;">
+            
+            <!-- Cabecera Sólida -->
+            <div class="modal-header" style="background-color: #1e1e1e; padding: 20px 30px; border-bottom: 1px solid #333; margin-bottom: 0;">
+                <h3 style="margin: 0; color: white;">Personalizar Overlay</h3>
+                <button class="modal-close-button" id="close-config-gvg">&times;</button>
+            </div>
+
+            <!-- Cuerpo con Scroll -->
+            <div class="modal-body-scroll" style="padding: 30px; background-color: #1e1e1e; max-height: 60vh; overflow-y: auto;">
+                
+                <div class="config-item inline-inputs">
+                    <label>Fuente:</label>
+                    <select id="gvg-font">
+                        <option value="'Luckiest Guy', cursive">Luckiest Guy</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Impact, sans-serif">Impact</option>
+                        <option value="'Press Start 2P', cursive">Pixel</option>
+                    </select>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Tamaño de fuente:</label>
+                    <input type="number" id="gvg-font-size" value="50">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Espaciado (Letras):</label>
+                    <input type="number" id="gvg-font-spacing" value="0">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Fondo:</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-bg-main"></div>
+                        <span class="color-hex-text" id="hex-gvg-bg-main">#090909</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Números:</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-color-num"></div>
+                        <span class="color-hex-text" id="hex-gvg-color-num">#ffffff</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Habilitar Borde:</label>
+                    <input type="checkbox" id="gvg-border-check" checked>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Borde:</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-color-border"></div>
+                        <span class="color-hex-text" id="hex-gvg-color-border">#000000</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Fondo Regalo 1 (Izq):</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-bg-gift1"></div>
+                        <span class="color-hex-text" id="hex-gvg-bg-gift1">#00000000</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Fondo Regalo 2 (Der):</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-bg-gift2"></div>
+                        <span class="color-hex-text" id="hex-gvg-bg-gift2">#00000000</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Mostrar Texto Inferior:</label>
+                    <input type="checkbox" id="gvg-show-bottom" checked>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Versus Vertical Offset:</label>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" id="gvg-vs-offset" value="10">
+                        <span style="font-size: 11px; color: #888;">px</span>
+                    </div>
+                </div>
+
+                <h4 class="modal-section-title">Textos de la Batalla</h4>
+                
+                <div class="config-item inline-inputs">
+                    <label>Texto Team Izq:</label>
+                    <input type="text" id="gvg-txt-left" value="en contra :c">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Team Der:</label>
+                    <input type="text" id="gvg-txt-right" value="a favor c:">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Iniciar:</label>
+                    <input type="text" id="gvg-txt-start" value="Iniciar Batalla">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Finalizar:</label>
+                    <input type="text" id="gvg-txt-win" value="GANA">
+                </div>
+
+            </div>
+
+            <!-- Pie Sólido -->
+            <div class="modal-footer" style="background-color: #1e1e1e; padding: 20px 30px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="btn-save-gvg-config" style="background-color: #5c1d80; color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">Ok</button>
+                <button id="btn-reset-gvg-config" style="background-color: #333; color: white; border: 1px solid #555; padding: 8px 20px; border-radius: 4px; cursor: pointer;">Restablecer</button>
             </div>
         </div>
     </div>

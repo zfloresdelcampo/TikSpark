@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const optionItem = document.createElement('div');
             optionItem.className = 'gift-option-item'; 
             optionItem.innerHTML = `<img src="${emote.image_url}" alt="Emote" style="width: 40px; height: 40px; object-fit: contain;">
-                                    <div class="gift-details"><span class="gift-name" style="font-size: 12px; font-weight: bold;">${emote.name || 'Emote'}</span></div>`;
+                                    <div class="gift-details"><span class="gift-name" style="font-size: 12px; font-weight: bold;">${emote.name || 'Emote'}</span><span style="color: #888; font-size: 10px;">ID: ${emote.id}</span></div>`;
             
             // CLICK HANDLER
             optionItem.addEventListener('click', (e) => { 
