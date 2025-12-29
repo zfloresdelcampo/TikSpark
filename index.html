@@ -1497,6 +1497,175 @@
                 </div>
 
             </div>
+
+            <!-- === NUEVA SECCIÓN: GIFT VS GIFT 2 (3 VS 3) === -->
+            <div class="overlay-card-container" id="card-gift-vs-gift-2">
+                <div class="overlay-header">
+                    <h3 class="overlay-title">Gift VS Gift 2 <i class="fab fa-tiktok" style="font-size: 0.8em; margin-left: 5px;"></i></h3>
+                </div>
+
+                <div class="goal-inputs-container">
+                    <div class="goal-input-item small">
+                        <label>Meta:</label>
+                        <input type="number" id="gvg2-meta-input" value="9000">
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Cuando se alcanza:</label>
+                        <select id="gvg2-behavior-select">
+                            <option value="increase">Aumentar Meta</option>
+                            <option value="maintain">Mantener Meta</option>
+                            <option value="stop">Detener</option>
+                        </select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion Win Left:</label>
+                        <select id="gvg2-action-left-select"><option value="">Selecciona...</option></select>
+                    </div>
+                    <div class="goal-input-item">
+                        <label>Accion Win Right:</label>
+                        <select id="gvg2-action-right-select"><option value="">Selecciona...</option></select>
+                    </div>
+                    <div class="goal-input-item checkbox">
+                        <label>Activar Widget:</label>
+                        <input type="checkbox" id="gvg2-active-check" checked>
+                    </div>
+                </div>
+
+                <div class="overlay-url-actions">
+                    <input type="text" value="http://127.0.0.1:5500/gift-vs-gift2.html" readonly class="url-input" id="gvg2-url-input">
+                    <div class="action-buttons">
+                        <button class="action-btn primary-btn" id="gvg2-copy-btn">Copiar URL</button>
+                        <button class="action-btn icon-btn" id="btn-play-gvg2" title="Play"><i class="fas fa-play"></i></button>
+                        <button class="action-btn icon-btn" id="btn-reset-gvg2" title="Reset"><i class="fas fa-redo"></i></button>
+                        <button class="action-btn icon-btn" id="btn-stop-gvg2" title="Stop"><i class="fas fa-stop"></i></button>
+                        <button class="action-btn personalize-btn" id="btn-config-gvg2"><i class="fas fa-cog"></i> Personalizar</button>
+                    </div>
+                </div>
+
+                <div class="subasta-controls-panel" style="margin-top: 15px; background: transparent; padding: 0; border: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                        <!-- PUNTOS IZQUIERDA -->
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="color: #e0e0e0; font-size: 14px;">Puntos Team Izquierdo:</label>
+                            <div style="display: flex; align-items: center; background: #181818; border: 1px solid #444; border-radius: 5px; padding: 3px;">
+                                <span style="color: #666; padding: 0 8px; font-size: 13px;">#</span>
+                                <input type="number" id="gvg2-score-left-input" value="0" style="width: 50px; background: transparent; border: none; color: white; text-align: center;">
+                            </div>
+                            <button id="btn-add-left2" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-plus"></i></button>
+                            <button id="btn-sub-left2" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-minus"></i></button>
+                        </div>
+                        <!-- PUNTOS DERECHA -->
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="color: #e0e0e0; font-size: 14px;">Puntos Team Derecho:</label>
+                            <div style="display: flex; align-items: center; background: #181818; border: 1px solid #444; border-radius: 5px; padding: 3px;">
+                                <span style="color: #666; padding: 0 8px; font-size: 13px;">#</span>
+                                <input type="number" id="gvg2-score-right-input" value="0" style="width: 50px; background: transparent; border: none; color: white; text-align: center;">
+                            </div>
+                            <button id="btn-add-right2" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-plus"></i></button>
+                            <button id="btn-sub-right2" style="background: #333; border: 1px solid #555; color: white; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;"><i class="fas fa-minus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === FILAS DE SELECCIÓN TRIPLE (ESTRUCTURA EXACTA AL OVERLAY 1) === -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin: 20px 0;">
+
+                    <!-- COLUMNA IZQUIERDA -->
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Botón 1 Izq -->
+                        <div id="btn-gvg2-left-1" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;"></span>
+                                    <span style="color: #888; font-size: 11px;"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                        <!-- Botón 2 Izq -->
+                        <div id="btn-gvg2-left-2" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;"></span>
+                                    <span style="color: #888; font-size: 11px;"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                        <!-- Botón 3 Izq -->
+                        <div id="btn-gvg2-left-3" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;"></span>
+                                    <span style="color: #888; font-size: 11px;"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN CENTRAL -->
+                    <div style="width: 120px;">
+                        <div id="btn-select-vs-overlay2" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Street_Fighter_VS_logo.png/600px-Street_Fighter_VS_logo.png" 
+                                    style="height: 20px; width: auto; object-fit: contain;" 
+                                    alt="VS Icon">
+
+                                <span style="color: #e0e0e0; font-size: 14px;">vs 1</span>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA -->
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Botón 1 Der -->
+                        <div id="btn-gvg2-right-1" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;"></span>
+                                    <span style="color: #888; font-size: 11px;"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                        <!-- Botón 2 Der -->
+                        <div id="btn-gvg2-right-2" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;"></span>
+                                    <span style="color: #888; font-size: 11px;"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                        <!-- Botón 3 Der -->
+                        <div id="btn-gvg2-right-3" style="position: relative; background: #181818; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; height: 45px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="" style="width: 30px; height: 30px; object-fit: contain;">
+                                <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                                    <span style="color: #e0e0e0; font-weight: bold; font-size: 14px;"></span>
+                                    <span style="color: #888; font-size: 11px;"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color: #666;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="goal-preview-box" style="min-height: 500px;">
+                    <div class="preview-iframe-wrapper">
+                        <iframe src="http://127.0.0.1:5500/gift-vs-gift2.html" class="gift-iframe-preview" scrolling="no"></iframe>
+                    </div>
+                </div>
+            </div>
             
         </div>
 
@@ -1508,22 +1677,26 @@
                 </div>
 
                 <div class="games-grid">
-                    <div class="game-card" onclick="openSection('section-cubo-tnt')">
+                    <div class="game-card" onclick="openSection('section-bedrock')">
                         <div class="game-img-container">
-                            <img src="images/minigames/minecraft-tnt.jpg" alt="Cubo TNT">
+                            <img src="images/minigames/minecraft-bedrock.jpg" alt="Bedrock">
                             <span class="version-badge">v1.0</span>
                         </div>
-                        <div class="game-title">CUBO TNT</div>
+                        <div class="game-title">Bedrock</div>
                     </div>
-                    <div class="game-card locked">
+                    <div class="game-card" onclick="openSection('section-sandbox')">
                         <div class="game-img-container">
-                            <img src="images/minigames/sandbox.jpg" alt="Sandbox">
-                            <div class="lock-overlay">
-                                <i class="fas fa-lock"></i>
-                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
-                            </div>
+                            <img src="images/minigames/minecraft-sandbox.jpg" alt="Sandbox">
+                            <span class="version-badge">v1.0</span>
                         </div>
                         <div class="game-title">SANDBOX</div>
+                    </div>
+                    <div class="game-card" onclick="openSection('section-parkour')">
+                        <div class="game-img-container">
+                            <img src="images/minigames/minecraft-parkour.jpg" alt="Parkour">
+                            <span class="version-badge">v1.0</span>
+                        </div>
+                        <div class="game-title">PARKOUR</div>
                     </div>
                     <div class="game-card locked">
                         <div class="game-img-container">
@@ -1784,40 +1957,132 @@
 
         <!-- SECCIONES DE JUEGOS INDIVIDUALES (VAN AFUERA DE minigames-section) -->
 
-        <div id="section-cubo-tnt" class="content-section">
+        <div id="section-bedrock" class="content-section">
             <div class="section-container">
                 <div class="game-header-row">
                     <button class="btn-back-purple" onclick="openSection('minigames-section')">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <h2 style="color: #8A2BE2;">Cubo TNT</h2>
+                    <h2 style="color: #8A2BE2;">Bedrock</h2>
                 </div>
                 <div class="game-dashboard-card">
                     <div class="dashboard-left">
                         <div class="dashboard-icon">
-                            <img src="images/minigames/minecraft-tnt.jpg" alt="Icono Cubo TNT">
+                            <img src="images/minigames/minecraft-bedrock.jpg" alt="Icono Bedrock">
                         </div>
-                        <h2>Cubo TNT</h2>
+                        <h2>Bedrock</h2>
                         <div class="dashboard-meta">
                             <span class="meta-tag premium">Premium Plus</span>
                             <span class="meta-version">v1.0</span>
                         </div>
                     </div>
-                    <div class="dashboard-right" style="background-image: url('images/minigames/minecraft-tnt.jpg');">
+                    <div class="dashboard-right" style="background-image: url('images/minigames/minecraft-bedrock.jpg');">
                         <div class="game-path-bar">
                             <div class="path-info">
                                 <i class="fas fa-gamepad"></i>
-                                <span id="cubo-tnt-game-path">No seleccionado...</span>
+                                <span id="bedrock-game-path">No seleccionado...</span>
                             </div>
-                            <button class="btn-select-path" id="btn-select-cubo-tnt-path">
-                                Select Cubo TNT
+                            <button class="btn-select-path" id="btn-select-bedrock-path">
+                                Select Bedrock
                             </button>
                         </div>
                         <div class="dashboard-actions">
-                            <button class="btn-dashboard btn-install" id="btn-install-cubo-tnt">
+                            <button class="btn-dashboard btn-install" id="btn-install-bedrock">
                                 Instalar Mod
                             </button>
-                            <button class="btn-dashboard btn-delete" id="btn-delete-cubo-tnt">
+                            <button class="btn-dashboard btn-delete" id="btn-delete-bedrock">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-sandbox" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">Sandbox</h2>
+                </div>
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/minecraft-sandbox.jpg" alt="Icono Sandbox">
+                        </div>
+                        <h2>Sandbox</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-right" style="background-image: url('images/minigames/minecraft-sandbox.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="parkour-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-sandbox-path">
+                                Select Sandbox
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-sandbox">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-sandbox">
+                                Borrar Mod
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="info-box">
+                    <p>Recomendado: Ejecuta TikSpark en modo administrador y cierra el juego antes de instalar los mods.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-parkour" class="content-section">
+            <div class="section-container">
+                <div class="game-header-row">
+                    <button class="btn-back-purple" onclick="openSection('minigames-section')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 style="color: #8A2BE2;">Parkour</h2>
+                </div>
+                <div class="game-dashboard-card">
+                    <div class="dashboard-left">
+                        <div class="dashboard-icon">
+                            <img src="images/minigames/minecraft-parkour.jpg" alt="Icono Parkour">
+                        </div>
+                        <h2>Parkour</h2>
+                        <div class="dashboard-meta">
+                            <span class="meta-tag premium">Premium Plus</span>
+                            <span class="meta-version">v1.0</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-right" style="background-image: url('images/minigames/minecraft-parkour.jpg');">
+                        <div class="game-path-bar">
+                            <div class="path-info">
+                                <i class="fas fa-gamepad"></i>
+                                <span id="parkour-game-path">No seleccionado...</span>
+                            </div>
+                            <button class="btn-select-path" id="btn-select-parkour-path">
+                                Select Parkour
+                            </button>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button class="btn-dashboard btn-install" id="btn-install-Parkour">
+                                Instalar Mod
+                            </button>
+                            <button class="btn-dashboard btn-delete" id="btn-delete-Parkour">
                                 Borrar Mod
                             </button>
                         </div>
@@ -2436,6 +2701,7 @@
                                     <option value="metaWin1" selected>Contador Win 1</option>
                                     <option value="metaWin2">Contador Win 2</option>
                                     <option value="giftVsGift1">Gift VS Gift 1</option>
+                                    <option value="giftVsGift2">Gift VS Gift 2</option>
                                     <option value="timer">Timer</option>
                                 </select>
                             </div>
@@ -3123,6 +3389,129 @@
         </div>
     </div>
 
+    <!-- === MODAL PERSONALIZAR GIFT VS GIFT 2 (3 VS 3) === -->
+    <div id="config-gvg-modal-2" class="modal-overlay">
+        <div class="modal-content" style="width: 550px; background-color: #1e1e1e; border: 1px solid #444; border-radius: 12px; overflow: hidden;">
+            
+            <!-- Cabecera Sólida -->
+            <div class="modal-header" style="background-color: #1e1e1e; padding: 20px 30px; border-bottom: 1px solid #333; margin-bottom: 0;">
+                <h3 style="margin: 0; color: white;">Personalizar Overlay</h3>
+                <button class="modal-close-button" id="close-config-gvg-2">&times;</button>
+            </div>
+
+            <!-- Cuerpo con Scroll -->
+            <div class="modal-body-scroll" style="padding: 30px; background-color: #1e1e1e; max-height: 60vh; overflow-y: auto;">
+                
+                <div class="config-item inline-inputs">
+                    <label>Fuente:</label>
+                    <select id="gvg-font-2">
+                        <option value="'Luckiest Guy', cursive">Luckiest Guy</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Impact, sans-serif">Impact</option>
+                        <option value="'Press Start 2P', cursive">Pixel</option>
+                    </select>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Tamaño de fuente:</label>
+                    <input type="number" id="gvg-font-size-2" value="50">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Espaciado (Letras):</label>
+                    <input type="number" id="gvg-font-spacing-2" value="0">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Fondo:</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-bg-main-2"></div>
+                        <span class="color-hex-text" id="hex-gvg-bg-main-2">#090909</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Números:</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-color-num-2"></div>
+                        <span class="color-hex-text" id="hex-gvg-color-num-2">#ffffff</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Habilitar Borde:</label>
+                    <input type="checkbox" id="gvg-border-check-2" checked>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Color de Borde:</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-color-border-2"></div>
+                        <span class="color-hex-text" id="hex-gvg-color-border-2">#000000</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Fondo Regalo 1 (Izq):</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-bg-gift1-2"></div>
+                        <span class="color-hex-text" id="hex-gvg-bg-gift1-2">#00000000</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Fondo Regalo 2 (Der):</label>
+                    <div class="color-picker-wrapper">
+                        <div id="gvg-bg-gift2-2"></div>
+                        <span class="color-hex-text" id="hex-gvg-bg-gift2-2">#00000000</span>
+                    </div>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Mostrar Texto Inferior:</label>
+                    <input type="checkbox" id="gvg-show-bottom-2" checked>
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Versus Vertical Offset:</label>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" id="gvg-vs-offset-2" value="10">
+                        <span style="font-size: 11px; color: #888;">px</span>
+                    </div>
+                </div>
+
+                <h4 class="modal-section-title">Textos de la Batalla</h4>
+                
+                <div class="config-item inline-inputs">
+                    <label>Texto Team Izq:</label>
+                    <input type="text" id="gvg-txt-left-2" value="en contra :c">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Team Der:</label>
+                    <input type="text" id="gvg-txt-right-2" value="a favor c:">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Iniciar:</label>
+                    <input type="text" id="gvg-txt-start-2" value="Iniciar Batalla">
+                </div>
+
+                <div class="config-item inline-inputs">
+                    <label>Texto Finalizar:</label>
+                    <input type="text" id="gvg-txt-win-2" value="GANA">
+                </div>
+
+            </div>
+
+            <!-- Pie Sólido -->
+            <div class="modal-footer" style="background-color: #1e1e1e; padding: 20px 30px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="btn-save-gvg-config-2" style="background-color: #5c1d80; color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">Ok</button>
+                <button id="btn-reset-gvg-config-2" style="background-color: #333; color: white; border: 1px solid #555; padding: 8px 20px; border-radius: 4px; cursor: pointer;">Restablecer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LIBRERÍAS FIREBASE (Versión Modular Compatible 8.10.1) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -3155,6 +3544,7 @@
     <script src="scripts/subasta.js"></script>
     <script src="scripts/social-rotator.js"></script>
     <script src="scripts/gift-vs-gift1.js"></script>
+    <script src="scripts/gift-vs-gift2.js"></script>
     <script src="scripts/timer.js"></script>
     <audio id="audio-player" style="display: none;"></audio>
     <input type="file" id="audio-file-input" accept=".mp3,.wav,.ogg" style="display: none;">

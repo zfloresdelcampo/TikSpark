@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gift VS Gift 2 (3 VS 3)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0; padding: 0;
+            background-color: transparent; 
+            font-family: 'Luckiest Guy', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .widget-card {
+            background-color: #000000;
+            border-radius: 20px;
+            padding: 30px 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 700px;
+            min-height: 400px;
+            position: relative;
+        }
+
+        #overlay-screen-2 {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        #overlay-img-2 { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; }
+        #overlay-text-2 { font-size: 80px; color: white; }
+
+        .battle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px;
+            padding: 10px;
+            border-radius: 15px;
+            overflow: hidden; /* Importante para el recorte del slide */
+        }
+
+        /* CONTENEDOR PARA ROTACIÓN */
+        .gift-carousel {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            overflow: hidden;
+        }
+        .gift-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 600px; /* 4 regalos x 150px */
+        }
+        .gift-img { width: 150px; height: 150px; object-fit: contain; flex-shrink: 0; }
+        
+        .vs-icon { width: 150px; margin: 0 20px; }
+
+        .score {
+            font-size: 80px;
+            font-weight: 900;
+            color: white;
+            margin-top: 10px;
+            paint-order: stroke fill;
+        }
+
+        .status-text {
+            margin-top: 20px;
+            font-size: 50px;
+            font-weight: 800;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            paint-order: stroke fill;
+        }
+
+        .with-stroke { -webkit-text-stroke: 1.5px black; }
+    </style>
+</head>
+<body>
+
+    <div class="widget-card" id="main-card-2">
+        
+        <div id="overlay-screen-2">
+            <img src="" id="overlay-img-2" style="display: none;">
+            <div id="overlay-text-2" class="with-stroke">3</div>
+        </div>
+
+        <div class="battle-row">
+            <div class="team" id="bg-team-left-2">
+                <div class="gift-carousel">
+                    <div class="gift-track" id="track-left">
+                        <img src="" class="gift-img" id="img-left-1">
+                        <img src="" class="gift-img" id="img-left-2">
+                        <img src="" class="gift-img" id="img-left-3">
+                        <img src="" class="gift-img" id="img-left-clone"> <!-- LA COPIA -->
+                    </div>
+                </div>
+                <div class="score with-stroke" id="score-left-2">0</div>
+            </div>
+
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Street_Fighter_VS_logo.png/600px-Street_Fighter_VS_logo.png" 
+                class="vs-icon" id="img-vs-2">
+
+            <div class="team" id="bg-team-right-2">
+                <div class="gift-carousel">
+                    <div class="gift-track" id="track-right">
+                        <img src="" class="gift-img" id="img-right-1">
+                        <img src="" class="gift-img" id="img-right-2">
+                        <img src="" class="gift-img" id="img-right-3">
+                        <img src="" class="gift-img" id="img-right-clone"> <!-- LA COPIA -->
+                    </div>
+                </div>
+                <div class="score with-stroke" id="score-right-2">0</div>
+            </div>
+        </div>
+
+        <div class="status-text with-stroke" id="status-text-2">EMPATE</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const mainCard2 = document.getElementById('main-card-2');
+        const scoreL2 = document.getElementById('score-left-2');
+        const scoreR2 = document.getElementById('score-right-2');
+        const statusText2 = document.getElementById('status-text-2');
+        const overlay2 = document.getElementById('overlay-screen-2');
+        const overlayImg2 = document.getElementById('overlay-img-2');
+        const overlayText2 = document.getElementById('overlay-text-2');
+
+        let lastCommandId2 = null; 
+        let startInterval2 = null; 
+        let currentGiftIndex = 0; 
+
+        // Lógica de rotación infinita hacia la izquierda
+        setInterval(() => {
+            currentGiftIndex++;
+            const trackL = document.getElementById('track-left');
+            const trackR = document.getElementById('track-right');
+            
+            const offset = currentGiftIndex * 150;
+            
+            // Movimiento fluido
+            trackL.style.transition = "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
+            trackR.style.transition = "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
+            trackL.style.transform = `translateX(-${offset}px)`;
+            trackR.style.transform = `translateX(-${offset}px)`;
+
+            // Si llegamos a la posición del CLON (que es la 4ta imagen, índice 3)
+            if (currentGiftIndex === 3) {
+                setTimeout(() => {
+                    // Salto instantáneo al inicio
+                    currentGiftIndex = 0;
+                    trackL.style.transition = "none"; 
+                    trackR.style.transition = "none";
+                    trackL.style.transform = `translateX(0px)`;
+                    trackR.style.transform = `translateX(0px)`;
+                }, 600); // 600ms exactos, lo que dura la transición de llegada
+            }
+        }, 5000);
+
+        function updateWidget2(data) {
+            if (!data) return;
+
+            // 1. SIEMPRE ACTUALIZAR NÚMEROS Y COLORES
+            let s1 = parseInt(data.scoreLeft || 0);
+            let s2 = parseInt(data.scoreRight || 0);
+            scoreL2.textContent = s1;
+            scoreR2.textContent = s2;
+
+            // Actualizar imágenes de los 3 slots + Clones
+            if (data.leftGifts) {
+                data.leftGifts.forEach((g, i) => {
+                    const img = document.getElementById(`img-left-${i+1}`);
+                    if (img && g.img) img.src = g.img;
+                    // Sincronizar el clon izquierdo
+                    if (i === 0) document.getElementById('img-left-clone').src = g.img;
+                });
+            }
+            if (data.rightGifts) {
+                data.rightGifts.forEach((g, i) => {
+                    const img = document.getElementById(`img-right-${i+1}`);
+                    if (img && g.img) img.src = g.img;
+                    // --- CORRECCIÓN: Sincronizar el clon derecho ---
+                    if (i === 0) document.getElementById('img-right-clone').src = g.img;
+                });
+            }
+
+            const s = data.styles || {};
+            mainCard2.style.backgroundColor = s.bgMain || "#000000";
+            document.getElementById('bg-team-left-2').style.backgroundColor = s.bgGift1 || "transparent";
+            document.getElementById('bg-team-right-2').style.backgroundColor = s.bgGift2 || "transparent";
+            if (s.font) document.body.style.fontFamily = s.font;
+            if (s.fontSpacing) document.body.style.letterSpacing = s.fontSpacing + 'px';
+            else document.body.style.letterSpacing = "";
+            const numColor = s.colorNum || "white";
+            scoreL2.style.color = numColor;
+            scoreR2.style.color = numColor;
+            const bCol = s.colorBorder || "black";
+            const stroke = s.borderCheck !== false ? `1.5px ${bCol}` : "0px transparent";
+            document.querySelectorAll('.with-stroke').forEach(el => el.style.webkitTextStroke = stroke);
+
+            const diff = Math.abs(s2 - s1);
+            const labelL = s.textLeft || "en contra :c";
+            const labelR = s.textRight || "a favor c:";
+            if (s2 > s1) {
+                statusText2.textContent = `${diff} ${labelR}`;
+                statusText2.style.color = "#00FF00";
+            } else if (s1 > s2) {
+                statusText2.textContent = `${diff} ${labelL}`;
+                statusText2.style.color = "#FF0000";
+            } else {
+                statusText2.textContent = "EMPATE";
+                statusText2.style.color = "white";
+            }
+
+            // 2. LÓGICA DE COMANDOS
+            if (!data.command || !data.timestamp) return;
+            const currentCommandId = data.command + data.timestamp;
+            if (currentCommandId === lastCommandId2) return;
+            lastCommandId2 = currentCommandId;
+
+            if (startInterval2) { clearInterval(startInterval2); startInterval2 = null; }
+
+            if (data.command === 'start') {
+                runStartFlow2(s.textStart || "Iniciar Batalla");
+            } else if (data.command === 'stop') {
+                overlay2.style.display = 'none'; 
+                runStopFlow2(s1, s2, s.textWin || "GANA");
+            } else if (data.command === 'reset') {
+                overlay2.style.display = 'none';
+            }
+        }
+
+        function runStartFlow2(txt) {
+            overlay2.style.display = 'flex';
+            overlayImg2.style.display = 'none';
+            let count = 3;
+            overlayText2.textContent = count;
+            startInterval2 = setInterval(() => {
+                count--;
+                if (count > 0) { overlayText2.textContent = count; } 
+                else {
+                    clearInterval(startInterval2);
+                    startInterval2 = null;
+                    overlayText2.textContent = txt;
+                    setTimeout(() => { if (!startInterval2) overlay2.style.display = 'none'; }, 1500);
+                }
+            }, 1000);
+        }
+
+        function runStopFlow2(s1, s2, txtWin) {
+            overlay2.style.display = 'flex';
+            if (s1 === s2) {
+                overlayImg2.style.display = 'none';
+                overlayText2.textContent = "EMPATE";
+            } else {
+                overlayImg2.style.display = 'block';
+                overlayImg2.src = (s1 > s2) ? document.getElementById('img-left-1').src : document.getElementById('img-right-1').src;
+                overlayText2.textContent = txtWin;
+            }
+            setTimeout(() => { overlay2.style.display = 'none'; }, 3000);
+        }
+
+        socket.on('init-data', (db) => { if (db && db.giftVsGift2) updateWidget2(db.giftVsGift2); });
+        socket.on('widget-update', (msg) => { if (msg.widgetId === 'giftVsGift2') updateWidget2(msg.data); });
+    </script>
+</body>
+</html>

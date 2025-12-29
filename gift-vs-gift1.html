@@ -125,13 +125,18 @@
         const overlayImg = document.getElementById('overlay-img');
         const overlayText = document.getElementById('overlay-text');
 
+        let lastCommandId = null; 
+        let startInterval = null; // Variable para controlar el conteo de 3 segundos
+
         function updateWidget(data) {
             if (!data) return;
 
+            // 1. SIEMPRE ACTUALIZAR NÚMEROS Y COLORES (Base Layer)
             let s1 = parseInt(data.scoreLeft || 0);
             let s2 = parseInt(data.scoreRight || 0);
             scoreL.textContent = s1;
             scoreR.textContent = s2;
+
             if (data.imgLeft) document.getElementById('img-left').src = data.imgLeft;
             if (data.imgRight) document.getElementById('img-right').src = data.imgRight;
 
@@ -139,28 +144,20 @@
             mainCard.style.backgroundColor = s.bgMain || "#000000";
             document.getElementById('bg-team-left').style.backgroundColor = s.bgGift1 || "transparent";
             document.getElementById('bg-team-right').style.backgroundColor = s.bgGift2 || "transparent";
-            
             if (s.font) document.body.style.fontFamily = s.font;
-            
-            // Espaciado de letras manual (si no hay nada, no toca el CSS)
-            if (s.fontSpacing) {
-                document.body.style.letterSpacing = s.fontSpacing + 'px';
-            } else {
-                document.body.style.letterSpacing = ""; // Vuelve al default (2px en status-text)
-            }
-            
+            if (s.fontSpacing) document.body.style.letterSpacing = s.fontSpacing + 'px';
+            else document.body.style.letterSpacing = "";
             const numColor = s.colorNum || "white";
             scoreL.style.color = numColor;
             scoreR.style.color = numColor;
-
             const bCol = s.colorBorder || "black";
             const stroke = s.borderCheck !== false ? `1.5px ${bCol}` : "0px transparent";
             document.querySelectorAll('.with-stroke').forEach(el => el.style.webkitTextStroke = stroke);
 
+            // Texto de estado inferior (Empate / Gana por X)
             const diff = Math.abs(s2 - s1);
             const labelL = s.textLeft || "en contra :c";
             const labelR = s.textRight || "a favor c:";
-
             if (s2 > s1) {
                 statusText.textContent = `${diff} ${labelR}`;
                 statusText.style.color = "#00FF00";
@@ -172,9 +169,27 @@
                 statusText.style.color = "white";
             }
 
+            // 2. LÓGICA DE COMANDOS (Capa superior)
+            // Si el mensaje no trae comando, nos detenemos aquí.
+            if (!data.command || !data.timestamp) return;
+
+            const currentCommandId = data.command + data.timestamp;
+
+            // Si el ID es igual al anterior, es un mensaje repetido, lo ignoramos.
+            if (currentCommandId === lastCommandId) return;
+            
+            lastCommandId = currentCommandId;
+
+            // Si llega un comando nuevo, cancelamos cualquier conteo previo para que no se bugee
+            if (startInterval) {
+                clearInterval(startInterval);
+                startInterval = null;
+            }
+
             if (data.command === 'start') {
                 runStartFlow(s.textStart || "Iniciar Batalla");
             } else if (data.command === 'stop') {
+                overlay.style.display = 'none'; 
                 runStopFlow(s1, s2, s.textWin || "GANA");
             } else if (data.command === 'reset') {
                 overlay.style.display = 'none';
@@ -186,13 +201,19 @@
             overlayImg.style.display = 'none';
             let count = 3;
             overlayText.textContent = count;
-            let timer = setInterval(() => {
+            
+            startInterval = setInterval(() => {
                 count--;
-                if (count > 0) overlayText.textContent = count;
-                else {
-                    clearInterval(timer);
+                if (count > 0) {
+                    overlayText.textContent = count;
+                } else {
+                    clearInterval(startInterval);
+                    startInterval = null;
                     overlayText.textContent = txt;
-                    setTimeout(() => overlay.style.display = 'none', 1500);
+                    setTimeout(() => {
+                        // Solo ocultamos si no se ha iniciado otro comando entre medias
+                        if (!startInterval) overlay.style.display = 'none';
+                    }, 1500);
                 }
             }, 1000);
         }
@@ -211,7 +232,7 @@
             // --- AGREGA ESTO AQUÍ ABAJO ---
             setTimeout(() => {
                 overlay.style.display = 'none';
-            }, 5000); // 5000 milisegundos = 5 segundos
+            }, 3000); // 5000 milisegundos = 5 segundos
 
         }
 

@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
+                delete parsed.command; // <--- AÑADE ESTO: Borra el comando viejo al cargar
                 // Fusionar lo guardado con el estado actual
                 gvgState = { ...gvgState, ...parsed };
                 
@@ -114,17 +115,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if(descEl) descEl.textContent = `${gift.coins} Coins - ID:${gift.id}`;
     }
 
-    // --- SINCRONIZAR CON OBS ---
+    // --- VARIABLE DE CONTROL (Ponla al principio del DOMContentLoaded) ---
+    let isBattleRunning = false; 
+
+    // --- SINCRONIZAR CON OBS (EXTREMADAMENTE LIMPIO) ---
     async function syncWidget() {
         if(window.electronAPI) {
-            // Enviamos el estado completo + las imágenes planas para el HTML
-            const dataToSend = {
-                ...gvgState, 
-                imgLeft: gvgState.left.img,
-                imgRight: gvgState.right.img,
-                scoreLeft: gvgState.scoreLeft,
-                scoreRight: gvgState.scoreRight
-            };
+            // Clonamos el estado actual
+            const dataToSend = JSON.parse(JSON.stringify(gvgState));
+            
+            // ELIMINAMOS cualquier comando o tiempo. 
+            // Esto garantiza que el Overlay reciba PUNTOS pero NUNCA una orden de animar.
+            delete dataToSend.command; 
+            delete dataToSend.timestamp; 
+
             await window.electronAPI.updateWidget('giftVsGift1', dataToSend);
         }
     }
@@ -151,14 +155,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // BOTÓN RESET
+    // Busca el event listener de btnReset y déjalo así:
     if (btnReset) {
         btnReset.addEventListener('click', async () => {
-            // Aquí no hace falta leer, forzamos el 0
             gvgState.scoreLeft = 0;
             gvgState.scoreRight = 0;
-            comboTracker = {}; 
-            saveState(); 
-            syncWidget();
+            await window.electronAPI.updateWidget('giftVsGift1', { 
+                ...gvgState, 
+                command: 'reset' 
+            });
+            saveState();
         });
     }
 
@@ -173,15 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
             syncWidget();
         });
     }
-    // IZQUIERDA - RESTAR
+    // --- CONTROLES DE RESTA (BLOQUEO DE NEGATIVOS) ---
     if (btnSubLeft && inputLeft) {
         btnSubLeft.addEventListener('click', async () => {
-            await refreshStateBeforeAction(); // <--- ESTO ARREGLA EL BUG
             const val = parseInt(inputLeft.value) || 0;
-            if (val <= 0) return;
-            // Permitimos restar aunque baje de 0 si quieres, o lo limitamos:
-            // if (gvgState.scoreLeft - val < 0) return; 
-            gvgState.scoreLeft -= val;
+            // Math.max(0, ...) asegura que si es menor a 0, se quede en 0
+            gvgState.scoreLeft = Math.max(0, (gvgState.scoreLeft || 0) - val);
             saveState();
             syncWidget();
         });
@@ -201,10 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // DERECHA - RESTAR
     if (btnSubRight && inputRight) {
         btnSubRight.addEventListener('click', async () => {
-            await refreshStateBeforeAction(); // <--- ESTO ARREGLA EL BUG
             const val = parseInt(inputRight.value) || 0;
-            if (val <= 0) return;
-            gvgState.scoreRight -= val;
+            gvgState.scoreRight = Math.max(0, (gvgState.scoreRight || 0) - val);
             saveState();
             syncWidget();
         });
@@ -473,19 +474,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPlayGVG = document.getElementById('btn-play-gvg');
     const btnStopGVG = document.getElementById('btn-stop-gvg');
 
+    // --- BOTONES DE ACCIÓN (CON BLOQUEO Y TIMESTAMPS) ---
     if (btnPlayGVG) {
         btnPlayGVG.addEventListener('click', async () => {
-            if (window.electronAPI) {
-                await window.electronAPI.updateWidget('giftVsGift1', { ...gvgState, command: 'start' });
-            }
+            isBattleRunning = true; // Habilitamos el botón Stop
+            
+            // Enviamos el comando de inicio con un tiempo exacto
+            await window.electronAPI.updateWidget('giftVsGift1', { 
+                ...gvgState, 
+                command: 'start', 
+                timestamp: Date.now() 
+            });
         });
     }
 
+    // Botón STOP (Cuadrado)
     if (btnStopGVG) {
         btnStopGVG.addEventListener('click', async () => {
-            if (window.electronAPI) {
-                await window.electronAPI.updateWidget('giftVsGift1', { ...gvgState, command: 'stop' });
-            }
+            // Si no se ha dado a Play, el botón no hace NADA (sin notificaciones molestas)
+            if (!isBattleRunning) return; 
+
+            await window.electronAPI.updateWidget('giftVsGift1', { 
+                ...gvgState, 
+                command: 'stop', 
+                timestamp: Date.now() 
+            });
+            
+            isBattleRunning = false; // Deshabilitamos el Stop hasta el próximo Play
         });
     }
 

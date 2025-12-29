@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const checkTopGiftActive = document.getElementById('activate-widget-topgifters');
     const checkSubastaActive = document.getElementById('activate-widget-subasta');
     const checkGvGActive = document.getElementById('gvg-active-check');
+    const checkGvG2Active = document.getElementById('gvg2-active-check');
     const checkTopGiftRecord = document.getElementById('chk-enable-top-gift');
     const checkTopStreakRecord = document.getElementById('chk-enable-top-streak');
 
@@ -1047,7 +1048,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // --- AQUI ACTIVAS TUS JUEGOS ---
-    setupGameController('cubo-tnt', 'Cubo TNT');
+    setupGameController('bedrock', 'Bedrock');
+    setupGameController('sandbox', 'Sandbox');
+    setupGameController('parkour', 'Parkour');
     setupGameController('peak', 'PEAK'); 
     setupGameController('supermarket-simulator', 'Supermarket Simulator');
     setupGameController('the-forest', 'The Forest');
@@ -1447,6 +1450,13 @@ if (window.electronAPI) {
             }
         }
         // -----------------------------------------------------
+
+        // --- AÑADE ESTO AQUÍ (Lógica para el Overlay 2) ---
+        if (checkGvG2Active && checkGvG2Active.checked) {
+            if (typeof window.updateGvGScore2 === 'function') {
+                window.updateGvGScore2(data);
+            }
+        }
 
         updateTimerFromEvent('coins', data.diamondCount);
 
@@ -2873,6 +2883,13 @@ if (window.electronAPI) {
                 { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/sumar_icon.png' },
                 { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/reset_icon.png' }
             ];
+        } else if (widget === 'giftVsGift2') {
+            prefix = "2 Gift vs Gift";
+            options = [
+                { val: 'sumar_left', text: 'Sumar Izquierda', icon: 'images/sumar_icon.png' },
+                { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/sumar_icon.png' },
+                { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/reset_icon.png' }
+            ];
         } else if (widget === 'timer') {
             prefix = "Timer";
             options = [
@@ -3697,7 +3714,29 @@ if (window.electronAPI) {
         // --- OPCIÓN A: GIFT VS GIFT 1 ---
         if (widgetId === 'giftVsGift1') {
             let gvgData = await window.electronAPI.getWidgetData('giftVsGift1');
-            // Si no existe data previa, iniciamos en 0
+            if (!gvgData) gvgData = { scoreLeft: 0, scoreRight: 0 };
+
+            const qty = parseInt(quantity) || 1;
+
+            if (operation === 'sumar_left') {
+                gvgData.scoreLeft = (gvgData.scoreLeft || 0) + qty;
+            } else if (operation === 'sumar_right') {
+                gvgData.scoreRight = (gvgData.scoreRight || 0) + qty;
+            } else if (operation === 'reset') {
+                gvgData.scoreLeft = 0;
+                gvgData.scoreRight = 0;
+                gvgData.isBattleActive = false;
+            }
+            
+            // ESTA LÍNEA ES EL TRUCO:
+            // Al actualizar puntos, forzamos que NO haya comando. 
+            // Así la capa superior se queda quieta.
+            await window.electronAPI.updateWidget('giftVsGift1', { ...gvgData, command: null });
+        }
+        
+        // --- OPCIÓN D: GIFT VS GIFT 2 (NUEVO) ---
+        else if (widgetId === 'giftVsGift2') {
+            let gvgData = await window.electronAPI.getWidgetData('giftVsGift2');
             if (!gvgData) gvgData = { scoreLeft: 0, scoreRight: 0 };
 
             const qty = parseInt(quantity) || 1;
@@ -3711,12 +3750,10 @@ if (window.electronAPI) {
                 gvgData.scoreRight = 0;
             }
             
-            // Actualizamos el widget y guardamos
-            await window.electronAPI.updateWidget('giftVsGift1', gvgData);
-            // Truco: Guardamos en localStorage para que la pantalla principal se entere si está abierta
-            localStorage.setItem('tikspark_gvg1_data', JSON.stringify(gvgData));
+            // Enviamos los puntos actualizados al Overlay 2
+            await window.electronAPI.updateWidget('giftVsGift2', { ...gvgData, command: null });
         }
-        
+
         // --- OPCIÓN B: CONTADORES WIN (1 y 2) ---
         // Cambiamos 'else' por 'else if' para ser específicos
         else if (widgetId === 'metaWin1' || widgetId === 'metaWin2') {
