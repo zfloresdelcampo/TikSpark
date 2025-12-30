@@ -161,33 +161,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentData = await window.electronAPI.getWidgetData('subasta');
         const parts = currentData?.participants || {};
         const sorted = Object.values(parts).sort((a, b) => b.coins - a.coins);
-        const winner = sorted[0];
 
-        if (winner) {
+        if (sorted.length > 0) {
+            const maxCoins = sorted[0].coins;
+            // Filtramos a los que empataron con el máximo (límite 3 para que quepan)
+            const winners = sorted.filter(p => p.coins === maxCoins).slice(0, 3);
+
             await window.electronAPI.updateWidget('subasta', {
                 isRunning: false,
                 timeLeft: 0, 
-                winnerInfo: {
-                    nickname: winner.nickname,
-                    profilePictureUrl: winner.profilePictureUrl,
-                    coins: winner.coins
-                }
+                winners: winners 
             });
         }
 
-        // Esperar 5 Segundos y cambiar a estado FINALIZADO (sin reiniciar tiempo aun)
         setTimeout(async () => {
-            localState.inSnipeMode = false;
-            localState.isFinished = true; // Aquí activamos el texto
-            localState.timeLeft = 0;      // Tiempo a 0
-
+            localState.isFinished = true;
+            localState.timeLeft = 0;
             await window.electronAPI.updateWidget('subasta', {
-                winnerInfo: null, // Quitar popup
+                winners: null,
                 isRunning: false,
-                inSnipeMode: false,
-                timeLeft: 0 // Enviar 0 al overlay para que ponga FINALIZADO
+                timeLeft: 0 
             });
-            
             updateDashboardUI();
         }, 5000);
     }
@@ -220,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     resetAllBtn.addEventListener('click', async () => {
-        if (confirm('¿Resetear TOTALMENTE?')) {
+        if (await window.showCustomConfirm('¿Resetear totalmente?')) {
             stopTimer();
             localState.isFinished = false;
             localState.timeLeft = parseInt(durationInput.value, 10);
@@ -230,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await window.electronAPI.updateWidget('subasta', { 
                 participants: null, 
                 winnerInfo: null,
+                winners: null, // Limpiar también el empate
                 isRunning: false,
                 timeLeft: localState.timeLeft,
                 inSnipeMode: false

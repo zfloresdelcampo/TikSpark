@@ -176,6 +176,32 @@
             box-sizing: border-box;
         }
 
+        /* Nueva regla para permitir múltiples ganadores en fila */
+        #winners-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        /* Ajuste para múltiples fotos */
+        .winner-pfps-group {
+            display: flex;
+            gap: -10px; /* Ligero solapamiento para ahorrar espacio */
+        }
+        .winner-pfp.small {
+            width: 60px; height: 60px; /* Un poco más pequeñas si hay empate */
+            margin-left: -15px;
+            border-width: 3px;
+        }
+        .winner-pfp.small:first-child { margin-left: 0; }
+
+        /* Ajuste para múltiples nombres */
+        .winner-names-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .winner-card {
             display: flex;
             align-items: center;
@@ -188,6 +214,10 @@
             transform: scale(0.9);
             opacity: 0;
             animation: pop-in 0.5s forwards ease-out;
+
+            /* AÑADE ESTO: */
+            width: 525px; /* Ajusta este número según qué tan ancho quieras el cartel */
+            box-sizing: border-box; /* Para que el padding no sume al ancho */
         }
 
         .winner-pfp {
@@ -214,12 +244,22 @@
         }
 
         .winner-name {
-            font-size: 2.5em;
+            font-size: 1.4em;
             font-weight: bold;
             width: 200px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        /* Ancho cuando son exactamente 2 en empate */
+        .winner-name.empate-2 {
+            width: 180px;
+        }
+
+        /* Ancho cuando son exactamente 3 en empate (Más reducido) */
+        .winner-name.empate-3 {
+            width: 150px;
         }
 
         .winner-coins {
@@ -230,12 +270,12 @@
         }
 
         .winner-coin-icon {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
         }
 
         #winner-coin-amount {
-            font-size: 2em;
+            font-size: 1.4em;
             font-weight: bold;
             color: #fce205;
         }
@@ -281,17 +321,8 @@
 <body>
 
     <div id="winner-overlay">
-        <div class="winner-card">
-            <div id="winner-pfp" class="winner-pfp"></div>
-            <div class="winner-info">
-                <span class="ganador-text">¡GANADOR!</span>
-                <span id="winner-name" class="winner-name"></span>
-                <div id="winner-coins" class="winner-coins">
-                    <img src="images/coin-icon.png" class="winner-coin-icon">
-                    <span id="winner-coin-amount"></span>
-                </div>
-            </div>
-            <img src="images/top1.png" class="top1-badge">
+        <div class="winner-card" id="winner-card-single">
+            <!-- El contenido interno se generará dinámicamente aquí -->
         </div>
     </div>
 
@@ -454,16 +485,54 @@
             // Actualizar historial de IDs
             lastTop3Ids = currentIds;
 
-            // Ganador
-            if (data.winnerInfo && !data.isRunning) {
-                winnerPfp.style.backgroundImage = `url('${data.winnerInfo.profilePictureUrl || ''}')`;
-                winnerName.textContent = data.winnerInfo.nickname;
-                winnerCoinAmount.textContent = data.winnerInfo.coins;
+            // Lógica de Ganador único o Empate en UNA sola tarjeta
+            if (data.winners && data.winners.length > 0 && !data.isRunning) {
+                const card = document.getElementById('winner-card-single');
+                const esEmpate = data.winners.length > 1;
+                
+                // 1. Generar HTML de las fotos
+                let pfpsHTML = '';
+                data.winners.forEach(w => {
+                    pfpsHTML += `<div class="winner-pfp ${esEmpate ? 'small' : ''}" style="background-image: url('${w.profilePictureUrl || ''}')"></div>`;
+                });
+
+                // 2. Generar HTML de los nombres con ancho dinámico
+                let namesHTML = '';
+                const cantidad = data.winners.length;
+                
+                // Determinamos qué clase de ancho usar
+                let claseAncho = '';
+                if (cantidad === 2) claseAncho = 'empate-2';
+                if (cantidad === 3) claseAncho = 'empate-3';
+
+                data.winners.forEach(w => {
+                    // Añadimos la clase pequeña y la clase de ancho específico
+                    namesHTML += `<span class="winner-name ${esEmpate ? 'small' : ''} ${claseAncho}">${w.nickname}</span>`;
+                });
+
+                // 3. Definir Textos e Imágenes
+                const textoHeader = esEmpate ? "¡EMPATE!" : "¡GANADOR!";
+                const imagenBadge = esEmpate ? "images/empate.png" : "images/top1.png";
+
+                // 4. Inyectar todo en la tarjeta
+                card.innerHTML = `
+                    <div class="winner-pfps-group">${pfpsHTML}</div>
+                    <div class="winner-info">
+                        <span class="ganador-text">${textoHeader}</span>
+                        <div class="winner-names-group">${namesHTML}</div>
+                        <div class="winner-coins">
+                            <img src="images/coin-icon.png" class="winner-coin-icon">
+                            <span id="winner-coin-amount">${data.winners[0].coins}</span>
+                        </div>
+                    </div>
+                    <img src="${imagenBadge}" class="top1-badge">
+                `;
+
                 winnerOverlay.style.display = 'flex';
 
                 if (!winnerOverlay.dataset.celebrated) {
                     soundWin.currentTime = 0;
-                    soundWin.play().catch(e => console.log("Audio bloqueado"));
+                    soundWin.play().catch(e => {});
                     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
                     winnerOverlay.dataset.celebrated = 'true';
                 }
