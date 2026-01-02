@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Likes Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: transparent;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            /* overflow: hidden; */ /* Scrollbarr */
+        }
+
+        .auction-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .participants-container {
+            background-color: #1d1c1c;
+            border-radius: 12px;
+            padding: 15px;
+            width: 350px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+        }
+
+        .participants-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .participant-row {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 10px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.1); 
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .profile-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            margin-right: 15px;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .medal-icon {
+            width: 30px; height: 30px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .rank-number {
+            width: 30px;
+            margin-right: 10px;
+            text-align: center;
+            font-family: "Luckiest Guy";
+            color: white;
+            font-size: 1.5em;
+            flex-shrink: 0;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.5);
+        }
+        
+        .default-avatar-icon {
+            background-color: #0000009f; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23cccccc' d='M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.7-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 448v48c0 17.7 14.3 32 32 32h384c17.7 0 32-14.3 32-32v-48c0-99.8-60.2-160-134.4-160z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 50%;
+        }
+
+        .info-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        /* TEXTO BASE: Normal (delgada) */
+        .text-bar {
+            height: auto; width: auto;
+            color: #fff;
+            font-weight: bold; 
+            background-color: transparent !important;
+        }
+
+        .text-bar.name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bid-container {
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .like-icon {
+            display: inline-block;
+            width: 16px; height: 16px;
+            background-image: url('images/heart.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        /* TOP 3: Letra en Negrita (Bold) */
+        .participant-row.gold { background-color: #483618; border-color: #aa8c34; }
+        .gold .text-bar { color: #ffffff; font-weight: bold; }
+        
+        .participant-row.silver { background-color: #414040; border-color: #8a8a8a; }
+        .silver .text-bar { color: #ffffff; font-weight: bold; }
+
+        .participant-row.bronze { background-color: #492d1a; border-color: #a25f2b; }
+        .bronze .text-bar { color: #ffffff; font-weight: bold; }
+
+        /* ANIMACIONES */
+        @keyframes flashUp {
+            0% { transform: scale(1); }
+            50% { background-color: #2ecc71; transform: scale(1.05); box-shadow: 0 0 15px #2ecc71; border-color: #fff; }
+            100% { transform: scale(1); }
+        }
+        @keyframes flashDown {
+            0% { transform: scale(1); }
+            50% { background-color: #e74c3c; transform: scale(0.95); border-color: #c0392b; }
+            100% { transform: scale(1); }
+        }
+        @keyframes pulseOnly {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .participant-row.rank-up { animation: flashUp 0.6s ease-out; z-index: 2; }
+        .participant-row.rank-down { animation: flashDown 0.6s ease-out; z-index: 1; }
+        .participant-row.pulse { animation: pulseOnly 0.3s ease-out; z-index: 2; }
+    </style>
+</head>
+<body>
+    <div class="auction-container">
+        <div class="participants-container">
+            <div class="participants-list" id="list"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const participantsList = document.getElementById('list');
+        const socket = io();
+        const medalImages = { gold: 'images/primero.png', silver: 'images/segundo.png', bronze: 'images/tercero.png' };
+        
+        let lastUserOrderIds = []; 
+        let lastCoinsMap = {};
+
+        socket.on('init-data', (db) => { if (db && db.topLikes) updateTopLikes(db.topLikes); });
+        socket.on('widget-update', (msg) => { if (msg.widgetId === 'topLikes') updateTopLikes(msg.data); });
+
+        function updateTopLikes(data) {
+            if (!data) return;
+            if (!data.active) return; // Se congela si no está activo
+
+            const participants = Object.values(data.participants || {});
+            const sorted = participants.sort((a, b) => b.coins - a.coins);
+            const maxRows = data.rows || 6;
+            
+            const currentOrderIds = sorted.slice(0, maxRows).map(p => p.userId || p.nickname);
+            let orderChanged = false;
+            
+            if (lastUserOrderIds.length > 0) {
+                for(let i = 0; i < currentOrderIds.length; i++) {
+                    if (currentOrderIds[i] && currentOrderIds[i] !== lastUserOrderIds[i]) {
+                        orderChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            participantsList.innerHTML = '';
+            const medals = ['gold', 'silver', 'bronze'];
+
+            for (let i = 0; i < maxRows; i++) {
+                const p = sorted[i];
+                const medalClass = i < 3 ? medals[i] : '';
+                
+                if (p) {
+                    const row = document.createElement('div');
+                    const userId = p.userId || p.nickname;
+                    let animClass = '';
+
+                    if (orderChanged && lastUserOrderIds.length > 0) {
+                        const prevIndex = lastUserOrderIds.indexOf(userId);
+                        if (prevIndex === -1 || prevIndex > i) animClass = 'rank-up';
+                        else if (prevIndex < i) animClass = 'rank-down';
+                    } else if (lastCoinsMap[userId] !== undefined && p.coins > lastCoinsMap[userId]) {
+                        animClass = 'pulse';
+                    }
+
+                    lastCoinsMap[userId] = p.coins;
+                    row.className = `participant-row ${medalClass} ${animClass}`;
+                    
+                    const iconHtml = i < 3 
+                        ? `<img class="medal-icon" src="${medalImages[medalClass]}">`
+                        : `<div class="rank-number">${i + 1}</div>`;
+
+                    row.innerHTML = `
+                        ${iconHtml}
+                        <div class="profile-icon" style="background-image: url('${p.avatar || ''}')"></div>
+                        <div class="info-container">
+                            <div class="text-bar name">${p.nickname}</div>
+                            <div class="bid-container">
+                                <span class="like-icon"></span>
+                                <span class="text-bar bid">${p.coins.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                    participantsList.appendChild(row);
+                } else {
+                    const row = document.createElement('div');
+                    row.className = `participant-row ${medalClass}`;
+                    const iconHtml = i < 3 
+                        ? `<img class="medal-icon" src="${medalImages[medalClass] || ''}">`
+                        : `<div class="rank-number">${i + 1}</div>`;
+
+                    row.innerHTML = `
+                        ${iconHtml}
+                        <div class="profile-icon default-avatar-icon"></div>
+                        <div class="info-container">
+                            <div class="text-bar" style="width: 150px; height: 12px; background-color: rgba(255, 255, 255, 0.3) !important; border-radius: 6px;"></div>
+                            <div class="text-bar" style="width: 100px; height: 12px; background-color: rgba(255, 255, 255, 0.3) !important; border-radius: 6px;"></div>
+                        </div>
+                    `;
+                    participantsList.appendChild(row);
+                }
+            }
+            lastUserOrderIds = currentOrderIds;
+        }
+    </script>
+</body>
+</html>

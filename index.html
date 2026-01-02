@@ -543,7 +543,7 @@
                     </div>
 
                 <div class="overlay-url-actions">
-                    <input type="text" value="interactiveapp.live/#/overlays/game/topgifters" readonly class="url-input">
+                    <input type="text" value="http://127.0.0.1:5500/top-gifters.html" readonly class="url-input">
                     <div class="action-buttons">
                         <button class="action-btn primary-btn">Copiar URL</button>
                         <button class="action-btn">
@@ -558,8 +558,8 @@
                 
                 <div class="overlay-content-layout">
                     
-                    <div class="overlay-preview">
-                        <p>Previsualización del Ranking va aquí...</p>
+                    <div class="overlay-preview" style="height: 400px; background: #121212; border-radius: 8px; overflow-y: auto;">
+                        <iframe src="http://127.0.0.1:5500/top-gifters.html" style="width: 100%; height: 100%; border: none;"></iframe>
                     </div>
 
                     <div class="overlay-config">
@@ -586,7 +586,7 @@
                     </div>
 
                 <div class="overlay-url-actions">
-                    <input type="text" value="interactiveapp.live/#/overlays/game/toplikes" readonly class="url-input">
+                    <input type="text" value="http://127.0.0.1:5500/top-likes.html" readonly class="url-input">
                     <div class="action-buttons">
                         <button class="action-btn primary-btn">Copiar URL</button>
                         <button class="action-btn">
@@ -601,8 +601,8 @@
                 
                 <div class="overlay-content-layout">
                     
-                    <div class="overlay-preview">
-                        <p>Previsualización del Ranking va aquí...</p>
+                    <div class="overlay-preview" style="height: 400px; background: #121212; border-radius: 8px; overflow-y: auto;">
+                        <iframe src="http://127.0.0.1:5500/top-likes.html" style="width: 100%; height: 100%; border: none;"></iframe>
                     </div>
 
                     <div class="overlay-config">
@@ -3539,6 +3539,8 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script src="scripts/script.js"></script>
+    <script src="scripts/top-gifters.js"></script>
+    <script src="scripts/top-likes.js"></script>
     <script src="scripts/meta-win1.js"></script>
     <script src="scripts/meta-win2.js"></script>
     <script src="scripts/subasta.js"></script>
@@ -3546,6 +3548,8 @@
     <script src="scripts/gift-vs-gift1.js"></script>
     <script src="scripts/gift-vs-gift2.js"></script>
     <script src="scripts/timer.js"></script>
+    <script src="scripts/top-gift.js"></script>
+    <script src="scripts/top-streak.js"></script>
     <audio id="audio-player" style="display: none;"></audio>
     <input type="file" id="audio-file-input" accept=".mp3,.wav,.ogg" style="display: none;">
 </body>

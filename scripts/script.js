@@ -296,23 +296,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    // Busca esta línea y cámbiala por esta:
-    let topGiftState = { 
-        username: 'Username', 
-        coins: 0, 
-        giftName: 'Default', 
-        // Puedes cambiar esta URL por la de un regalo caro que te guste
-        giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
-    };
-
-    //MEJOR RACHA
-    let topStreakState = { 
-        username: 'Username', 
-        streakCount: 0, 
-        giftName: 'Default', 
-        giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' 
-    };
-
     // --- NUEVO: RECUPERAR DATOS GUARDADOS LOCALMENTE AL INICIAR ---
     if (window.electronAPI && window.electronAPI.getWidgetData) {
         // Cargar Top Gift guardado
@@ -1368,58 +1351,16 @@ if (window.electronAPI) {
 
     // Listener de Regalos (CORREGIDO FINAL)
     window.electronAPI.onGift(data => {
-        
-        // =================================================================
-        // 1. LÓGICA DE RÉCORDS (INDEPENDIENTE AHORA)
-        // =================================================================
-
-        // A) MEJOR REGALO (Por precio unitario)
-        // CORRECCIÓN: Usamos 'checkTopGiftRecord' (el de Gifts Overlays) en vez del de la galería
-        if (checkTopGiftRecord && checkTopGiftRecord.checked) { 
-            if (data.diamondCount > topGiftState.coins) {
-                let finalGiftImage = data.giftPictureUrl; 
-                const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
-                if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
-                    finalGiftImage = cachedGift.image.url_list[0];
-                }
-
-                topGiftState = {
-                    username: data.nickname,
-                    coins: data.diamondCount, 
-                    giftName: data.giftName,
-                    giftImage: finalGiftImage
-                };
-                
-                if(window.electronAPI) {
-                    window.electronAPI.updateWidget('topGift', topGiftState);
-                    saveAllData();
-                }
-            }
+    
+        // Mejores donadores
+        // Solo llama a la función si el script de abajo ya se cargó
+        if (typeof window.processTopGifter === 'function') {
+            window.processTopGifter(data);
         }
 
-        // B) MEJOR RACHA (Por cantidad de combo)
-        // CORRECCIÓN: Agregamos el IF para que respete su propio checkbox
-        if (checkTopStreakRecord && checkTopStreakRecord.checked) {
-            if (data.repeatCount > topStreakState.streakCount) {
-                let finalGiftImage = data.giftPictureUrl; 
-                const cachedGift = availableGiftsCache.find(g => g.id == data.giftId);
-                if (cachedGift && cachedGift.image && cachedGift.image.url_list) {
-                    finalGiftImage = cachedGift.image.url_list[0];
-                }
-
-                topStreakState = {
-                    username: data.nickname,
-                    streakCount: data.repeatCount, // Cantidad acumulada
-                    giftName: data.giftName,
-                    giftImage: finalGiftImage
-                };
-
-                if(window.electronAPI) {
-                    window.electronAPI.updateWidget('topStreak', topStreakState);
-                    saveAllData();
-                }
-            }
-        }
+        // 1. LLAMADA A LOS RÉCORDS (Módulos externos)
+        if(window.processTopGiftRecord) window.processTopGiftRecord(data);
+        if(window.processTopStreakRecord) window.processTopStreakRecord(data);
 
         // =================================================================
         // 2. FILTRO DE REPETICIÓN (Para Subasta y Logs)
@@ -1511,11 +1452,11 @@ if (window.electronAPI) {
                 
                 // Resetear Mejor Regalo
                 topGiftState = { username: 'Nadie', coins: 0, giftName: 'Esperando...', giftImage: '' };
-                if (window.electronAPI) await window.electronAPI.updateWidget('topGift', topGiftState);
+                if (window.electronAPI) await window.electronAPI.updateWidget('topGift', window.topGiftState);
 
                 // Resetear Mejor Racha
                 topStreakState = { username: 'Nadie', streakCount: 0, giftName: 'Esperando...', giftImage: '' };
-                if (window.electronAPI) await window.electronAPI.updateWidget('topStreak', topStreakState);
+                if (window.electronAPI) await window.electronAPI.updateWidget('topStreak', window.topStreakState);
                 
                 showToastNotification("🔄 Nuevo directo: Récords reiniciados.");
             }
@@ -1575,7 +1516,7 @@ if (window.electronAPI) {
     let profiles = {};
     let activeProfileName = '';
     let globalAlerts = []; // <--- AGREGA ESTO (Alertas independientes)
-    let availableGiftsCache = [];
+    window.availableGiftsCache = [];
     let lastProfilePicture = ''; // <--- AGREGA ESTA LÍNEA AQUÍ
     const ITEMS_PER_PAGE = 20;
     let currentPageActions = 1;
@@ -1597,8 +1538,8 @@ if (window.electronAPI) {
                     activeProfileName, 
                     globalAlerts, 
                     mediaLibrary: mediaLibrary || [],
-                    topGift: topGiftState,
-                    topStreak: topStreakState,
+                    topGift: window.topGiftState,
+                    topStreak: window.topStreakState,
                     lastProfilePicture: lastProfilePicture || '', // <--- ESTO GUARDA LA FOTO
                     // --- AQUÍ ESTÁ LO DE HOTKEYS ---
                     hotkeysConfig: hotkeysConfig || {},
@@ -1637,14 +1578,14 @@ if (window.electronAPI) {
                 globalAlerts = data.globalAlerts || [];
                 mediaLibrary = data.mediaLibrary || [];
                 // CORRECCIÓN: Usar los nombres de variables correctos (con 'State')
-                topGiftState = data.topGift || { 
+                window.topGiftState = data.topGift || { 
                     username: 'Username', 
                     coins: 0, 
                     giftName: 'Default', 
                     giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
                 };
 
-                topStreakState = data.topStreak || { 
+                window.topStreakState = data.topStreak || { 
                     username: 'Username', 
                     streakCount: 0, 
                     giftName: 'Default', 
@@ -1706,8 +1647,8 @@ if (window.electronAPI) {
 
                 // Sincronizar widgets
                 if (window.electronAPI) {
-                    window.electronAPI.updateWidget('topGift', topGiftState);
-                    window.electronAPI.updateWidget('topStreak', topStreakState);
+                    window.electronAPI.updateWidget('topGift', window.topGiftState);
+                    window.electronAPI.updateWidget('topStreak', window.topStreakState);
                     syncGoalOverlay(); 
                     syncFollowGoalOverlay(); 
                 }
@@ -4617,7 +4558,7 @@ if (window.electronAPI) {
         syncGoalOverlay();
     }
 
-    // Listener de "Likes" (ACTUALIZADO)
+    // Listener de "Likes" (ACTUALIZADO CON EL PUENTE)
     if (window.electronAPI.onLike) {
         window.electronAPI.onLike(data => {
             addLogEntry(`<i class="fas fa-heart" style="color: #ff005c;"></i> <b>${data.nickname}</b> ha dado ${data.likeCount} Me gusta.`, 'like');
@@ -4626,6 +4567,11 @@ if (window.electronAPI) {
             // Aquí enviamos AMBOS datos. El script decidirá cuál usar.
             addLikesToGoal(data.likeCount, data.totalLikeCount); 
             updateTimerFromEvent('like', data.likeCount);
+
+            // === ESTA ES LA LÍNEA QUE FALTABA (EL PUENTE) ===
+            if (typeof window.processTopLike === 'function') {
+                window.processTopLike(data);
+            }
         });
     }
 
@@ -4844,53 +4790,6 @@ if (window.electronAPI) {
         });
     }
 
-    // ==========================================
-    // LÓGICA RESET TOP GIFT
-    // ==========================================
-    const btnResetTopGift = document.getElementById('btn-reset-top-gift');
-
-    if (btnResetTopGift) {
-        btnResetTopGift.addEventListener('click', async () => {
-            if(await window.showCustomConfirm('¿Reiniciar el Mejor Regalo a 0?')) {
-                // 1. Reiniciar variable local
-                topGiftState = { 
-                    username: 'Username', 
-                    coins: 0, 
-                    giftName: 'Default', 
-                    giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/8173e9b07875cca37caa5219e4903a40.png~tplv-obj.webp' 
-                };
-
-                // 2. Enviar a Electron (Main) para guardar en disco y actualizar overlay
-                if (window.electronAPI) {
-                    await window.electronAPI.updateWidget('topGift', topGiftState);
-                    saveAllData(); // Guardar también en data.json por si acaso
-                }
-
-                showToastNotification("🏆 Mejor Regalo reiniciado.");
-            }
-        });
-    }
-
-    // LÓGICA RESET TOP STREAK
-    const btnResetTopStreak = document.getElementById('btn-reset-top-streak');
-    if (btnResetTopStreak) {
-        btnResetTopStreak.addEventListener('click', async () => {
-            if(await window.showCustomConfirm('¿Reiniciar la Mejor Racha a 0?')) {
-                topStreakState = { 
-                    username: 'Username', 
-                    streakCount: 0, 
-                    giftName: 'Default', 
-                    giftImage: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' 
-                };
-                if (window.electronAPI) {
-                    await window.electronAPI.updateWidget('topStreak', topStreakState);
-                    saveAllData();
-                }
-                showToastNotification("🔥 Mejor Racha reiniciada.");
-            }
-        });
-    }
-    
     // --- LÓGICA BOTÓN PROBAR CONEXIÓN MINECRAFT (CON MODAL PROPIO) ---
     const testMcBtn = document.getElementById('test-mc-connection-btn');
 
