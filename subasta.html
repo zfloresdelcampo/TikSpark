@@ -118,7 +118,7 @@
             width: auto;
             border-radius: 6px;
             color: #fff;
-            font-weight: normal;
+            font-weight: bold;
             background-color: transparent !important;
         }
 
@@ -285,6 +285,18 @@
             height: auto;
         }
 
+        /* Estilo para los números del puesto 4 al 10 */
+        .rank-number {
+            width: 30px;
+            margin-right: 10px;
+            text-align: center;
+            font-family: "Luckiest Guy";
+            color: white;
+            font-size: 2.5em; 
+            flex-shrink: 0;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.5);
+        }
+
         @keyframes pop-in {
             to { transform: scale(1); opacity: 1; }
         }
@@ -411,27 +423,33 @@
             // Procesar Participantes
             const participants = data.participants || {};
             const sortedParticipants = Object.values(participants).sort((a, b) => b.coins - a.coins);
-            const currentTop3 = sortedParticipants.slice(0, 3);
             
-            // --- DETECCIÓN DE CAMBIOS EN EL TOP 3 ---
+            // --- NUEVO: LEER CANTIDAD DE FILAS CONFIGURADAS ---
+            const maxRows = (data.config && data.config.rows) ? data.config.rows : 3;
+            
+            // --- DETECCIÓN DE CAMBIOS EN EL RANKING ---
             let orderChanged = false;
-            let currentIds = [null, null, null];
+            let currentIds = [];
 
-            for(let i = 0; i < 3; i++) {
-                if (currentTop3[i]) {
-                    currentIds[i] = currentTop3[i].userId;
+            for(let i = 0; i < maxRows; i++) {
+                if (sortedParticipants[i]) {
+                    currentIds[i] = sortedParticipants[i].userId;
                     if (currentIds[i] !== lastTop3Ids[i]) {
                         orderChanged = true;
                     }
-                } else if (lastTop3Ids[i] !== null) {
-                    orderChanged = true;
+                } else {
+                    currentIds[i] = null;
+                    if (lastTop3Ids[i] !== null) {
+                        orderChanged = true;
+                    }
                 }
             }
 
             // Sonidos de Ranking (Whoosh + Pop)
             if (orderChanged && data.isRunning) {
                 const isFirstLoad = lastTop3Ids.every(id => id === null);
-                if (!isFirstLoad) {
+                // Validamos si el sonido está activado en la configuración
+                if (!isFirstLoad && data.config && data.config.sound !== false) {
                     soundWhoosh.currentTime = 0;
                     soundWhoosh.play().catch(e => {});
                     soundPop.currentTime = 0;
@@ -440,10 +458,18 @@
             }
 
             participantsList.innerHTML = ''; 
-            const medals = ['gold', 'silver', 'bronze'];
+            const medalNames = ['gold', 'silver', 'bronze'];
 
-            for (let i = 0; i < 3; i++) {
-                const participant = currentTop3[i];
+            for (let i = 0; i < maxRows; i++) {
+                const participant = sortedParticipants[i];
+                const isTop3 = i < 3;
+                const medalClass = isTop3 ? medalNames[i] : '';
+                
+                // Icono: Medalla para el Top 3, Número para el 4 en adelante
+                const iconHtml = isTop3 
+                    ? `<img class="medal-icon" src="${medalImages[medalClass]}">`
+                    : `<div class="rank-number">${i + 1}</div>`;
+
                 if (participant) {
                     const row = document.createElement('div');
                     
@@ -474,11 +500,17 @@
                     lastCoinsMap[participant.userId] = participant.coins;
                     // -------------------------------------------------------------
 
-                    row.className = `participant-row ${medals[i]} ${animClass}`;
-                    row.innerHTML = `<img class="medal-icon" src="${medalImages[medals[i]]}"><div class="profile-icon" style="background-image: url('${participant.profilePictureUrl || ''}')"></div><div class="info-container"><div class="text-bar name">${participant.nickname}</div><div class="bid-container"><span class="coin-icon"></span><span class="text-bar bid">${participant.coins}</span></div></div>`;
+                    // --- SOLUCIÓN PARA LA FOTO ---
+                    // Solo ponemos el style si REALMENTE hay una URL de foto
+                    const fotoEstilo = participant.profilePictureUrl ? `style="background-image: url('${participant.profilePictureUrl}')"` : "";
+                    const fotoClase = participant.profilePictureUrl ? "" : "default-avatar-icon";
+
+                    row.className = `participant-row ${medalClass} ${animClass}`;
+                    row.innerHTML = `${iconHtml}<div class="profile-icon ${fotoClase}" ${fotoEstilo}></div><div class="info-container"><div class="text-bar name">${participant.nickname}</div><div class="bid-container"><span class="coin-icon"></span><span class="text-bar bid">${participant.coins}</span></div></div>`;
                     participantsList.appendChild(row);
                 } else {
-                    participantsList.innerHTML += createPlaceholderRow(medals[i]);
+                    // Placeholder si no hay participantes en ese puesto
+                    participantsList.innerHTML += `<div class="participant-row ${medalClass}">${iconHtml}<div class="profile-icon default-avatar-icon"></div><div class="info-container"><div style="height: 12px; width: 150px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div><div style="height: 12px; width: 100px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.3);"></div></div></div>`;
                 }
             }
 
@@ -531,8 +563,11 @@
                 winnerOverlay.style.display = 'flex';
 
                 if (!winnerOverlay.dataset.celebrated) {
-                    soundWin.currentTime = 0;
-                    soundWin.play().catch(e => {});
+                    // Validamos si el sonido está activado para la victoria
+                    if (data.config && data.config.sound !== false) {
+                        soundWin.currentTime = 0;
+                        soundWin.play().catch(e => {});
+                    }
                     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
                     winnerOverlay.dataset.celebrated = 'true';
                 }

@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseInput = document.getElementById('subasta-base');
     const participantsList = document.querySelector('.participants-list');
     const timerDisplay = document.getElementById('subasta-timer-display');
+    const filasInput = document.getElementById('filas-overlay');
     
     // Estado local
     let timerInterval = null;
@@ -37,6 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 durationInput.value = data.config.duration || 300;
                 snipeInput.value = data.config.snipe || 20;
                 baseInput.value = data.config.base || 1;
+                filasInput.value = data.config.rows || 3;
+                document.getElementById('activate-widget-subasta').checked = data.config.active !== undefined ? data.config.active : true;
+                document.getElementById('snipe-extra-subasta').checked = data.config.snipeExtra !== undefined ? data.config.snipeExtra : true;
+                document.getElementById('sound-subasta').checked = data.config.sound !== undefined ? data.config.sound : true;
             }
 
             // Si viene del backend como 0 y no corre, es que terminó
@@ -70,7 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const config = {
             duration: parseInt(durationInput.value) || 300,
             snipe: parseInt(snipeInput.value) || 20,
-            base: parseInt(baseInput.value) || 1
+            base: parseInt(baseInput.value) || 1,
+            rows: parseInt(filasInput.value) || 3,
+            active: document.getElementById('activate-widget-subasta').checked,
+            snipeExtra: document.getElementById('snipe-extra-subasta').checked,
+            sound: document.getElementById('sound-subasta').checked
         };
         await window.electronAPI.updateWidget('subasta', { config: config });
     }
@@ -90,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     snipeInput.addEventListener('input', saveConfig);
     baseInput.addEventListener('input', saveConfig);
+    filasInput.addEventListener('input', saveConfig);
+    document.getElementById('activate-widget-subasta').addEventListener('change', saveConfig);
+    document.getElementById('snipe-extra-subasta').addEventListener('change', saveConfig);
+    document.getElementById('sound-subasta').addEventListener('change', saveConfig);
 
     // --- LÓGICA VISUAL ---
     function updateDashboardUI() {
@@ -133,13 +146,25 @@ document.addEventListener('DOMContentLoaded', () => {
         isRunning = true;
         
         timerInterval = setInterval(() => {
+            const isSnipeExtra = document.getElementById('snipe-extra-subasta').checked;
+            const snipeValue = parseInt(snipeInput.value, 10);
+
             if (localState.timeLeft > 0) {
                 localState.timeLeft--;
-            } else {
-                if (!localState.inSnipeMode) {
+                
+                // MODO INDICADOR: Si Snipe Extra está apagado, activamos el color rojo 
+                // cuando el tiempo principal llega al valor de snipe (ej. faltan 20 seg)
+                if (!isSnipeExtra && localState.timeLeft < snipeValue) {
                     localState.inSnipeMode = true;
-                    localState.timeLeft = parseInt(snipeInput.value, 10);
+                }
+            } else {
+                // LÓGICA DE FINALIZACIÓN O PRÓRROGA
+                if (isSnipeExtra && !localState.inSnipeMode) {
+                    // MODO TIEMPO EXTRA: Agregamos los segundos de snipe al llegar a 0
+                    localState.inSnipeMode = true;
+                    localState.timeLeft = snipeValue;
                 } else {
+                    // FIN DE LA SUBASTA
                     stopTimer();
                     calculateWinnerAndReset();
                 }
@@ -303,7 +328,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             row.querySelector('.rank-num').textContent = index + 1;
-            row.querySelector('.participant-pfp').style.backgroundImage = `url('${p.profilePictureUrl || ''}')`;
+            const pfpEl = row.querySelector('.participant-pfp');
+            if (p.profilePictureUrl) {
+                pfpEl.style.backgroundImage = `url('${p.profilePictureUrl}')`;
+                pfpEl.classList.remove('default-avatar-icon');
+            } else {
+                // Si no hay foto, borramos el style y ponemos la clase de la silueta
+                pfpEl.style.backgroundImage = ''; 
+                pfpEl.classList.add('default-avatar-icon');
+            }
             row.querySelector('.nickname').textContent = p.nickname;
             row.querySelector('.username').textContent = `@${p.uniqueId || 'unknown'}`;
             row.querySelector('.coins-display').textContent = p.coins;
@@ -334,7 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.kickUser = async (userId) => {
-        if(confirm("¿Expulsar?")) {
+        // Cambiado de confirm() nativo a tu showCustomConfirm()
+        if(await window.showCustomConfirm("¿Seguro que quieres expulsar a este participante?")) {
             const data = await window.electronAPI.getWidgetData('subasta');
             if(data && data.participants && data.participants[userId]) {
                 delete data.participants[userId];
@@ -342,6 +376,61 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+
+    // --- LÓGICA DE INGRESO MANUAL DE PARTICIPANTES ---
+    const btnSumarManual = document.querySelector('.sum-coins-btn');
+    const inputNombreManual = document.getElementById('name-subasta');
+    const inputMonedasManual = document.getElementById('coins-subasta');
+
+    if (btnSumarManual) {
+        btnSumarManual.addEventListener('click', async () => {
+            const nombre = inputNombreManual.value.trim();
+            const monedas = parseInt(inputMonedasManual.value, 10) || 0;
+
+            // Validaciones básicas (Cambiado a tus alertas personalizadas)
+            if (!nombre) {
+                window.showCustomAlert("⚠️ Por favor, ingresa un nombre.");
+                return;
+            }
+            if (isNaN(monedas) || monedas <= 0) {
+                window.showCustomAlert("⚠️ Ingresa una cantidad válida de monedas.");
+                return;
+            }
+
+            // Obtener datos actuales de la subasta
+            const data = await window.electronAPI.getWidgetData('subasta');
+            const participants = data?.participants || {};
+
+            // 1. Buscar si ya existe alguien con ese nombre (ignora mayúsculas/minúsculas)
+            let userIdEncontrado = Object.keys(participants).find(id => 
+                participants[id].nickname.toLowerCase() === nombre.toLowerCase()
+            );
+
+            if (userIdEncontrado) {
+                // Caso A: Ya existe, le sumamos las monedas
+                participants[userIdEncontrado].coins += monedas;
+                console.log(`[Manual] Sumando ${monedas} a ${nombre} existente.`);
+            } else {
+                // Caso B: No existe, creamos un nuevo "ID Manual" único
+                const manualId = `manual_${Date.now()}`;
+                participants[manualId] = {
+                    userId: manualId,
+                    nickname: nombre,
+                    uniqueId: nombre.toLowerCase(),
+                    profilePictureUrl: '', // Quedará con la silueta gris por defecto
+                    coins: monedas
+                };
+                console.log(`[Manual] Agregando nuevo participante: ${nombre}.`);
+            }
+
+            // 2. Guardar en el backend
+            await window.electronAPI.updateWidget('subasta', { participants: participants });
+
+            // 3. Limpiar inputs
+            inputNombreManual.value = '';
+            inputMonedasManual.value = '0';
+        });
+    }
 
     initSubasta();
 });
