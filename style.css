@@ -4411,3 +4411,68 @@ input.custom-chk {
 .pcr-interaction .pcr-type {
     display: none !important;
 }
+/* ESTRUCTURA DEL BANNER DE ACTUALIZACIÓN */
+#update-progress-container {
+    background-color: #161616;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 40px 0 40px;
+}
+
+.update-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.update-icon-square {
+    background-color: #5c1d80; /* Morado Oscuro */
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+}
+
+.update-icon-square i {
+    font-size: 14px;
+    color: white;
+}
+
+#update-status-text {
+    color: #eee;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#update-percent-text {
+    margin-left: auto;
+    color: #d886ff; /* lila claro */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.update-progress-track {
+    background-color: #333;
+    height: 5px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+#update-progress-fill {
+    background-color: #8A2BE2; /* Morado Vibrante */
+    width: 0%;
+    height: 100%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+}
+
+.update-footer-text {
+    font-size: 11px;
+    color: #888 !important;
+    margin: 0 !important;
+}

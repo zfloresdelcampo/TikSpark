@@ -1,6 +1,6 @@
 // --- START OF FILE main.js ---
 
-const { app, BrowserWindow, ipcMain, dialog, shell, globalShortcut } = require('electron'); // <-- Añade 'shell'
+const { app, BrowserWindow, ipcMain, dialog, shell, globalShortcut, Notification } = require('electron'); // <-- Añade 'shell'
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -172,22 +172,42 @@ function createWindow() {
         autoUpdater.checkForUpdatesAndNotify();
     });
 
-    // Evento: Se encontró una actualización disponible.
-    autoUpdater.on('update-available', () => {
-        mainWindow.webContents.send('show-toast', '¡Nueva actualización disponible! Descargando...');
+    // 1. Notificación de "Actualización Disponible" (La de abajo en tu imagen)
+    autoUpdater.on('update-available', (info) => {
+        // Actualiza la barra morada interna
+        mainWindow.webContents.send('update-status', { msg: `Descargando v${info.version}`, show: true });
+
+        // Manda la notificación a Windows
+        new Notification({
+            title: '📥 Actualización Disponible',
+            body: `Nueva versión encontrada. Descargando la v${info.version}...`,
+        }).show();
     });
 
-    // Evento: La actualización se ha descargado.
-    autoUpdater.on('update-downloaded', () => {
+    // 2. Reporte de progreso para la barra morada
+    autoUpdater.on('download-progress', (progressObj) => {
+        mainWindow.webContents.send('update-progress', progressObj.percent);
+    });
+
+    // 3. Notificación de "Actualización Lista" (La de arriba en tu imagen)
+    autoUpdater.on('update-downloaded', (info) => {
+        mainWindow.webContents.send('update-progress', 100);
+
+        // Manda la notificación a Windows
+        new Notification({
+            title: '✅ Actualización Lista',
+            body: 'Se ha descargado la actualización. Se instalará ahora.',
+        }).show();
+
+        // Cuadro de diálogo opcional dentro de la app
         dialog.showMessageBox({
             type: 'info',
             title: 'Actualización Lista',
-            message: 'Nueva versión descargada. ¿Reiniciar e instalar ahora?',
-            buttons: ['Sí, reiniciar', 'Más tarde']
+            message: `¡Todo listo! Se descargó la v${info.version}. ¿Quieres reiniciar para instalar ahora?`,
+            buttons: ['Sí, reiniciar ahora', 'Más tarde'],
+            cancelId: 1
         }).then(result => {
-            if (result.response === 0) { // Si el usuario hace clic en "Sí, reiniciar"
-                autoUpdater.quitAndInstall();
-            }
+            if (result.response === 0) autoUpdater.quitAndInstall();
         });
     });
 

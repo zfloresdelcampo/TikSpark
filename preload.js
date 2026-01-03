@@ -92,6 +92,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // ========================
     onShowToast: (callback) => ipcRenderer.on('show-toast', (_event, message) => callback(message)),
     onSetVersion: (callback) => ipcRenderer.on('set-version', (_event, version) => callback(version)),
+    
+    //AUTO-UPDATER
+    onUpdateStatus: (callback) => ipcRenderer.on('update-status', (_event, data) => callback(data)),
+    onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (_event, percent) => callback(percent)),
+
     // --- NUEVA LÍNEA PARA KEYSTROKES ---
     simulateKeystroke: (data) => ipcRenderer.invoke('simulate-keystroke', data),
     simulateKeystrokes: (actionData) => ipcRenderer.invoke('simulate-keystrokes', actionData) // <--- AÑADE ESTA LÍNEA

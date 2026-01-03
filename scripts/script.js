@@ -5399,6 +5399,33 @@ if (window.electronAPI) {
         }).catch(err => console.error("Error GvG Queue:", err));
     };
 
+    // --- LÓGICA VISUAL DE ACTUALIZACIÓN ---
+    if (window.electronAPI && window.electronAPI.onUpdateStatus) {
+        const upContainer = document.getElementById('update-progress-container');
+        const upStatus = document.getElementById('update-status-text');
+        const upFill = document.getElementById('update-progress-fill');
+        const upPercent = document.getElementById('update-percent-text');
+
+        window.electronAPI.onUpdateStatus((data) => {
+            if (data.showBar) {
+                upContainer.style.display = 'block';
+                upStatus.textContent = data.msg;
+            }
+        });
+
+        window.electronAPI.onUpdateProgress((percent) => {
+            const p = Math.round(percent);
+            upContainer.style.display = 'block';
+            upFill.style.width = p + '%';
+            upPercent.textContent = p + '%';
+            
+            if (p >= 100) {
+                upStatus.textContent = "¡Actualización descargada! Reinicia para aplicar.";
+                upFill.style.background = "#ac2fff";
+            }
+        });
+    }
+
     // ==========================================================
     // INICIALIZACIÓN FINAL
     // ==========================================================
