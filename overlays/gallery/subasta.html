@@ -153,7 +153,7 @@
             display: inline-block;
             width: 16px;
             height: 16px;
-            background-image: url('images/coin-icon.png');
+            background-image: url('../../images/coin-icon.png');
             background-size: contain;
             background-repeat: no-repeat;
         }
@@ -361,12 +361,12 @@
       const winnerName = document.getElementById('winner-name');
       const winnerCoinAmount = document.getElementById('winner-coin-amount');
 
-      const medalImages = { gold: 'images/primero.png', silver: 'images/segundo.png', bronze: 'images/tercero.png' };
+      const medalImages = { gold: '../../images/primero.png', silver: '../../images/segundo.png', bronze: '../../images/tercero.png' };
 
       // --- CONFIGURACIÓN AUDIO ---
-      const soundWin = new Audio('sounds/victory.mp3');
-      const soundPop = new Audio('sounds/pop.mp3');
-      const soundWhoosh = new Audio('sounds/whoosh.mp3'); 
+      const soundWin = new Audio('../../sounds/victory.mp3');
+      const soundPop = new Audio('../../sounds/pop.mp3');
+      const soundWhoosh = new Audio('../../sounds/whoosh.mp3'); 
       
       soundWin.volume = 0.5;
       soundPop.volume = 0.5;
@@ -544,7 +544,7 @@
 
                 // 3. Definir Textos e Imágenes
                 const textoHeader = esEmpate ? "¡EMPATE!" : "¡GANADOR!";
-                const imagenBadge = esEmpate ? "images/empate.png" : "images/top1.png";
+                const imagenBadge = esEmpate ? "../../images/empate.png" : "../../images/top1.png";
 
                 // 4. Inyectar todo en la tarjeta
                 card.innerHTML = `
@@ -553,7 +553,7 @@
                         <span class="ganador-text">${textoHeader}</span>
                         <div class="winner-names-group">${namesHTML}</div>
                         <div class="winner-coins">
-                            <img src="images/coin-icon.png" class="winner-coin-icon">
+                            <img src="../../images/coin-icon.png" class="winner-coin-icon">
                             <span id="winner-coin-amount">${data.winners[0].coins}</span>
                         </div>
                     </div>

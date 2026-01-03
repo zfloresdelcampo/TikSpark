@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Gifters Overlay</title>
+    <title>Top Likes Overlay</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
@@ -112,10 +112,10 @@
             display: flex; align-items: center; gap: 5px;
         }
 
-        .coin-icon {
+        .like-icon {
             display: inline-block;
             width: 16px; height: 16px;
-            background-image: url('images/coin-icon.png');
+            background-image: url('../../images/heart.png');
             background-size: contain;
             background-repeat: no-repeat;
         }
@@ -163,15 +163,15 @@
     <script>
         const participantsList = document.getElementById('list');
         const socket = io();
-        const medalImages = { gold: 'images/primero.png', silver: 'images/segundo.png', bronze: 'images/tercero.png' };
+        const medalImages = { gold: '../../images/primero.png', silver: '../../images/segundo.png', bronze: '../../images/tercero.png' };
         
         let lastUserOrderIds = []; 
         let lastCoinsMap = {};
 
-        socket.on('init-data', (db) => { if (db && db.topGifters) updateTopGifters(db.topGifters); });
-        socket.on('widget-update', (msg) => { if (msg.widgetId === 'topGifters') updateTopGifters(msg.data); });
+        socket.on('init-data', (db) => { if (db && db.topLikes) updateTopLikes(db.topLikes); });
+        socket.on('widget-update', (msg) => { if (msg.widgetId === 'topLikes') updateTopLikes(msg.data); });
 
-        function updateTopGifters(data) {
+        function updateTopLikes(data) {
             if (!data) return;
             if (!data.active) return; // Se congela si no está activo
 
@@ -224,7 +224,7 @@
                         <div class="info-container">
                             <div class="text-bar name">${p.nickname}</div>
                             <div class="bid-container">
-                                <span class="coin-icon"></span>
+                                <span class="like-icon"></span>
                                 <span class="text-bar bid">${p.coins.toLocaleString()}</span>
                             </div>
                         </div>

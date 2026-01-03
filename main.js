@@ -139,6 +139,8 @@ function startDetector(forceGiftFetch = false) { if (currentDetector) { currentD
 
 // --- FUNCIÓN PRINCIPAL PARA CREAR LA VENTANA ---
 function createWindow() {
+    app.setAppUserModelId('com.electron.tikspark');
+    
     currentUsername = loadConfig().username || '';
     mainWindow = new BrowserWindow({ width: 1200, height: 800, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, backgroundThrottling: false } });
     
@@ -181,6 +183,7 @@ function createWindow() {
         new Notification({
             title: '📥 Actualización Disponible',
             body: `Nueva versión encontrada. Descargando la v${info.version}...`,
+            icon: path.join(__dirname, 'images', 'icon.png') // <-- CORREGIDO AQUÍ
         }).show();
     });
 
@@ -197,6 +200,7 @@ function createWindow() {
         new Notification({
             title: '✅ Actualización Lista',
             body: 'Se ha descargado la actualización. Se instalará ahora.',
+            icon: path.join(__dirname, 'images', 'icon.png') // <-- CORREGIDO AQUÍ
         }).show();
 
         // Cuadro de diálogo opcional dentro de la app

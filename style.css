@@ -4476,3 +4476,19 @@ input.custom-chk {
     color: #888 !important;
     margin: 0 !important;
 }
+/* --- FIX ESPECÍFICO PARA EL ROTADOR SOCIAL --- */
+#social-list-container input {
+    width: auto !important; /* Libera el ancho forzado del 100% */
+}
+
+/* El input del nombre de usuario (el que va después del @) */
+#social-list-container input:nth-of-type(1) {
+    width: 130px !important; /* Dale el ancho que tú quieras aquí */
+    flex: none !important;
+}
+
+/* El input del contador (el que dice 10k, etc) */
+#social-list-container input:nth-of-type(2) {
+    width: 130px !important;  /* Ancho para el contador */
+    flex: none !important;
+}

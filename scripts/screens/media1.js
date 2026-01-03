@@ -1,4 +1,4 @@
-// --- START OF FILE scripts/media.js ---
+// --- START OF FILE scripts/media1.js ---
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Conectar al servidor local (Sin definir puerto, usa el actual)
     const socket = io();
 
-    console.log("✅ Conectado al sistema local (Media.js)");
+    console.log("✅ Conectado al sistema local (Media1.js)");
 
     // 3. Escuchar cuando la app mande un video
     socket.on('widget-update', (msg) => {
