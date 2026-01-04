@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Cargar Top Gift guardado
         window.electronAPI.getWidgetData('topGift').then(savedGift => {
             if (savedGift && savedGift.coins > 0) {
-                topGiftState = savedGift;
+                window.topGiftState = savedGift;
                 console.log("Top Gift recuperado:", topGiftState);
             }
         });
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Cargar Top Streak guardado
         window.electronAPI.getWidgetData('topStreak').then(savedStreak => {
             if (savedStreak && savedStreak.streakCount > 0) {
-                topStreakState = savedStreak;
+                window.topStreakState = savedStreak;
                 console.log("Top Streak recuperado:", topStreakState);
             }
         });
@@ -1514,7 +1514,7 @@ if (window.electronAPI) {
     let currentPageEvents = 1;
     let currentPageAlerts = 1; // <--- AGREGA ESTA LÍNEA
 
-    async function saveAllData() {
+    window.saveAllData = async function() {
         if (currentAppUser && activeProfileName && profiles[activeProfileName]) {
             
             // 1. GUARDAMOS LAS METAS DENTRO DEL PERFIL ACTUAL ANTES DE SUBIR
