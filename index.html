@@ -93,11 +93,30 @@
         <!-- === ZONA SCROLLABLE (MENÚ) === -->
         <div id="sidebar-scroll-area">
             
-            <div class="nav-item active" data-target="home-section">
-                Inicio
+            <div class="nav-item active" id="btn-home-main" data-target="home-section">
+                <span>Inicio</span>
             </div>
-            <div class="nav-item" data-target="config-section">
-                Configuración
+
+            <!-- Sub-menú Inicio -->
+            <div id="submenu-home" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="switchConnectionMode('api-server')">
+                    <i class="fab fa-tiktok"></i> Api Server
+                </div>
+                <div class="sub-nav-item" onclick="switchConnectionMode('api-tikfinity')">
+                    <i class="fas fa-plug"></i> Api TikFinity
+                </div>
+            </div>
+
+            <div class="nav-item" id="btn-config-main" data-target="config-section">
+                <span>Configuración</span>
+            </div>
+
+            <!-- Sub-menú Configuración -->
+            <div id="submenu-config" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('servertap-section', 'btn-config-main')">
+                    <i class="fas fa-cube"></i> Conexión Minecraft
+                </div>
+                <!-- Aquí podrás añadir más en el futuro -->
             </div>
 
             <!-- SEPARADOR RAYO (Antes de Acciones) -->
@@ -185,7 +204,7 @@
             </div>
 
             <div class="nav-item" id="btn-gifts-main" data-target="gift-section">
-                Gifts Overlays
+                <span>Gifts Overlays</span>
             </div>
 
             <!-- Sub-menú Gifts -->
@@ -212,9 +231,23 @@
             <div class="nav-item" data-target="minigames-section">
                 Mini-Juegos
             </div>
-            <div class="nav-item" data-target="timer-section">
-                Timer
+            <div class="nav-item" id="btn-timer-main" data-target="timer-section">
+                <span>Timer</span>
             </div>
+
+            <!-- Sub-menú Timer -->
+            <div id="submenu-timer" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('card-timer-overlay', 'btn-timer-main')">
+                    <i class="fas fa-desktop"></i> Overlay
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-timer-control', 'btn-timer-main')">
+                    <i class="fas fa-gamepad"></i> Control
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-timer-config', 'btn-timer-main')">
+                    <i class="fas fa-cog"></i> Configuración
+                </div>
+            </div>
+
             <div class="nav-item" data-target="hotkeys-section">
                 Hotkeys
             </div>
@@ -340,7 +373,7 @@
             </div>
 
             <div class="section-container" id="servertap-section">
-                <h2>Minecraft ServerTap</h2>
+                <h2>Conexión Minecraft</h2>
                 
                 <!-- Caja de información Superior -->
                 <div class="info-box">
@@ -1352,7 +1385,7 @@
                     <!-- COLUMNA DERECHA: TOP STREAK -->
                     <div class="gift-column" id="anchor-top-streak">
                         <div class="overlay-header compact">
-                            <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Top Streak</h3>
+                            <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Mejor Racha</h3>
                             <div class="premium-tag small">PRO</div>
                         </div>
                         <p class="overlay-description">El usuario que ha enviado la racha más larga.</p>
@@ -1793,7 +1826,7 @@
             </div>
 
             <!-- TARJETA 1: OVERLAY (PREVIEW) -->
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-timer-overlay">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Overlay</h3>
                 </div>
@@ -1821,7 +1854,7 @@
             </div>
 
             <!-- TARJETA 2: CONTROL -->
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-timer-control">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Control</h3>
                 </div>
@@ -1845,7 +1878,7 @@
             </div>
 
             <!-- TARJETA 3: CONFIGURACIÓN -->
-            <div class="overlay-card-container">
+            <div class="overlay-card-container" id="card-timer-config">
                 <div class="overlay-header">
                     <h3 class="overlay-title">Configuración</h3>
                 </div>

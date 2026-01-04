@@ -1078,7 +1078,10 @@ navItems.forEach(item => {
         if (item.id !== 'btn-actions-main' && 
             item.id !== 'btn-gallery-main' && 
             item.id !== 'btn-goals-main' &&
-            item.id !== 'btn-gifts-main') {
+            item.id !== 'btn-gifts-main' &&
+            item.id !== 'btn-timer-main' &&
+            item.id !== 'btn-config-main' &&
+            item.id !== 'btn-home-main') {
             
             closeAllSubmenus(); // Llamamos a la función de limpieza
         }
@@ -4308,18 +4311,48 @@ if (window.electronAPI) {
     const submenuGoals = document.getElementById('submenu-goals');
     const btnGiftsMain = document.getElementById('btn-gifts-main');
     const submenuGifts = document.getElementById('submenu-gifts');
+    const btnTimerMain = document.getElementById('btn-timer-main');
+    const submenuTimer = document.getElementById('submenu-timer');
+    const btnConfigMain = document.getElementById('btn-config-main');
+    const submenuConfig = document.getElementById('submenu-config');
+    const btnHomeMain = document.getElementById('btn-home-main');
+    const submenuHome = document.getElementById('submenu-home');
 
     // Función maestra para cerrar todos los submenús
     function closeAllSubmenus() {
-        [submenuActions, submenuGallery, submenuGoals, submenuGifts].forEach(sm => {
+        [submenuActions, submenuGallery, submenuGoals, submenuGifts, submenuTimer, submenuConfig, submenuHome].forEach(sm => {
             if(sm) sm.classList.remove('open');
         });
-        [btnActionsMain, btnGalleryMain, btnGoalsMain, btnGiftsMain].forEach(btn => {
+        [btnActionsMain, btnGalleryMain, btnGoalsMain, btnGiftsMain, btnTimerMain, btnConfigMain, btnHomeMain].forEach(btn => {
             if(btn) btn.classList.remove('menu-open');
         });
     }
 
-    // 1. Toggle Acciones
+    // 1. Toggle Inicio
+    if(btnHomeMain) {
+        btnHomeMain.addEventListener('click', () => {
+            const isOpen = submenuHome.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuHome.classList.add('open');
+                btnHomeMain.classList.add('menu-open');
+            }
+        });
+    }
+
+    // 2. Toggle Configuración
+    if(btnConfigMain) {
+        btnConfigMain.addEventListener('click', () => {
+            const isOpen = submenuConfig.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuConfig.classList.add('open');
+                btnConfigMain.classList.add('menu-open');
+            }
+        });
+    }
+
+    // 3. Toggle Acciones
     if(btnActionsMain) {
         btnActionsMain.addEventListener('click', () => {
             const isOpen = submenuActions.classList.contains('open');
@@ -4331,7 +4364,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 2. Toggle Galería
+    // 4. Toggle Galería
     if(btnGalleryMain) {
         btnGalleryMain.addEventListener('click', () => {
             const isOpen = submenuGallery.classList.contains('open');
@@ -4343,7 +4376,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 3. Toggle Metas
+    // 5. Toggle Metas
     if(btnGoalsMain) {
         btnGoalsMain.addEventListener('click', () => {
             const isOpen = submenuGoals.classList.contains('open');
@@ -4355,7 +4388,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 4. Toggle Gifts
+    // 6. Toggle Gifts
     if(btnGiftsMain) {
         btnGiftsMain.addEventListener('click', () => {
             const isOpen = submenuGifts.classList.contains('open');
@@ -4367,7 +4400,19 @@ if (window.electronAPI) {
         });
     }
 
-    // 5. Función Global de Scroll y Temblor
+    //7. Toggle Timer
+    if(btnTimerMain) {
+        btnTimerMain.addEventListener('click', () => {
+            const isOpen = submenuTimer.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuTimer.classList.add('open');
+                btnTimerMain.classList.add('menu-open');
+            }
+        });
+    }
+
+    // 8. Función Global de Scroll y Temblor
     window.scrollToSection = (targetId, tabId) => {
         // A. Cambiar a la pestaña correcta
         const mainTab = document.getElementById(tabId);
@@ -4380,6 +4425,8 @@ if (window.electronAPI) {
         if (tabId === 'btn-gallery-main' && submenuGallery) submenuGallery.classList.add('open');
         if (tabId === 'btn-goals-main' && submenuGoals) submenuGoals.classList.add('open'); // NUEVO
         if (tabId === 'btn-gifts-main' && submenuGifts) submenuGifts.classList.add('open');
+        if (tabId === 'btn-timer-main' && submenuTimer) submenuTimer.classList.add('open');
+        if (tabId === 'btn-config-main' && submenuConfig) submenuConfig.classList.add('open');
 
         // C. Scroll y Animación
         setTimeout(() => {
@@ -4401,6 +4448,32 @@ if (window.electronAPI) {
                 }, 1000);
             }
         }, 50);
+    };
+
+    // ==========================================================
+    // Lógica para cambiar el modo en el menú despegable
+    // ==========================================================
+    window.switchConnectionMode = (mode) => {
+        // 1. Activar la pestaña Inicio visualmente sin cerrar el sub-menú
+        navItems.forEach(i => i.classList.remove('active'));
+        btnHomeMain.classList.add('active');
+
+        // 2. Cambiar de sección
+        contentSections.forEach(s => s.classList.remove('active'));
+        document.getElementById('home-section').classList.add('active');
+
+        // 3. FORZAR que el sub-menú se mantenga abierto
+        submenuHome.classList.add('open');
+        btnHomeMain.classList.add('menu-open');
+
+        // 4. Activar el panel de conexión (derecha)
+        if (mode === 'api-server') {
+            document.getElementById('toggle-api-server').click();
+        } else {
+            document.getElementById('toggle-api-tikfinity').click();
+        }
+        
+        document.getElementById('main-content').scrollTop = 0;
     };
 
     // ==========================================================

@@ -11,6 +11,29 @@ const cheerio = require('cheerio');
 const { startTikTokDetector , fetchProfileViaHTML } = require('./tiktokConnection.js');
 const { autoUpdater } = require('electron-updater');
 
+// --- DECLARACIÓN DE VARIABLES GLOBALES ---
+let mainWindow = null;
+let currentDetector = null;
+let serverInstance = null;
+let tikfinitySocket = null;
+let currentUsername = '';
+
+// --- BLOQUEO DE INSTANCIA ÚNICA ---
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit(); // Si ya hay una instancia, cerramos esta
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // Si alguien intenta abrir otra, enfocamos la ventana principal
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+        }
+    });
+}
+// ----------------------------------
+
 // --- MANEJO DE DATOS DE WIDGETS (PERSISTENCIA) ---
 const widgetsPath = path.join(app.getPath('userData'), 'widgets.json');
 
@@ -81,21 +104,17 @@ io.on('connection', (socket) => {
     socket.emit('init-data', localWidgetsDB);
 });
 
-serverInstance = httpServer.listen(SERVER_PORT, () => {
-    console.log(`✅ Servidor Local (Socket.io) listo en: http://localhost:${SERVER_PORT}`);
-});
+if (gotTheLock) {
+    serverInstance = httpServer.listen(SERVER_PORT, () => {
+        console.log(`✅ Servidor Local (Socket.io) listo en: http://localhost:${SERVER_PORT}`);
+    });
+}
 // --- FIN: SERVIDOR LOCAL ---
 
 const soundsPath = path.join(app.getPath('userData'), 'sounds');
 if (!fs.existsSync(soundsPath)) {
     fs.mkdirSync(soundsPath);
 }
-
-// --- DECLARACIÓN DE VARIABLES GLOBALES ---
-let mainWindow = null;
-let currentDetector = null;
-let tikfinitySocket = null;
-let currentUsername = '';
 
 // --- MANEJO DE CONFIGURACIÓN DE USUARIO ---
 const configPath = path.join(app.getPath('userData'), 'config.json');
@@ -1056,14 +1075,17 @@ ipcMain.handle('register-global-hotkeys', (event, { config, enabled }) => {
     }
 });
 
-app.whenReady().then(createWindow);
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+if (gotTheLock) {
+    app.whenReady().then(createWindow);
+    app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+    app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+}
 // --- ESTE ES EL CÓDIGO NUEVO (COLOCADO CORRECTAMENTE FUERA) ---
 app.on('will-quit', () => {
-    globalShortcut.unregisterAll(); // Limpia teclas
-    if (typeof serverInstance !== 'undefined' && serverInstance) {
-        serverInstance.close(); // Limpia servidor
-        console.log('🛑 Servidor interno detenido.');
+    globalShortcut.unregisterAll();
+    if (serverInstance) {
+        serverInstance.close();
     }
+    // Forzamos el cierre de procesos para liberar el puerto 5500
+    process.exit(0); 
 });
