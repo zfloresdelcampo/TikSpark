@@ -27,6 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
         isFinished: false 
     };
 
+    function updateHelpLabels() {
+        const snipeVal = document.getElementById('subasta-snipe').value;
+        const baseVal = document.getElementById('subasta-base').value;
+        document.getElementById('label-snipe-text').textContent = snipeVal;
+        document.getElementById('label-base-text').textContent = baseVal;
+    }
+
     // --- CARGA INICIAL ---
     async function initSubasta() {
         if (!window.electronAPI) return;
@@ -64,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateDashboardUI();
             renderParticipantsList(localState.participants);
+            updateHelpLabels();
         } else {
             saveConfig();
             updateDashboardUI();
@@ -97,8 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    snipeInput.addEventListener('input', saveConfig);
-    baseInput.addEventListener('input', saveConfig);
+    snipeInput.addEventListener('input', () => {
+        saveConfig();
+        updateHelpLabels(); // <-- Añadir aquí
+    });
+    baseInput.addEventListener('input', () => {
+        saveConfig();
+        updateHelpLabels(); // <-- Añadir aquí
+    });
     filasInput.addEventListener('input', saveConfig);
     document.getElementById('activate-widget-subasta').addEventListener('change', saveConfig);
     document.getElementById('snipe-extra-subasta').addEventListener('change', saveConfig);
@@ -154,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // MODO INDICADOR: Si Snipe Extra está apagado, activamos el color rojo 
                 // cuando el tiempo principal llega al valor de snipe (ej. faltan 20 seg)
-                if (!isSnipeExtra && localState.timeLeft < snipeValue) {
+                if (!isSnipeExtra && localState.timeLeft <= snipeValue) {
                     localState.inSnipeMode = true;
                 }
             } else {
@@ -185,17 +199,27 @@ document.addEventListener('DOMContentLoaded', () => {
     async function calculateWinnerAndReset() {
         const currentData = await window.electronAPI.getWidgetData('subasta');
         const parts = currentData?.participants || {};
-        const sorted = Object.values(parts).sort((a, b) => b.coins - a.coins);
+        const minBase = parseInt(baseInput.value, 10) || 1;
+
+        // Filtrar solo los que alcanzaron el mínimo de la BASE
+        const qualified = Object.values(parts).filter(p => p.coins >= minBase);
+        const sorted = qualified.sort((a, b) => b.coins - a.coins);
 
         if (sorted.length > 0) {
             const maxCoins = sorted[0].coins;
-            // Filtramos a los que empataron con el máximo (límite 3 para que quepan)
             const winners = sorted.filter(p => p.coins === maxCoins).slice(0, 3);
 
             await window.electronAPI.updateWidget('subasta', {
                 isRunning: false,
                 timeLeft: 0, 
                 winners: winners 
+            });
+        } else {
+            // Si nadie llegó a la base, no hay ganadores
+            await window.electronAPI.updateWidget('subasta', {
+                isRunning: false,
+                timeLeft: 0,
+                winners: null
             });
         }
 
@@ -428,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 3. Limpiar inputs
             inputNombreManual.value = '';
-            inputMonedasManual.value = '0';
+            inputMonedasManual.value = '';
         });
     }
 

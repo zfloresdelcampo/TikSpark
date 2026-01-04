@@ -1074,25 +1074,13 @@ navItems.forEach(item => {
             document.getElementById('main-content').scrollTop = 0;
         }
 
-        // 2. LÓGICA NUEVA: Cerrar sub-menús si vamos a una sección simple
-        // Si el botón presionado NO es el de Acciones NI el de Galería...
+        // 2. LÓGICA: Cerrar sub-menús si vamos a una sección simple
         if (item.id !== 'btn-actions-main' && 
             item.id !== 'btn-gallery-main' && 
-            item.id !== 'btn-goals-main') { // <--- IMPORTANTE: AGREGAR ESTE ID
+            item.id !== 'btn-goals-main' &&
+            item.id !== 'btn-gifts-main') {
             
-            // Entonces cerramos TODOS los menús a la fuerza
-            const smActions = document.getElementById('submenu-actions');
-            if (smActions) smActions.classList.remove('open');
-            
-            const smGallery = document.getElementById('submenu-gallery');
-            if (smGallery) smGallery.classList.remove('open');
-
-            const smGoals = document.getElementById('submenu-goals');
-            if (smGoals) smGoals.classList.remove('open');
-
-            // Quitar rotación de flechas si las usas
-            const allBtns = [document.getElementById('btn-actions-main'), document.getElementById('btn-gallery-main'), document.getElementById('btn-alerts-main'), document.getElementById('btn-goals-main')];
-            allBtns.forEach(btn => { if(btn) btn.classList.remove('menu-open'); });
+            closeAllSubmenus(); // Llamamos a la función de limpieza
         }
     });
 });
@@ -4309,56 +4297,77 @@ if (window.electronAPI) {
     renderVirtualKeyboard();
 
     // ==========================================================
-    // LÓGICA DEL SUB-MENÚ Y DESPLAZAMIENTO (ACTUALIZADO)
+    // LÓGICA DEL SUB-MENÚ Y DESPLAZAMIENTO (SOLUCIÓN ACORDEÓN)
     // ==========================================================
     
     const btnActionsMain = document.getElementById('btn-actions-main');
     const submenuActions = document.getElementById('submenu-actions');
     const btnGalleryMain = document.getElementById('btn-gallery-main');
     const submenuGallery = document.getElementById('submenu-gallery');
-    
-    // NUEVAS VARIABLES PARA METAS
     const btnGoalsMain = document.getElementById('btn-goals-main');
     const submenuGoals = document.getElementById('submenu-goals');
+    const btnGiftsMain = document.getElementById('btn-gifts-main');
+    const submenuGifts = document.getElementById('submenu-gifts');
 
-    // 1. Toggle del Menú Acciones
+    // Función maestra para cerrar todos los submenús
+    function closeAllSubmenus() {
+        [submenuActions, submenuGallery, submenuGoals, submenuGifts].forEach(sm => {
+            if(sm) sm.classList.remove('open');
+        });
+        [btnActionsMain, btnGalleryMain, btnGoalsMain, btnGiftsMain].forEach(btn => {
+            if(btn) btn.classList.remove('menu-open');
+        });
+    }
+
+    // 1. Toggle Acciones
     if(btnActionsMain) {
         btnActionsMain.addEventListener('click', () => {
-            submenuActions.classList.toggle('open');
-            btnActionsMain.classList.toggle('menu-open');
-            // Cerrar los otros
-            if(submenuGallery) submenuGallery.classList.remove('open');
-            if(submenuGoals) submenuGoals.classList.remove('open');
+            const isOpen = submenuActions.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuActions.classList.add('open');
+                btnActionsMain.classList.add('menu-open');
+            }
         });
     }
 
-    // 2. Toggle del Menú Galería
+    // 2. Toggle Galería
     if(btnGalleryMain) {
         btnGalleryMain.addEventListener('click', () => {
-            submenuGallery.classList.toggle('open');
-            // Cerrar los otros
-            if(submenuActions) {
-                submenuActions.classList.remove('open');
-                btnActionsMain.classList.remove('menu-open');
+            const isOpen = submenuGallery.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuGallery.classList.add('open');
+                btnGalleryMain.classList.add('menu-open');
             }
-            if(submenuGoals) submenuGoals.classList.remove('open');
         });
     }
 
-    // 3. Toggle del Menú Metas (NUEVO)
+    // 3. Toggle Metas
     if(btnGoalsMain) {
         btnGoalsMain.addEventListener('click', () => {
-            submenuGoals.classList.toggle('open');
-            // Cerrar los otros
-            if(submenuActions) {
-                submenuActions.classList.remove('open');
-                btnActionsMain.classList.remove('menu-open');
+            const isOpen = submenuGoals.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuGoals.classList.add('open');
+                btnGoalsMain.classList.add('menu-open');
             }
-            if(submenuGallery) submenuGallery.classList.remove('open');
         });
     }
 
-    // 4. Función Global de Scroll y Temblor
+    // 4. Toggle Gifts
+    if(btnGiftsMain) {
+        btnGiftsMain.addEventListener('click', () => {
+            const isOpen = submenuGifts.classList.contains('open');
+            closeAllSubmenus();
+            if(!isOpen) {
+                submenuGifts.classList.add('open');
+                btnGiftsMain.classList.add('menu-open');
+            }
+        });
+    }
+
+    // 5. Función Global de Scroll y Temblor
     window.scrollToSection = (targetId, tabId) => {
         // A. Cambiar a la pestaña correcta
         const mainTab = document.getElementById(tabId);
@@ -4370,6 +4379,7 @@ if (window.electronAPI) {
         if (tabId === 'btn-actions-main' && submenuActions) submenuActions.classList.add('open');
         if (tabId === 'btn-gallery-main' && submenuGallery) submenuGallery.classList.add('open');
         if (tabId === 'btn-goals-main' && submenuGoals) submenuGoals.classList.add('open'); // NUEVO
+        if (tabId === 'btn-gifts-main' && submenuGifts) submenuGifts.classList.add('open');
 
         // C. Scroll y Animación
         setTimeout(() => {

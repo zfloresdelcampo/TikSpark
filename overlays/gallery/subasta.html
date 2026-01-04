@@ -227,6 +227,14 @@
             border: 4px solid #FFD700;
             background-size: cover;
             background-position: center;
+            background-color: #333; /* Fondo oscuro para la silueta */
+            flex-shrink: 0;
+        }
+
+        /* Agrega esto justo debajo para que la silueta se vea del tamaño correcto */
+        .winner-pfp.default-avatar-icon {
+            background-size: 60% !important; /* Evita que la silueta se vea gigante */
+            background-color: #222;
         }
 
         .winner-info {
@@ -522,10 +530,15 @@
                 const card = document.getElementById('winner-card-single');
                 const esEmpate = data.winners.length > 1;
                 
-                // 1. Generar HTML de las fotos
+                // 1. Generar HTML de las fotos (CON LOGICA DE SILUETA)
                 let pfpsHTML = '';
                 data.winners.forEach(w => {
-                    pfpsHTML += `<div class="winner-pfp ${esEmpate ? 'small' : ''}" style="background-image: url('${w.profilePictureUrl || ''}')"></div>`;
+                    // Verificamos si tiene foto real
+                    const tieneFoto = w.profilePictureUrl && w.profilePictureUrl !== "";
+                    const fotoEstilo = tieneFoto ? `style="background-image: url('${w.profilePictureUrl}')"` : "";
+                    const claseSilueta = tieneFoto ? "" : "default-avatar-icon";
+
+                    pfpsHTML += `<div class="winner-pfp ${esEmpate ? 'small' : ''} ${claseSilueta}" ${fotoEstilo}></div>`;
                 });
 
                 // 2. Generar HTML de los nombres con ancho dinámico

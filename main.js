@@ -142,7 +142,7 @@ function createWindow() {
     app.setAppUserModelId('com.electron.tikspark');
     
     currentUsername = loadConfig().username || '';
-    mainWindow = new BrowserWindow({ width: 1200, height: 800, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, backgroundThrottling: false } });
+    mainWindow = new BrowserWindow({ width: 1250, height: 920, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, backgroundThrottling: false } });
     
     // === BARRA SUPERIOR MOLESTA ===
     mainWindow.setMenu(null);

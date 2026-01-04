@@ -24,15 +24,15 @@ async function syncTopGifters() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // === NUEVO: CARGAR DATOS PERSISTENTES AL ABRIR EL PROGRAMA ===
     if (window.electronAPI) {
         const saved = await window.electronAPI.getWidgetData('topGifters');
-        if (saved && saved.participants) {
-            window.topGiftersData.participants = saved.participants;
+        if (saved) {
+            window.topGiftersData.participants = saved.participants || {};
             window.topGiftersData.rows = saved.rows || 6;
             window.topGiftersData.active = saved.active !== undefined ? saved.active : true;
-            console.log("✅ Top Gifters recuperados del disco.");
+        } else {
+            // SI NO HAY DATOS: Forzamos la creación inicial de la tabla vacía
+            syncTopGifters();
         }
     }
     // ===========================================================

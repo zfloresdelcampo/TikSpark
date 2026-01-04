@@ -24,15 +24,15 @@ async function syncTopLikes() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-
-    // === NUEVO: CARGAR DATOS PERSISTENTES AL ABRIR EL PROGRAMA ===
     if (window.electronAPI) {
         const saved = await window.electronAPI.getWidgetData('topLikes');
-        if (saved && saved.participants) {
-            window.topLikesData.participants = saved.participants;
+        if (saved) {
+            window.topLikesData.participants = saved.participants || {};
             window.topLikesData.rows = saved.rows || 6;
             window.topLikesData.active = saved.active !== undefined ? saved.active : true;
-            console.log("✅ Top Likes recuperados del disco.");
+        } else {
+            // SI NO HAY DATOS: Forzamos la creación inicial de la tabla vacía
+            syncTopLikes();
         }
     }
     // ===========================================================

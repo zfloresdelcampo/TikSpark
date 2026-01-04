@@ -37,20 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     
     let gvgState2 = {
-        // Estructura de 3 regalos por bando
         leftGifts: [
-            { id: 5655, name: 'Rose', coins: 1, img: 'https://p19-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
-            { id: 0, name: 'Vacío', coins: 0, img: '' },
-            { id: 0, name: 'Vacío', coins: 0, img: '' }
+            { id: 5655, name: 'Rose', coins: 1, img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp' },
+            { id: 8913, name: 'Rosa', coins: 10, img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eb77ead5c3abb6da6034d3cf6cfeb438~tplv-obj.webp' },
+            { id: 5879, name: 'Doughnut', coins: 30, img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/4e7ad6bdf0a1d860c538f38026d4e812~tplv-obj.webp' }
         ],
         rightGifts: [
             { id: 6064, name: 'GG', coins: 1, img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp' },
-            { id: 0, name: 'Vacío', coins: 0, img: '' },
-            { id: 0, name: 'Vacío', coins: 0, img: '' }
+            { id: 5576, name: 'Heart', coins: 10, img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/98bea1b189fba75bf0ca766b4dc1976e.png~tplv-obj.webp' },
+            { id: 14488, name: 'Capybara', coins: 30, img: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/6703facdac34caefbd0617a6321afe9b.png~tplv-obj.webp' }
         ],
         scoreLeft: 0,
         scoreRight: 0,
-        styles: {} // <--- AGREGA ESTA LÍNEA
+        styles: {}
     };
 
     // Memoria de combos (No se guarda en localStorage para evitar errores con combos viejos)
@@ -88,13 +87,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const backendData = await window.electronAPI.getWidgetData('giftVsGift2');
                 if (backendData) {
                     gvgState2 = { ...gvgState2, ...backendData };
-                    for(let i=0; i<3; i++) {
-                        updateButtonVisual2('left', gvgState2.leftGifts[i], i+1);
-                        updateButtonVisual2('right', gvgState2.rightGifts[i], i+1);
-                    }
-                    saveState2();
+                } else {
+                    // SI ES NUEVO: Forzamos que el backend guarde los defaults
                     syncWidget2();
                 }
+                
+                for(let i=0; i<3; i++) {
+                    updateButtonVisual2('left', gvgState2.leftGifts[i], i+1);
+                    updateButtonVisual2('right', gvgState2.rightGifts[i], i+1);
+                }
+                saveState2();
             } catch (e) { console.error(e); }
         }
     }

@@ -184,8 +184,24 @@
                 </div>
             </div>
 
-            <div class="nav-item" data-target="gift-section">
+            <div class="nav-item" id="btn-gifts-main" data-target="gift-section">
                 Gifts Overlays
+            </div>
+
+            <!-- Sub-menú Gifts -->
+            <div id="submenu-gifts" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('anchor-top-gift', 'btn-gifts-main')">
+                    <i class="fas fa-medal"></i> Mejor Regalo
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('anchor-top-streak', 'btn-gifts-main')">
+                    <i class="fas fa-fire"></i> Mejor Racha
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-gift-vs-gift', 'btn-gifts-main')">
+                    <i class="fas fa-bolt"></i> Gift VS Gift 1
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('card-gift-vs-gift-2', 'btn-gifts-main')">
+                    <i class="fas fa-gift"></i> Gift VS Gift 2
+                </div>
             </div>
 
             <!-- SEPARADOR JUEGOS (Antes de Mini-Juegos) -->
@@ -730,8 +746,8 @@
                             
                             <button class="action-btn sum-coins-btn">Sumar Monedas</button>
                         </div>
-                        <p class="subasta-info-text"><i class="fas fa-bolt" style="color: #ffc107;"></i> 20 Segundos Snipe !!</p>
-                        <p class="subasta-info-text"><i class="fas fa-coins" style="color: #ffeb3b;"></i> MINIMO 1 MONEDAS</p>
+                        <p class="subasta-info-text"><i class="fas fa-bolt" style="color: #ffc107;"></i> <span id="label-snipe-text">20</span> Segundos Snipe !!</p>
+                        <p class="subasta-info-text"><i class="fas fa-coins" style="color: #ffeb3b;"></i> MINIMO <span id="label-base-text">1</span> MONEDAS</p>
                     </div>
                     
                     <div class="subasta-participants-panel">
@@ -1300,7 +1316,7 @@
                 <div class="gifts-grid-layout">
                     
                     <!-- COLUMNA IZQUIERDA: TOP GIFT -->
-                    <div class="gift-column">
+                    <div class="gift-column" id="anchor-top-gift">
                         <div class="overlay-header compact">
                             <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Mejor Regalo</h3>
                             <div class="premium-tag small">PRO</div>
@@ -1334,7 +1350,7 @@
                     </div>
 
                     <!-- COLUMNA DERECHA: TOP STREAK -->
-                    <div class="gift-column">
+                    <div class="gift-column" id="anchor-top-streak">
                         <div class="overlay-header compact">
                             <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Top Streak</h3>
                             <div class="premium-tag small">PRO</div>
