@@ -115,7 +115,7 @@
         .like-icon {
             display: inline-block;
             width: 16px; height: 16px;
-            background-image: url('../../images/heart.png');
+            background-image: url('../../images/icons/like-icon.png');
             background-size: contain;
             background-repeat: no-repeat;
         }
@@ -163,7 +163,7 @@
     <script>
         const participantsList = document.getElementById('list');
         const socket = io();
-        const medalImages = { gold: '../../images/primero.png', silver: '../../images/segundo.png', bronze: '../../images/tercero.png' };
+        const medalImages = { gold: '../../images/positions/first-position.png', silver: '../../images/positions/second-position.png', bronze: '../../images/positions/third-position.png' };
         
         let lastUserOrderIds = []; 
         let lastCoinsMap = {};

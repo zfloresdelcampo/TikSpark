@@ -2797,37 +2797,37 @@ if (window.electronAPI) {
         if (widget === 'metaWin1') {
             prefix = "1 Contador Win";
             options = [
-                { val: 'sumar', text: 'Sumar', icon: 'images/sumar_icon.png' },
-                { val: 'quitar', text: 'Quitar', icon: 'images/quitar_icon.png' },
-                { val: 'reset', text: 'Reset', icon: 'images/reset_icon.png' }
+                { val: 'sumar', text: 'Sumar', icon: 'images/wins/add-win.png' },
+                { val: 'quitar', text: 'Quitar', icon: 'images/wins/remove-win.png' },
+                { val: 'reset', text: 'Reset', icon: 'images/wins/reset-win.png' }
             ];
         } else if (widget === 'metaWin2') {
             prefix = "2 Contador Win";
             options = [
-                { val: 'sumar', text: 'Sumar', icon: 'images/sumar_icon.png' },
-                { val: 'quitar', text: 'Quitar', icon: 'images/quitar_icon.png' },
-                { val: 'reset', text: 'Reset', icon: 'images/reset_icon.png' }
+                { val: 'sumar', text: 'Sumar', icon: 'images/wins/add-win.png' },
+                { val: 'quitar', text: 'Quitar', icon: 'images/wins/remove-win.png' },
+                { val: 'reset', text: 'Reset', icon: 'images/wins/reset-win.png' }
             ];
         } else if (widget === 'giftVsGift1') {
             prefix = "1 Gift vs Gift";
             options = [
-                { val: 'sumar_left', text: 'Sumar Izquierda', icon: 'images/sumar_icon.png' },
-                { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/sumar_icon.png' },
-                { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/reset_icon.png' }
+                { val: 'sumar_left', text: 'Sumar Izquierda', icon: 'images/wins/add-win.png' },
+                { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/wins/add-win.png' },
+                { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/wins/reset-win.png' }
             ];
         } else if (widget === 'giftVsGift2') {
             prefix = "2 Gift vs Gift";
             options = [
-                { val: 'sumar_left', text: 'Sumar Izquierda', icon: 'images/sumar_icon.png' },
-                { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/sumar_icon.png' },
-                { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/reset_icon.png' }
+                { val: 'sumar_left', text: 'Sumar Izquierda', icon: 'images/wins/add-win.png' },
+                { val: 'sumar_right', text: 'Sumar Derecha', icon: 'images/wins/add-win.png' },
+                { val: 'reset', text: 'Reset (0 vs 0)', icon: 'images/wins/reset-win.png' }
             ];
         } else if (widget === 'timer') {
             prefix = "Timer";
             options = [
-                { val: 'add', text: 'Sumar Tiempo', icon: 'images/sumar_icon.png' },
-                { val: 'sub', text: 'Quitar Tiempo', icon: 'images/quitar_icon.png' },
-                { val: 'restart', text: 'Reset (Reiniciar)', icon: 'images/reset_icon.png' },
+                { val: 'add', text: 'Sumar Tiempo', icon: 'images/wins/add-win.png' },
+                { val: 'sub', text: 'Quitar Tiempo', icon: 'images/wins/remove-win.png' },
+                { val: 'restart', text: 'Reset (Reiniciar)', icon: 'images/wins/reset-win.png' },
                 { val: 'start', text: 'Iniciar (Play)', icon: 'images/play_icon.png' }, // Opcional pero útil
                 { val: 'pause', text: 'Pausar', icon: 'images/pause_icon.png' }      // Opcional pero útil
             ];

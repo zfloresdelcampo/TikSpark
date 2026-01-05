@@ -229,8 +229,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             pickers['mw2-color-border'].setColor('#000000');
 
             // Resetear Icono
-            hiddenInput.value = "images/trophy.png";
-            selectedDisplay.querySelector('img').src = "images/trophy.png";
+            hiddenInput.value = "images/wins/trophy.png";
+            selectedDisplay.querySelector('img').src = "images/wins/trophy.png";
             selectedDisplay.querySelector('span').textContent = "Win Cup";
 
             saveData();
