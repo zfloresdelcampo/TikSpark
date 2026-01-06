@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         subBtn.textContent = "Liberar";
                         subBtn.style.background = "#a4262c";
                     } else {
-                        subStatusInput.value = "No Active";
+                        subStatusInput.value = "Sin Activar";
                         subStatusInput.style.color = "#666666";
                         subBtn.textContent = "Autenticar";
                         subBtn.style.background = "";
@@ -206,10 +206,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
 
                 // --- PARTE B: LÓGICA DE SUSCRIPCIÓN (Rango y Escudo) ---
-                const subscription = userData.subscription || { type: 'free', expire: 'N/A' };
+                const subscription = userData.subscription || { type: 'free', expire: 'no-active' };
                 
                 // --- NUEVO: VALIDACIÓN DE EXPIRACIÓN AUTOMÁTICA ---
-                if (subscription.expire !== "permanent" && subscription.expire !== "N/A") {
+                if (subscription.expire !== "permanent" && subscription.expire !== "no-active") {
                     // Convertimos "DD/MM/YYYY" a objeto de fecha real
                     const [d, m, y] = subscription.expire.split('/');
                     const fechaExpiracion = new Date(y, m - 1, d); 
@@ -5725,7 +5725,7 @@ if (window.electronAPI) {
         if (subBtn.textContent === "Liberar") {
             if (await window.showCustomConfirm("¿Quieres liberar este ID para usar tu cuenta en otra PC?")) {
                 await db.ref('users/' + currentAppUser.uid + '/license').remove();
-                document.getElementById('sub-status-id').value = "No Active";
+                document.getElementById('sub-status-id').value = "Sin Activar";
                 document.getElementById('sub-status-id').style.color = "#666666";
                 subBtn.textContent = "Autenticar";
                 subBtn.style.background = "";
@@ -5792,15 +5792,27 @@ if (window.electronAPI) {
 
         if (!rankImg || !rankText || !expireLabel) return;
 
-        // 1. Limpiamos el contenedor y creamos la lógica de textos
-        if (type === 'free' && expireDate !== "N/A" && expireDate !== "permanent") {
-            // CASO: EXPIRO
+        // --- NUEVA LÓGICA DE VALIDACIÓN INTERNA ---
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        let yaExpiro = false;
+
+        if (expireDate !== "no-active" && expireDate !== "permanent") {
+            const [d, m, y] = expireDate.split('/');
+            const fExp = new Date(y, m - 1, d);
+            if (hoy > fExp) yaExpiro = true;
+        }
+
+        // --- DIBUJAR TEXTOS SEGÚN EL ESTADO REAL ---
+        if (expireDate === "no-active") {
+            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #666;">Sin Activar</span>`;
+        } else if (yaExpiro) {
+            // Solo sale "EXPIRÓ" si la fecha realmente ya pasó
             expireLabel.innerHTML = `<span style="color: #ff4444; font-weight: bold;">EXPIRÓ:</span> <span id="expire-date" style="color: #666;">${expireDate}</span>`;
         } else if (expireDate === "permanent") {
-            // CASO: VITALICIO (permanent en minúsculas)
-            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ffbb00;">NUNCA</span>`;
+            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ffbb00; font-weight: bold;">NUNCA</span>`;
         } else {
-            // CASO: ACTIVO O NUEVO
+            // Si la fecha es futura (aunque seas FREE), dice "EXPIRA"
             expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ff4d4d;">${expireDate}</span>`;
         }
 
