@@ -8,6 +8,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 2. Recibir el aviso del Main cuando se presiona la tecla
     onGlobalHotkeyTriggered: (callback) => ipcRenderer.on('global-hotkey-triggered', (_event, actionId) => callback(actionId)),
 
+    // 3. Funciones de Login TikTok
+    openTikTokWebLogin: () => ipcRenderer.invoke('open-tiktok-web-login'),
+    tiktokWebLogout: () => ipcRenderer.invoke('tiktok-web-logout'),
+    checkTikTokWebSession: () => ipcRenderer.invoke('check-tiktok-web-session'),
+    getTikTokWebProfile: () => ipcRenderer.invoke('get-tiktok-web-profile'),
+
     // --- AGREGAR ESTA LÍNEA ---
     selectFolder: (startPath) => ipcRenderer.invoke('select-folder', startPath),
     detectGamePath: (folderName) => ipcRenderer.invoke('detect-game-path', folderName),

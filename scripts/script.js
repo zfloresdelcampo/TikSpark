@@ -2,9 +2,22 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
-    // --- NUEVO: CARGA INSTANTÁNEA DE FOTO (CACHÉ LOCAL) ---
+    // --- GENERADOR DE ID ÚNICO PARA ESTA PC ---
+    let myMachineId = localStorage.getItem('tikspark_machine_id');
+
+    if (!myMachineId) {
+        // Si la PC no tiene un ID, creamos uno único (ej: TS-A1B2C3D4)
+        myMachineId = 'TS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        localStorage.setItem('tikspark_machine_id', myMachineId);
+    }
+
+    // Mostrar el ID generado en la tarjeta de la derecha automáticamente
+    const idDisplay = document.getElementById('machine-id-display');
+    if (idDisplay) idDisplay.value = myMachineId;
+
+    // --- NUEVO: CARGA INSTANTÁNEA DE FOTO Y NOMBRE (CACHÉ LOCAL) ---
     const cachedPic = localStorage.getItem('cachedProfilePic');
-    const cachedName = localStorage.getItem('cachedUsername');
+    const cachedName = localStorage.getItem('cachedUsername'); // <--- BUSCA ESTA LÍNEA
     
     if (cachedPic) {
         const img = document.getElementById('sidebar-profile-img');
@@ -15,6 +28,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             icon.style.display = 'none';
         }
     }
+
+    // ESTO ELIMINA EL PARPADEO:
     if (cachedName) {
         const nameDisplay = document.getElementById('sidebar-username-display');
         if (nameDisplay) nameDisplay.textContent = cachedName;
@@ -145,24 +160,95 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     let isRegisterMode = false; // false = Login, true = Registro
     
-    // --- ESCUCHA AUTOMÁTICA DE SESIÓN (MODIFICADO) ---
-    auth.onAuthStateChanged(async (user) => {
+    // --- ESCUCHA DE SESIÓN: LICENCIA (PC) + SUSCRIPCIÓN (RANGO) EN TIEMPO REAL ---
+    auth.onAuthStateChanged((user) => {
         if (user) {
             console.log("✅ Sesión encontrada:", user.email);
             currentAppUser = user;
 
+            // 1. Referencias de la UI
+            const subEmailInput = document.getElementById('sub-email');
+            const subStatusInput = document.getElementById('sub-status-id');
+            const subBtn = document.getElementById('btn-authenticate');
             const sidebarName = document.getElementById('sidebar-username-display');
-            if (sidebarName && user.email) sidebarName.textContent = user.email.split('@')[0];
+            
+            if (subEmailInput) subEmailInput.value = user.email;
 
-            await loadAllDataFromCloud();
+            // 3. Actualizar nombre en el sidebar (Prioridad al apodo para evitar parpadeo)
+            const nicknameEnCache = localStorage.getItem('cachedUsername');
+            if (sidebarName) {
+                if (nicknameEnCache) {
+                    sidebarName.textContent = nicknameEnCache;
+                } else if (user.email) {
+                    sidebarName.textContent = user.email.split('@')[0];
+                }
+            }
 
-            if (loginScreen) loginScreen.classList.remove('active');
+            // --- 2. ESCUCHA ACTIVA (LIVE) DE DATOS EN FIREBASE ---
+            db.ref('users/' + user.uid).on('value', (snapshot) => {
+                const userData = snapshot.val();
+                if (!userData) return;
+
+                // --- PARTE A: LÓGICA DE LICENCIA (Vínculo con PC) ---
+                const license = userData.license;
+                if (subStatusInput && subBtn) {
+                    if (license && license.machineId) {
+                        subStatusInput.value = license.machineId;
+                        subStatusInput.style.color = "#ffffff";
+                        subBtn.textContent = "Liberar";
+                        subBtn.style.background = "#a4262c";
+                    } else {
+                        subStatusInput.value = "No Active";
+                        subStatusInput.style.color = "#666666";
+                        subBtn.textContent = "Autenticar";
+                        subBtn.style.background = "";
+                    }
+                }
+
+                // --- PARTE B: LÓGICA DE SUSCRIPCIÓN (Rango y Escudo) ---
+                const subscription = userData.subscription || { type: 'free', expire: 'N/A' };
+                
+                // --- NUEVO: VALIDACIÓN DE EXPIRACIÓN AUTOMÁTICA ---
+                if (subscription.expire !== "permanent" && subscription.expire !== "N/A") {
+                    // Convertimos "DD/MM/YYYY" a objeto de fecha real
+                    const [d, m, y] = subscription.expire.split('/');
+                    const fechaExpiracion = new Date(y, m - 1, d); 
+                    const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0); 
+
+                    // Si hoy ya pasó la fecha de expiración...
+                    if (hoy > fechaExpiracion && subscription.type !== 'free') {
+                        console.log("⚠️ Suscripción vencida. Volviendo a FREE...");
+                        // Actualizamos Firebase
+                        db.ref('users/' + user.uid + '/subscription').update({
+                            type: 'free',
+                        });
+                        return; 
+                    }
+                }
+
+                // Si no ha expirado (o es permanente), pintamos la UI normalmente
+                updateSubscriptionUI(subscription.type, subscription.expire);
+
+                // Sincronizar Nickname de la nube si cambió
+                if (userData.lastNickname && sidebarName) {
+                    sidebarName.textContent = userData.lastNickname;
+                    localStorage.setItem('cachedUsername', userData.lastNickname);
+                }
+            });
+
+            // 4. Cargar configuraciones (acciones/eventos) y entrar a la app
+            loadAllDataFromCloud();
+            if (loginScreen) {
+                loginScreen.classList.remove('active');
+            }
+            
         } else {
-            console.log("ℹ️ No hay sesión, mostrando formulario.");
-            // AQUÍ ESTÁ EL TRUCO: Solo mostramos la caja si CONFIRMAMOS que no hay usuario
+            console.log("ℹ️ No hay sesión activa.");
             if (loginScreen) {
                 loginScreen.classList.add('active');
-                document.querySelector('.login-card').style.display = 'block'; // <--- ESTO MUESTRA EL FORMULARIO
+                const loginCard = document.querySelector('.login-card');
+                if (loginCard) loginCard.style.display = 'block';
             }
         }
     });
@@ -1463,8 +1549,7 @@ if (window.electronAPI) {
         });
     }
 
-    // === AÑADE ESTO AQUÍ ===
-    // === CÓDIGO FINAL Y LIMPIO PARA SCRIPT.JS ===
+    // --- ESCUCHA DE PERFIL: ACTUALIZA NOMBRE REAL Y FOTO ---
     window.electronAPI.onUserProfile(data => {
         console.log("Datos de perfil recibidos:", data);
 
@@ -1472,29 +1557,35 @@ if (window.electronAPI) {
         const profileImg = document.getElementById('sidebar-profile-img');
         const nameDisplay = document.getElementById('sidebar-username-display');
 
-        // 1. Poner el nombre
-        if (data.nickname && nameDisplay) {
-            nameDisplay.textContent = data.nickname;
-            localStorage.setItem('cachedUsername', data.nickname); // <--- NUEVO: Guardar nombre local
+        // 1. Manejo del Nombre (Nickname)
+        if (data.nickname) {
+            if (nameDisplay) nameDisplay.textContent = data.nickname;
+            // Esto es vital para que la próxima vez que abras la app, el Paso 1 lo encuentre
+            localStorage.setItem('cachedUsername', data.nickname);
         }
 
-        // 2. Poner la foto y GUARDARLA
+        // 2. Manejo de la Foto (Avatar)
         if (data.avatar && profileImg && defaultIcon) {
             profileImg.src = data.avatar;
             profileImg.style.display = 'block'; 
             defaultIcon.style.display = 'none';
             
-            // Guardar en variable global y nube
+            // Guardar en variable global para que saveAllData() lo suba a la nube
             lastProfilePicture = data.avatar;
-            saveAllData(); 
             
-            // --- NUEVO: Guardar en Caché Local (Instantáneo) ---
+            // Guardar en caché local para carga inmediata al abrir la app
             localStorage.setItem('cachedProfilePic', data.avatar);
-            // ---------------------------------------------------
-            
-            if(typeof addLogEntry === 'function') {
-                addLogEntry(`🖼️ Perfil actualizado: ${data.nickname}`, 'info');
-            }
+        }
+
+        // 3. GUARDAR CAMBIOS EN LA NUBE (Firebase)
+        // Llamamos a tu función de guardado para que el Nickname y la Foto se sincronicen
+        if (data.nickname || data.avatar) {
+            saveAllData(); 
+        }
+        
+        // 4. Log visual en la consola de la app
+        if (typeof addLogEntry === 'function' && data.nickname) {
+            addLogEntry(`🖼️ Perfil actualizado: ${data.nickname}`, 'info');
         }
     });
 
@@ -1532,6 +1623,7 @@ if (window.electronAPI) {
                     topGift: window.topGiftState,
                     topStreak: window.topStreakState,
                     lastProfilePicture: lastProfilePicture || '', // <--- ESTO GUARDA LA FOTO
+                    lastNickname: document.getElementById('sidebar-username-display').textContent,
                     // --- AQUÍ ESTÁ LO DE HOTKEYS ---
                     hotkeysConfig: hotkeysConfig || {},
                     hotkeysEnabled: document.getElementById('hotkeys-global-toggle')?.checked || false
@@ -1585,6 +1677,11 @@ if (window.electronAPI) {
                 
                 // Cargar Foto guardada
                 lastProfilePicture = data.lastProfilePicture || '';
+                const lastNickname = data.lastNickname || ''; 
+                if (lastNickname) {
+                    document.getElementById('sidebar-username-display').textContent = lastNickname;
+                    localStorage.setItem('cachedUsername', lastNickname);
+                }
                 if (lastProfilePicture) {
                     const img = document.getElementById('sidebar-profile-img');
                     const icon = document.getElementById('sidebar-default-icon');
@@ -5507,6 +5604,230 @@ if (window.electronAPI) {
                 upFill.style.background = "#ac2fff";
             }
         });
+    }
+
+    async function updateTikTokWebUI(forcedProfile = null) {
+        if (!window.electronAPI) return;
+
+        const btnWebLogin = document.getElementById('btn-config-login-tk') || document.getElementById('btn-web-login-tiktok');
+        const btnWebLogout = document.getElementById('btn-config-logout-tk') || document.getElementById('btn-web-logout-tiktok');
+        const tkWebNickname = document.getElementById('tk-config-nickname');
+        const tkWebUsername = document.getElementById('tk-config-username') || document.getElementById('tk-web-username-text');
+        const tkWebStatus = document.getElementById('tk-config-status') || document.getElementById('tk-web-status-label');
+        const tkWebImg = document.getElementById('tk-config-profile-img') || document.getElementById('tk-web-profile-img');
+        const tkWebIcon = document.getElementById('tk-config-default-icon') || document.getElementById('tk-web-default-icon');
+
+        // 1. CARGAR DESDE CACHÉ AL INSTANTE
+        const cached = JSON.parse(localStorage.getItem('cached_tk_web_profile'));
+
+        // Función auxiliar para pintar la UI (con tus estilos de 13px y #aaa)
+        const fillUI = (profile) => {
+            if (tkWebNickname) tkWebNickname.textContent = profile.nickname || profile.uniqueId;
+            if (tkWebUsername) {
+                tkWebUsername.textContent = "@" + profile.uniqueId;
+                tkWebUsername.style.fontSize = "13px";
+                tkWebUsername.style.color = "#aaa";
+            }
+            if (profile.avatar && tkWebImg) {
+                tkWebImg.src = profile.avatar; // Sin el timestamp para el primer cargado rápido
+                tkWebImg.style.display = 'block';
+                if (tkWebIcon) tkWebIcon.style.display = 'none';
+            }
+        };
+
+        // Si hay caché, lo pintamos de inmediato para que el usuario no vea "Cargando..."
+        if (cached) fillUI(cached);
+
+        // 2. VERIFICAR SI HAY SESIÓN (Esto es muy rápido en comparación a cargar el perfil)
+        const isLoggedIn = await window.electronAPI.checkTikTokWebSession();
+
+        if (isLoggedIn) {
+            if (btnWebLogin) btnWebLogin.style.display = 'none';
+            if (btnWebLogout) btnWebLogout.style.display = 'flex';
+            if (tkWebStatus) {
+                tkWebStatus.textContent = "Sesión iniciada correctamente";
+                tkWebStatus.style.color = "#10c35b";
+            }
+
+            // --- EL CAMBIO CLAVE AQUÍ ---
+            // Si YA tenemos caché y NO estamos forzando un perfil (login nuevo), NO cargamos nada más.
+            if (cached && !forcedProfile) {
+                console.log("Caché cargado: Saltando proceso de carga real.");
+                return; 
+            }
+
+            // Si no hay caché o es un Login nuevo, hacemos la carga real
+            if (!cached && tkWebUsername) tkWebUsername.textContent = "Cargando perfil...";
+
+            const profile = forcedProfile || await window.electronAPI.getTikTokWebProfile();
+
+            if (profile && profile.uniqueId && profile.uniqueId !== "error_extraction") {
+                localStorage.setItem('cached_tk_web_profile', JSON.stringify(profile));
+                fillUI(profile);
+                
+                // Refrescar imagen con timestamp solo en carga real para evitar cacheo de imagen vieja
+                if (profile.avatar && tkWebImg) {
+                    const separator = profile.avatar.includes('?') ? '&' : '?';
+                    tkWebImg.src = profile.avatar + separator + "t=" + Date.now();
+                }
+            }
+        } else {
+            // --- ESTADO DESCONECTADO ---
+            localStorage.removeItem('cached_tk_web_profile');
+            if (btnWebLogin) btnWebLogin.style.display = 'flex';
+            if (btnWebLogout) btnWebLogout.style.display = 'none';
+            if (tkWebNickname) tkWebNickname.textContent = "";
+            if (tkWebUsername) tkWebUsername.textContent = "No identificado";
+            if (tkWebStatus) {
+                tkWebStatus.textContent = "Sesión no iniciada";
+                tkWebStatus.style.color = "#888";
+            }
+            if (tkWebImg) tkWebImg.style.display = 'none';
+            if (tkWebIcon) tkWebIcon.style.display = 'block';
+        }
+    }
+
+    // Evento para el botón de Login
+    const btnWebLoginAction = document.getElementById('btn-config-login-tk') || document.getElementById('btn-web-login-tiktok');
+    if (btnWebLoginAction) {
+        btnWebLoginAction.addEventListener('click', async () => {
+            const result = await window.electronAPI.openTikTokWebLogin();
+            if (result.success) {
+                // Actualizamos la UI con el perfil que el login ya capturó
+                updateTikTokWebUI(result.profile);
+            }
+        });
+    }
+
+    // Evento para el botón de Logout
+    const btnWebLogoutAction = document.getElementById('btn-config-logout-tk') || document.getElementById('btn-web-logout-tiktok');
+    if (btnWebLogoutAction) {
+        btnWebLogoutAction.addEventListener('click', async () => {
+            // Usamos tu diálogo personalizado que ya tienes en script.js
+            if (await window.showCustomConfirm("¿Seguro que quieres cerrar la sesión de TikTok?")) {
+                await window.electronAPI.tiktokWebLogout();
+                updateTikTokWebUI(); // Limpiamos la interfaz
+            }
+        });
+    }
+
+    // Ejecutar al cargar la página para saber si ya empezamos logueados
+    updateTikTokWebUI();
+    
+    // Funcionalidad para el botón "Autenticar"
+    document.getElementById('btn-authenticate').addEventListener('click', async () => {
+        if (!currentAppUser) return showCustomAlert("❌ Inicia sesión primero.");
+        
+        const subBtn = document.getElementById('btn-authenticate');
+        const machineId = localStorage.getItem('tikspark_machine_id');
+
+        // --- MODO: LIBERAR ---
+        if (subBtn.textContent === "Liberar") {
+            if (await window.showCustomConfirm("¿Quieres liberar este ID para usar tu cuenta en otra PC?")) {
+                await db.ref('users/' + currentAppUser.uid + '/license').remove();
+                document.getElementById('sub-status-id').value = "No Active";
+                document.getElementById('sub-status-id').style.color = "#666666";
+                subBtn.textContent = "Autenticar";
+                subBtn.style.background = "";
+                showSystemModal('success', 'ID Liberado', 'Ya puedes usar esta cuenta en otra PC.');
+            }
+            return;
+        }
+
+        // --- MODO: AUTENTICAR (Aquí creamos la suscripción automática) ---
+        showToastNotification("⏳ Vinculando...");
+
+        try {
+            // 1. Calculamos la fecha de expiración (Hoy + 1 mes)
+            const hoy = new Date();
+            const expiracion = new Date();
+            expiracion.setMonth(expiracion.getMonth() + 1); // Suma un mes
+
+            // Formato DD/MM/YYYY
+            const formatDate = (date) => {
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            };
+
+            const expireStr = formatDate(expiracion);
+
+            // 2. Guardamos la Licencia
+            await db.ref('users/' + currentAppUser.uid + '/license').set({
+                machineId: machineId,
+                status: 'active',
+                date: Date.now()
+            });
+
+            // 3. REVISIÓN: Solo creamos la suscripción si NO existe una previa
+            // Esto evita que un usuario Premium vuelva a ser Free por error
+            const subSnap = await db.ref('users/' + currentAppUser.uid + '/subscription').once('value');
+            if (!subSnap.exists()) {
+                await db.ref('users/' + currentAppUser.uid + '/subscription').set({
+                    type: 'free',
+                    expire: expireStr
+                });
+                updateSubscriptionUI('free', expireStr); // Actualiza la imagen al instante
+            }
+
+            // Actualizamos UI de la licencia
+            document.getElementById('sub-status-id').value = machineId;
+            document.getElementById('sub-status-id').style.color = "#ffffff";
+            subBtn.textContent = "Liberar";
+            subBtn.style.background = "#a4262c";
+            
+            showSystemModal('success', '¡Autenticado!', `PC vinculada. Tu acceso expira el ${expireStr}`);
+            
+        } catch (error) {
+            console.error(error);
+            showSystemModal('error', 'Error', 'No se pudo completar el registro.');
+        }
+    });
+
+    function updateSubscriptionUI(type, expireDate) {
+        const rankImg = document.getElementById('rank-img');
+        const rankText = document.getElementById('rank-text');
+        const expireLabel = document.querySelector('.rank-expire');
+
+        if (!rankImg || !rankText || !expireLabel) return;
+
+        // 1. Limpiamos el contenedor y creamos la lógica de textos
+        if (type === 'free' && expireDate !== "N/A" && expireDate !== "permanent") {
+            // CASO: EXPIRO
+            expireLabel.innerHTML = `<span style="color: #ff4444; font-weight: bold;">EXPIRÓ:</span> <span id="expire-date" style="color: #666;">${expireDate}</span>`;
+        } else if (expireDate === "permanent") {
+            // CASO: VITALICIO (permanent en minúsculas)
+            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ffbb00;">∞ (NUNCA)</span>`;
+        } else {
+            // CASO: ACTIVO O NUEVO
+            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ff4d4d;">${expireDate}</span>`;
+        }
+
+        // Configuración por tipo
+        const config = {
+            'free': {
+                text: 'FREE',
+                img: 'free-subscription.jpg',
+                color: '#2d2d2d'
+            },
+            'premium': {
+                text: 'PREMIUM',
+                img: 'premium-subscription.jpg',
+                color: '#57b727' // Verde
+            },
+            'premium-plus': {
+                text: 'PREMIUM PLUS',
+                img: 'premium-plus-subscription.jpg',
+                color: '#c02727' // Rojo
+            }
+        };
+
+        const selected = config[type] || config['free'];
+
+        rankText.textContent = selected.text;
+        rankText.style.background = selected.color;
+        rankImg.src = `images/subscriptions/${selected.img}`;
     }
 
     // ==========================================================

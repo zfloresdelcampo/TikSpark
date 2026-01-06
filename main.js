@@ -1,6 +1,6 @@
 // --- START OF FILE main.js ---
 
-const { app, BrowserWindow, ipcMain, dialog, shell, globalShortcut, Notification } = require('electron'); // <-- Añade 'shell'
+const { app, BrowserWindow, ipcMain, dialog, shell, globalShortcut, Notification,session } = require('electron'); // <-- Añade 'shell'
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -1042,6 +1042,107 @@ function createWindow() {
     
     mainWindow.webContents.on('did-finish-load', () => { mainWindow.webContents.send('connection-status', 'Desconectado. Introduce un usuario.'); });
 }
+
+// --- FUNCIÓN COMPLETA PARA EXTRAER EL PERFIL REAL ---
+async function getTikTokWebProfileData() {
+    const { BrowserWindow } = require('electron');
+    const tempWin = new BrowserWindow({ 
+        show: false, 
+        webPreferences: { partition: 'persist:tiktok_session' } 
+    });
+    
+    try {
+        tempWin.webContents.setAudioMuted(true);
+        await tempWin.loadURL('https://www.tiktok.com/');
+        
+        await new Promise(r => setTimeout(r, 4000));
+
+        // Obtenemos el ID único de la sesión web
+        const result = await tempWin.webContents.executeJavaScript(`
+            (() => {
+                try {
+                    const script = document.getElementById('__UNIVERSAL_DATA_FOR_REHYDRATION__');
+                    if (script) {
+                        const data = JSON.parse(script.textContent);
+                        return { uniqueId: data?.__DEFAULT_SCOPE__?.['webapp.app-context']?.user?.uniqueId };
+                    }
+                } catch (e) { return null; }
+                return null;
+            })()
+        `);
+
+        tempWin.destroy();
+        
+        if (result && result.uniqueId) {
+            // USAMOS EL MÉTODO DE "NOEL" (fetchProfileViaHTML) 
+            // para obtener el Nickname con emojis y la foto real
+            try {
+                const nativeData = await fetchProfileViaHTML(result.uniqueId);
+                return {
+                    uniqueId: result.uniqueId,
+                    nickname: nativeData.nickname, // <--- EL NOMBRE REAL (Mophin 🦭)
+                    avatar: nativeData.avatar 
+                };
+            } catch (err) {
+                return { uniqueId: result.uniqueId, nickname: result.uniqueId, avatar: "" };
+            }
+        } else {
+            return { uniqueId: "error_extraction" };
+        }
+
+    } catch (e) {
+        if (!tempWin.isDestroyed()) tempWin.destroy();
+        return null;
+    }
+}
+
+// --- LOGIN WEB DE TIKTOK (GENERAL) ---
+ipcMain.handle('open-tiktok-web-login', async () => {
+    const loginWin = new BrowserWindow({
+        width: 500, height: 750,
+        title: 'TikTok Login',
+        autoHideMenuBar: true,
+        webPreferences: { partition: 'persist:tiktok_session' }
+    });
+
+    await loginWin.loadURL('https://www.tiktok.com/login');
+
+    return new Promise((resolve) => {
+        // Detectar navegación para cerrar automáticamente al loguearse
+        loginWin.webContents.on('did-navigate', async (event, url) => {
+            if (url.includes('tiktok.com/foryou') || url.includes('tiktok.com/@')) {
+                const cookies = await require('electron').session.fromPartition('persist:tiktok_session').cookies.get({ name: 'sessionid' });
+                if (cookies.length > 0) {
+                    setTimeout(() => loginWin.close(), 1000);
+                }
+            }
+        });
+
+        loginWin.on('closed', async () => {
+            const cookies = await require('electron').session.fromPartition('persist:tiktok_session').cookies.get({ name: 'sessionid' });
+            if (cookies.length > 0) {
+                const profile = await getTikTokWebProfileData();
+                resolve({ success: true, profile });
+            } else {
+                resolve({ success: false });
+            }
+        });
+    });
+});
+
+ipcMain.handle('check-tiktok-web-session', async () => {
+    const cookies = await require('electron').session.fromPartition('persist:tiktok_session').cookies.get({ name: 'sessionid' });
+    return cookies.length > 0;
+});
+
+ipcMain.handle('get-tiktok-web-profile', async () => {
+    return await getTikTokWebProfileData();
+});
+
+ipcMain.handle('tiktok-web-logout', async () => {
+    await require('electron').session.fromPartition('persist:tiktok_session').clearStorageData();
+    return true;
+});
 
 // --- GESTIÓN DE HOTKEYS GLOBALES (VERSIÓN SILENCIOSA) ---
 ipcMain.handle('register-global-hotkeys', (event, { config, enabled }) => {

@@ -4492,3 +4492,130 @@ input.custom-chk {
     width: 130px !important;  /* Ancho para el contador */
     flex: none !important;
 }
+/* Estilos Específicos Suscripción */
+.subscription-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.sub-info { flex: 2; }
+
+.sub-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+.sub-benefits li {
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #b0b0b0;
+}
+
+.sub-benefits i { color: #8A2BE2; margin-right: 8px; }
+
+.sub-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    margin-top: 20px;
+}
+
+.sub-input-group {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+}
+
+.sub-input-group input {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    color: #888;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* Tarjeta de Rango (Derecha) */
+.rank-card {
+    width: 300px;  /* Ancho fijo */
+    height: 450px; /* Alto fijo */
+    flex-shrink: 0; /* Evita que se aplaste */
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.rank-image img {
+    width: 300px;
+    height: 300px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid #333;
+}
+
+.rank-badge {
+    background: #2d2d2d;
+    color: white;
+    width: 100%;
+    padding: 8px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    border-radius: 4px;
+}
+
+.rank-expire {
+    color: #ff4d4d;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.rank-link {
+    color: #10c35b;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.rank-id-box {
+    display: flex;
+    align-items: center;
+    background: #111;
+    border-radius: 4px;
+    padding: 5px 10px;
+    width: 100%;
+    gap: 10px;
+}
+
+.rank-id-box span { color: #666; font-size: 12px; }
+
+.rank-id-box input {
+    background: transparent;
+    border: none;
+    color: #555;
+    font-size: 11px;
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .subscription-layout { flex-direction: column; }
+    .rank-card { width: 100%; }
+}
+#btn-authenticate {
+    width: fit-content;    /* Tamaño ajustado al texto */
+    padding: 8px 30px;     /* Menos ancho */
+    margin-left: 120px;    /* Empuja el botón para que empiece donde los inputs */
+}
+#sub-email, #sub-status-id {
+    color: #ffffff !important; /* Texto blanco brillante */
+    background: #121212 !important; /* Fondo un poco más oscuro para que resalte */
+    cursor: default; /* Quita la barrita de escribir */
+    border: 1px solid #444; /* Un borde más definido */
+    opacity: 1; /* Por si el navegador lo pone opaco por defecto */
+}
