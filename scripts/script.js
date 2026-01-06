@@ -5798,7 +5798,7 @@ if (window.electronAPI) {
             expireLabel.innerHTML = `<span style="color: #ff4444; font-weight: bold;">EXPIRÓ:</span> <span id="expire-date" style="color: #666;">${expireDate}</span>`;
         } else if (expireDate === "permanent") {
             // CASO: VITALICIO (permanent en minúsculas)
-            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ffbb00;">∞ (NUNCA)</span>`;
+            expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ffbb00;">NUNCA</span>`;
         } else {
             // CASO: ACTIVO O NUEVO
             expireLabel.innerHTML = `EXPIRA: <span id="expire-date" style="color: #ff4d4d;">${expireDate}</span>`;
