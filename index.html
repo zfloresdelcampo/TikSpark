@@ -124,6 +124,29 @@
                 </div>
             </div>
 
+            <div class="nav-item" id="btn-subscriptions-main" data-target="subscriptions-section">
+                <span>Suscripciones</span>
+            </div>
+
+            <!-- Sub-menú de Suscripciones -->
+            <div id="submenu-subscriptions" class="sidebar-submenu">
+                <div class="sub-nav-item" onclick="scrollToSection('sub-header-top', 'btn-subscriptions-main')">
+                    <i class="fas fa-th-large"></i> Planes
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('sub-kick-anchor', 'btn-subscriptions-main')">
+                    <i class="fas fa-plus-circle"></i> Add-on Kick
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('sub-payment-anchor', 'btn-subscriptions-main')">
+                    <i class="fas fa-qrcode"></i> Métodos de Pago
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('sub-offers-anchor', 'btn-subscriptions-main')">
+                    <i class="fas fa-tag"></i> Ofertas
+                </div>
+                <div class="sub-nav-item" onclick="scrollToSection('sub-refund-anchor', 'btn-subscriptions-main')">
+                    <i class="fas fa-shield-alt"></i> Política de Reembolso
+                </div>
+            </div>
+
             <!-- SEPARADOR RAYO (Antes de Acciones) -->
             <div class="menu-separator">
                 <i class="fas fa-bolt"></i>
@@ -394,7 +417,7 @@
                         </ul>
 
                         <p style="font-size: 14px; margin-top: 15px; color: #b0b0b0; line-height: 1.5;">
-                            Para suscribirte, solo haz clic en <span style="color: #8A2BE2; font-weight: bold;">Subscribe</span>, completa tu pago y envíanos una captura a través de <span style="color: #5865F2; font-weight: bold;">Discord</span> para activar tu cuenta.
+                            Para suscribirte, solo haz clic en <span style="color: #8A2BE2; font-weight: bold;">Suscribirse</span>, completa tu pago y envíanos una captura a través de <span style="color: #5865F2; font-weight: bold;">Discord</span> para activar tu cuenta.
                         </p>
 
                         <p style="font-size: 14px; margin-top: 10px; font-weight: bold; color: #b0b0b0;">
@@ -423,7 +446,8 @@
                         <!-- Agregado id="rank-text" -->
                         <div class="rank-badge" id="rank-text">FREE</div>
                         <div class="rank-expire">EXPIRA: <span id="expire-date">14-11-2025</span></div>
-                        <a href="#" class="rank-link">
+                        <!-- Agregamos el onclick que ya usas en otros botones -->
+                        <a href="#" class="rank-link" onclick="scrollToSection('sub-header-top', 'btn-subscriptions-main')">
                             <i class="fas fa-external-link-alt"></i> Mira todos los planes aquí
                         </a>
                         
@@ -544,6 +568,192 @@
                 </div>
             </div>
 
+        </div>
+
+        <div id="subscriptions-section" class="content-section">
+            <div class="section-container" id="sub-header-top"> <!-- ID AGREGADO -->
+                <h2>Planes</h2>
+                <p>Elige el plan que mejor se adapte a tus necesidades y potencia tu contenido.</p>
+
+                <div style="max-width: 850px; margin: 20px auto; background-color: #362245; border-left: 4px solid #5c1d80; padding: 15px 20px; border-radius: 6px; color: #ffffff; font-family: sans-serif; font-size: 0.95em; line-height: 1.8;">
+    
+                    <div style="margin-bottom: 8px;">
+                        Para una suscripción recurrente usa los botones de 
+                        <i class="fab fa-paypal" style="color: #2583ff; margin: 0 5px;"></i> 
+                        <strong>PayPal “Suscribirse”</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <span>Si prefieres un pago manual, puedes usar los <strong>QR</strong> o enviar el pago al correo de PayPal</span>
+                        
+                        <div style="background-color: #21241f; border: 2px solid #3f3f46; padding: 4px 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; color: #ffffff;">
+                            <span style="font-size: 0.9em;">Proximamente...</span>
+                            <i class="far fa-copy" style="cursor: pointer; color: #888;" title="Copiar al portapapeles"></i>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Contenedor de Tarjetas -->
+                <div class="pricing-wrapper">
+                    
+                    <!-- Plan FREE -->
+                    <div class="pricing-card">
+                        <div class="plan-name">FREE</div>
+                        <div class="plan-price">$0<span>/mes</span></div>
+                        <div class="plan-description">Acceso a lo básico</div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 5 Eventos</li>
+                            <li><i class="fas fa-check"></i> 1 Perfil General</li>
+                            <li><i class="fas fa-check"></i> Overlays Básicos</li>
+                        </ul>
+                        <button id="btn-plan-free" class="btn-sub-plan disabled">Actual</button>
+                    </div>
+
+                    <!-- Plan PREMIUM PLUS (DESTACADO) -->
+                    <div class="pricing-card featured">
+                        <div class="popular-tag">Más Popular</div>
+                        <div class="plan-name">PREMIUM PLUS</div>
+                        <div class="plan-price">$18<span>/mes</span></div>
+                        <div class="plan-description">Acceso a Interactive + Mini-Juegos</div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Acceso a todo lo anterior ++</li>
+                            <li><i class="fas fa-check"></i> 30 Perfiles Personalizados</li>
+                            <li><i class="fas fa-check"></i> Acceso a todos los Mini-Juegos</li>
+                            <li><i class="fas fa-check"></i> Acceso a Overlay de Miniaturas</li>
+                            <li><i class="fas fa-check"></i> Rol Premium Plus en Discord</li>
+                        </ul>
+                        <button id="btn-plan-plus" class="btn-sub-plan primary">
+                            <i class="fab fa-paypal"></i> Suscribirse
+                        </button>
+                    </div>
+
+                    <!-- Plan PREMIUM -->
+                    <div class="pricing-card">
+                        <div class="plan-name">PREMIUM</div>
+                        <div class="plan-price">$10<span>/mes</span></div>
+                        <div class="plan-description">Acceso a Interactive</div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Eventos Ilimitados</li>
+                            <li><i class="fas fa-check"></i> 15 Perfiles Personalizados</li>
+                            <li><i class="fas fa-check"></i> Overlays Extras</li>
+                            <li><i class="fas fa-check"></i> Rol Premium en Discord</li>
+                            <li><i class="fas fa-check"></i> Soporte Priorizado</li>
+                        </ul>
+                        <button id="btn-plan-premium" class="btn-sub-plan primary">
+                            <i class="fab fa-paypal"></i> Suscribirse
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Banner ADD-ON KICK -->
+                <div id="sub-kick-anchor" style="max-width: 665px; margin: 20px auto; background-color: #121727; border: 1px solid #216e51; border-radius: 12px; display: flex; align-items: center; padding: 20px; font-family: sans-serif;">
+    
+                    <div style="background-color: #000000; padding: 12px; border-radius: 10px; margin-right: 20px; display: flex; align-items: center; justify-content: center;">
+                        <img src="images/kick-logo.png" alt="Kick" style="width: 32px; height: 32px; object-fit: contain;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="color: #32c571; font-weight: bold; font-size: 1.2em; letter-spacing: 0.5px;">
+                            ADD-ON KICK
+                        </div>
+                        
+                        <div style="color: #cbd5e1; font-size: 0.95em;">
+                            <strong>+$8</strong> añade Kick para multistream junto a tu plan 
+                            <span style="color: #ff4d4d; font-weight: bold;">PREMIUM</span> o 
+                            <span style="color: #ffb84d; font-weight: bold;">PREMIUM PLUS</span>
+                        </div>
+                        
+                        <div style="color: #94a3b8; font-style: italic; font-size: 0.75em;">
+                            Se añade como complemento mensual a tu suscripción actual.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Métodos de Pago QR -->
+                <div id="sub-payment-anchor" class="payment-qr-container">
+                    <div class="qr-card">
+                        <span class="qr-label paypal">PayPal</span>
+                        <img src="images/payments/coming-soon.png" alt="Paypal">
+                    </div>
+                    
+                    <div class="qr-card">
+                        <span class="qr-label binance">Binance</span>
+                        <img src="images/payments/coming-soon.png" alt="Binance">
+                    </div>
+                    
+                    <div class="qr-card">
+                        <span class="qr-label yape">Yape</span>
+                        <img src="images/payments/coming-soon.png" alt="Yape">
+                    </div>
+                </div>
+
+                <!-- Segmento de Ofertas de 6 Meses -->
+                <div id="sub-offers-anchor" class="offers-grid">
+                    <!-- Oferta Premium -->
+                    <div class="offer-card premium-border">
+                        <div class="offer-label">Oferta Premium</div>
+                        <img src="images/subscriptions/premium-subscription.jpg" alt="Premium">
+                        <div class="offer-info">
+                            <span class="offer-price">6 MESES x $50</span>
+                            <span class="offer-save">(ahorra $10)</span>
+                        </div>
+                    </div>
+
+                    <!-- Oferta Premium Plus -->
+                    <div class="offer-card plus-border">
+                        <div class="offer-label">Oferta Premium Plus</div>
+                        <img src="images/subscriptions/premium-plus-subscription.jpg" alt="Premium Plus">
+                        <div class="offer-info">
+                            <span class="offer-price">6 MESES x $90</span>
+                            <span class="offer-save">(ahorra $18)</span>
+                        </div>
+                    </div>
+
+                    <!-- Premium + Kick -->
+                    <div class="offer-card kick-border">
+                        <div class="offer-label kick-bg">Premium + Kick</div>
+                        <img src="images/subscriptions/premium-subscription.jpg" alt="Premium Kick">
+                        <div class="offer-info">
+                            <span class="offer-price">6 MESES x $90</span>
+                            <span class="offer-save">(ahorra $18)</span>
+                        </div>
+                    </div>
+
+                    <!-- Premium Plus + Kick -->
+                    <div class="offer-card kick-plus-border">
+                        <div class="offer-label kick-bg">Premium Plus + Kick</div>
+                        <img src="images/subscriptions/premium-plus-subscription.jpg" alt="Plus Kick">
+                        <div class="offer-info">
+                            <span class="offer-price">6 MESES x $130</span>
+                            <span class="offer-save">(ahorra $26)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuadro de Política de Reembolso -->
+                <div id="sub-refund-anchor" style="max-width: 850px; margin: 20px auto; background-color: #362245; border-left: 4px solid #5c1d80; padding: 20px 25px; border-radius: 6px; color: #ffffff; font-family: sans-serif; font-size: 0.9em; line-height: 1.6;">
+    
+                    <strong style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 1.1em; color: #e0b0ff;">
+                        <i class="fas fa-shield-alt"></i> 
+                        Política de Reembolso:
+                    </strong>
+
+                    <p style="margin: 0 0 10px 0; color: #ffffff;">
+                        Puedes solicitar un reembolso únicamente dentro de los <strong>primeros 3 días</strong> posteriores a tu compra, siempre que el motivo sea un error técnico comprobable directamente relacionado con nuestra aplicación.
+                    </p>
+
+                    <p style="margin: 0 0 10px 0; color: #ffffff;">
+                        No se realizarán reembolsos por cambios de opinión, uso indebido del software, problemas de compatibilidad, interferencias de terceros o causas ajenas a nuestro control.
+                    </p>
+
+                    <p style="margin: 0; font-style: italic; color: #b794f4;">
+                        Al utilizar nuestros servicios, aceptas estos términos. Nos reservamos el derecho de evaluar cada caso individual antes de emitir cualquier reembolso.
+                    </p>
+                    
+                </div>
+            </div>
         </div>
 
         <div id="actions-events-section" class="content-section">

@@ -4578,9 +4578,15 @@ input.custom-chk {
 }
 
 .rank-link {
-    color: #10c35b;
+    color: #8A2BE2 !important; /* Morado brillante */
     font-size: 12px;
     text-decoration: none;
+    transition: color 0.2s;
+}
+
+.rank-link:hover {
+    color: #ac2fff; /* Morado un poco más claro al pasar el mouse */
+    text-decoration: underline;
 }
 
 .rank-id-box {
@@ -4618,4 +4624,326 @@ input.custom-chk {
     cursor: default; /* Quita la barrita de escribir */
     border: 1px solid #444; /* Un borde más definido */
     opacity: 1; /* Por si el navegador lo pone opaco por defecto */
+}
+/* --- SECCIÓN SUSCRIPCIONES (VERSIÓN CORREGIDA FINAL) --- */
+
+/* 1. Arreglo para que el texto de arriba no se tape */
+#subscriptions-section h2 {
+    margin-bottom: 10px;
+}
+
+#subscriptions-section p {
+    margin-bottom: 40px; /* Esto empuja las tarjetas hacia abajo para que no tapen el texto */
+    display: block;
+}
+
+.pricing-wrapper {
+    display: grid;
+    /* Reducimos anchos: 250px laterales y 270px la central */
+    grid-template-columns: 280px 300px 280px; 
+    gap: 15px; 
+    margin: 60px auto 0 auto;
+    justify-content: center; 
+    padding: 10px;
+    align-items: center;
+}
+
+.pricing-card {
+    background-color: #1e1e24;
+    border: 1px solid #333;
+    border-radius: 15px;
+    padding: 20px 15px; /* Menos padding para que el contenido respire */
+    text-align: center;
+    transition: transform 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 400px;
+}
+
+/* Animación para que las tarjetas suban y brillen */
+.pricing-card:hover {
+    transform: translateY(-10px); /* Sube 10px */
+    box-shadow: 0 15px 35px rgba(138, 43, 226, 0.4); /* Resplandor morado */
+    border-color: #8A2BE2;
+}
+
+/* Tarjeta Destacada Premium Plus */
+.pricing-card.featured {
+    border: 2px solid #8A2BE2;
+    background-color: #1e1e24;
+    box-shadow: 0 10px 30px rgba(138, 43, 226, 0.2);
+    transform: scale(1.05);
+    z-index: 5; /* Asegura que esté por encima de las otras */
+    min-height: 450;
+}
+
+/* Caso especial para la central para que no pierda su tamaño grande */
+.pricing-card.featured:hover {
+    transform: scale(1.05) translateY(-10px);
+}
+
+.popular-tag {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #8A2BE2;
+    color: white;
+    padding: 4px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.plan-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.plan-price {
+    font-size: 42px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.plan-price span {
+    font-size: 16px;
+    color: #888;
+}
+
+.plan-description {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 30px 0;
+    text-align: left;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    font-size: 14px;
+    color: #ccc;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.plan-features li i {
+    color: #57b727; 
+    font-size: 12px;
+}
+
+.btn-sub-plan {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-sub-plan.primary {
+    background-color: #2d2d3a;
+    color: white;
+    border: 1px solid #444;
+}
+
+.btn-sub-plan.primary:hover {
+    background-color: #8A2BE2;
+    border-color: #8A2BE2;
+}
+
+.btn-sub-plan.disabled {
+    background-color: #333;
+    color: #666;
+    cursor: default;
+}
+
+.payment-qr-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.qr-card {
+    background: #252526;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #333;
+}
+
+/* Estilo para tus imágenes QR */
+.qr-card img {
+    /* Mantenemos el tamaño pero aseguramos que no se salga */
+    width: 100%; /* Ahora ocupará el ancho disponible dentro del padding de la card */
+    max-width: 150px; 
+    height: auto;
+    border-radius: 5px;
+    background-color: white;
+    padding: 5px;
+    box-sizing: border-box; /* También aquí */
+}
+
+.qr-card span {
+    display: block;
+    font-size: 13px;
+    color: #888;
+    font-weight: bold;
+}
+.qr-card {
+    background: #1a1a1f;
+    /* Ajustamos el padding: 35px arriba (para la etiqueta), 15px a los lados y abajo */
+    padding: 46px 15px 11px 15px !important; 
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #333;
+    /* Subimos el ancho a 180px para que la imagen de 150px tenga aire a los lados */
+    width: 180px; 
+    position: relative;
+    transition: transform 0.2s;
+    /* IMPORTANTE: Esto evita que el padding sume tamaño extra */
+    box-sizing: border-box; 
+}
+
+.qr-card:hover {
+    transform: scale(1.05); /* Efecto pequeño de aumento al pasar por el QR */
+}
+
+/* Estilo base de la etiqueta */
+.qr-label {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 5px;
+    color: white;
+    text-transform: uppercase;
+}
+
+/* Colores específicos según el servicio */
+.qr-label.paypal {
+    background-color: #0070ba; /* Azul PayPal */
+    color: #ffffff;
+}
+
+.qr-label.binance {
+    background-color: #f3ba2f; /* Amarillo Binance */
+    color: #ffffff;
+}
+
+.qr-label.yape {
+    background-color: #88129a; /* Morado Yape */
+    color: #ffffff;
+}
+/* --- SEGMENTO DE OFERTAS (6 MESES) --- */
+.offers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 200px); /* 4 columnas de 200px */
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.offer-card {
+    background: #1e1e24;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+    border: 1px solid #333;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.offer-card:hover {
+    transform: scale(1.03);
+}
+
+/* Etiquetas superiores de las ofertas */
+.offer-label {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 2;
+}
+
+.offer-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    filter: brightness(0.7);
+}
+
+.offer-info {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    background: #1a1a1f;
+}
+
+.offer-price {
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.offer-save {
+    color: #aaa;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/* Bordes de colores según el tipo de oferta */
+.premium-border { border: 1px solid #2ecc71; box-shadow: 0 0 10px rgba(231, 76, 60, 0.2); }
+.plus-border { border: 1px solid #e74c3c; box-shadow: 0 0 10px rgba(241, 196, 15, 0.2); }
+.kick-border { border: 1px solid #f1c40f; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); }
+.kick-plus-border { border: 1px solid #f1c40f; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); }
+
+.kick-bg { background-color: #2ecc71 !important; color: #000; }
+/* Estado para el plan que el usuario ya tiene o superó */
+.btn-sub-plan.active-plan {
+    background-color: #5c1d80 !important; /* Morado de tu app */
+    color: white !important;
+    cursor: default;
+    border: none;
+}
+
+.btn-sub-plan.included-plan {
+    background-color: #2d2d3a !important; /* Gris oscuro */
+    color: #888 !important;
+    cursor: default;
+    border: 1px solid #444;
+}
+/* Esto aplica el espacio de arriba a tus secciones de suscripciones sin cambiarles el color ni el borde */
+#sub-kick-anchor, 
+#sub-payment-anchor, 
+#sub-offers-anchor, 
+#sub-refund-anchor {
+    scroll-margin-top: 20px;
 }

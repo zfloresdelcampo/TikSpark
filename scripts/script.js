@@ -2,16 +2,18 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
-    // --- GENERADOR DE ID ÚNICO PARA ESTA PC ---
+    // --- GENERADOR DE ID ÚNICO CON MIGRACIÓN AUTOMÁTICA ---
     let myMachineId = localStorage.getItem('tikspark_machine_id');
 
-    if (!myMachineId) {
-        // Si la PC no tiene un ID, creamos uno único (ej: TS-A1B2C3D4)
-        myMachineId = 'TS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    // Si no existe ID O si el ID es de los antiguos (empieza con TS-)
+    if (!myMachineId || myMachineId.startsWith('TS-')) {
+        // Generamos el nuevo UUID largo
+        myMachineId = self.crypto.randomUUID(); 
         localStorage.setItem('tikspark_machine_id', myMachineId);
+        console.log("🔄 ID Migrado al nuevo formato UUID");
     }
 
-    // Mostrar el ID generado en la tarjeta de la derecha automáticamente
+    // Mostrar el ID en la interfaz
     const idDisplay = document.getElementById('machine-id-display');
     if (idDisplay) idDisplay.value = myMachineId;
 
@@ -1147,17 +1149,23 @@ let currentConnectionMode = 'api-server'; // 'api-server' o 'api-tikfinity'
 
 navItems.forEach(item => {
     item.addEventListener('click', () => {
-        // 1. Limpieza visual estándar
-        navItems.forEach(i => i.classList.remove('active'));
-        contentSections.forEach(s => s.classList.remove('active'));
-        
-        item.classList.add('active');
         const targetId = item.getAttribute('data-target');
         const targetSection = document.getElementById(targetId);
         
         if(targetSection) {
+            // --- CAMBIO AQUÍ ---
+            // Solo hacemos el "scrollTop = 0" si la sección NO está activa todavía
+            // (es decir, cuando venimos de OTRA pestaña diferente)
+            if (!targetSection.classList.contains('active')) {
+                document.getElementById('main-content').scrollTop = 0;
+            }
+
+            // 1. Limpieza visual estándar
+            navItems.forEach(i => i.classList.remove('active'));
+            contentSections.forEach(s => s.classList.remove('active'));
+            
+            item.classList.add('active');
             targetSection.classList.add('active');
-            document.getElementById('main-content').scrollTop = 0;
         }
 
         // 2. LÓGICA: Cerrar sub-menús si vamos a una sección simple
@@ -1167,9 +1175,10 @@ navItems.forEach(item => {
             item.id !== 'btn-gifts-main' &&
             item.id !== 'btn-timer-main' &&
             item.id !== 'btn-config-main' &&
-            item.id !== 'btn-home-main') {
+            item.id !== 'btn-home-main' &&
+            item.id !== 'btn-subscriptions-main') {
             
-            closeAllSubmenus(); // Llamamos a la función de limpieza
+            closeAllSubmenus(); 
         }
     });
 });
@@ -4414,13 +4423,15 @@ if (window.electronAPI) {
     const submenuConfig = document.getElementById('submenu-config');
     const btnHomeMain = document.getElementById('btn-home-main');
     const submenuHome = document.getElementById('submenu-home');
+    const btnSubscriptionsMain = document.getElementById('btn-subscriptions-main');
+    const submenuSubscriptions = document.getElementById('submenu-subscriptions');
 
     // Función maestra para cerrar todos los submenús
     function closeAllSubmenus() {
-        [submenuActions, submenuGallery, submenuGoals, submenuGifts, submenuTimer, submenuConfig, submenuHome].forEach(sm => {
+        [submenuActions, submenuGallery, submenuGoals, submenuGifts, submenuTimer, submenuConfig, submenuHome, submenuSubscriptions].forEach(sm => {
             if(sm) sm.classList.remove('open');
         });
-        [btnActionsMain, btnGalleryMain, btnGoalsMain, btnGiftsMain, btnTimerMain, btnConfigMain, btnHomeMain].forEach(btn => {
+        [btnActionsMain, btnGalleryMain, btnGoalsMain, btnGiftsMain, btnTimerMain, btnConfigMain, btnHomeMain, btnSubscriptionsMain].forEach(btn => {
             if(btn) btn.classList.remove('menu-open');
         });
     }
@@ -4449,7 +4460,19 @@ if (window.electronAPI) {
         });
     }
 
-    // 3. Toggle Acciones
+    // 3. Toggle Suscripciones
+    if(btnSubscriptionsMain) {
+        btnSubscriptionsMain.addEventListener('click', () => {
+            const isOpen = submenuSubscriptions.classList.contains('open');
+            closeAllSubmenus(); // Cierra los otros para que no se encimen
+            if(!isOpen) {
+                submenuSubscriptions.classList.add('open');
+                btnSubscriptionsMain.classList.add('menu-open');
+            }
+        });
+    }
+
+    // 4. Toggle Acciones
     if(btnActionsMain) {
         btnActionsMain.addEventListener('click', () => {
             const isOpen = submenuActions.classList.contains('open');
@@ -4461,7 +4484,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 4. Toggle Galería
+    // 5. Toggle Galería
     if(btnGalleryMain) {
         btnGalleryMain.addEventListener('click', () => {
             const isOpen = submenuGallery.classList.contains('open');
@@ -4473,7 +4496,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 5. Toggle Metas
+    // 6. Toggle Metas
     if(btnGoalsMain) {
         btnGoalsMain.addEventListener('click', () => {
             const isOpen = submenuGoals.classList.contains('open');
@@ -4485,7 +4508,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 6. Toggle Gifts
+    // 7. Toggle Gifts
     if(btnGiftsMain) {
         btnGiftsMain.addEventListener('click', () => {
             const isOpen = submenuGifts.classList.contains('open');
@@ -4497,7 +4520,7 @@ if (window.electronAPI) {
         });
     }
 
-    //7. Toggle Timer
+    //8. Toggle Timer
     if(btnTimerMain) {
         btnTimerMain.addEventListener('click', () => {
             const isOpen = submenuTimer.classList.contains('open');
@@ -4509,7 +4532,7 @@ if (window.electronAPI) {
         });
     }
 
-    // 8. Función Global de Scroll y Temblor
+    // 9. Función Global de Scroll y Temblor
     window.scrollToSection = (targetId, tabId) => {
         // A. Cambiar a la pestaña correcta
         const mainTab = document.getElementById(tabId);
@@ -4524,6 +4547,7 @@ if (window.electronAPI) {
         if (tabId === 'btn-gifts-main' && submenuGifts) submenuGifts.classList.add('open');
         if (tabId === 'btn-timer-main' && submenuTimer) submenuTimer.classList.add('open');
         if (tabId === 'btn-config-main' && submenuConfig) submenuConfig.classList.add('open');
+        if (tabId === 'btn-subscriptions-main' && submenuSubscriptions) submenuSubscriptions.classList.add('open');
 
         // C. Scroll y Animación
         setTimeout(() => {
@@ -5786,11 +5810,61 @@ if (window.electronAPI) {
     });
 
     function updateSubscriptionUI(type, expireDate) {
+        // 1. Define tus links aquí arriba (dentro de la función o fuera)
+        const PAYPAL_LINK_PREMIUM = "https://www.paypal.com/ncp/payment/TU_ID_AQUÍ";
+        const PAYPAL_LINK_PLUS = "https://www.paypal.com/ncp/payment/TU_ID_AQUÍ";
+
         const rankImg = document.getElementById('rank-img');
         const rankText = document.getElementById('rank-text');
         const expireLabel = document.querySelector('.rank-expire');
 
+        // Referencias a los botones de las tarjetas
+        const btnFree = document.getElementById('btn-plan-free');
+        const btnPremium = document.getElementById('btn-plan-premium');
+        const btnPlus = document.getElementById('btn-plan-plus');
+
         if (!rankImg || !rankText || !expireLabel) return;
+
+        // --- LÓGICA DE RANKING (Jerarquía) ---
+        const levels = { 'free': 0, 'premium': 1, 'premium-plus': 2 };
+        const userLevel = levels[type] || 0;
+
+        // Función auxiliar para resetear y pintar botones
+        const setBtn = (btn, text, status) => {
+            if(!btn) return;
+            btn.classList.remove('primary', 'disabled', 'active-plan', 'included-plan');
+            btn.onclick = null; // Limpiar clics previos
+            
+            if (status === 'actual') {
+                btn.textContent = "Actual";
+                btn.classList.add('active-plan');
+            } else if (status === 'incluido') {
+                btn.textContent = "Incluido";
+                btn.classList.add('included-plan');
+            } else {
+                btn.innerHTML = '<i class="fab fa-paypal"></i> Suscribirse';
+                btn.classList.add('primary');
+
+                // 2. ASIGNAR EL LINK SEGÚN EL BOTÓN (NAVEGADOR REAL)
+                btn.onclick = () => {
+                    const link = (btn.id === 'btn-plan-premium') ? PAYPAL_LINK_PREMIUM : PAYPAL_LINK_PLUS;
+                    window.open(link, '_blank'); 
+                };
+            }
+        };
+
+        // Actualizar Botón FREE
+        if (userLevel === 0) setBtn(btnFree, "", 'actual');
+        else setBtn(btnFree, "", 'incluido');
+
+        // Actualizar Botón PREMIUM
+        if (userLevel === 1) setBtn(btnPremium, "", 'actual');
+        else if (userLevel > 1) setBtn(btnPremium, "", 'incluido');
+        else setBtn(btnPremium, "", 'suscribirse');
+
+        // Actualizar Botón PREMIUM PLUS
+        if (userLevel === 2) setBtn(btnPlus, "", 'actual');
+        else setBtn(btnPlus, "", 'suscribirse');
 
         // --- NUEVA LÓGICA DE VALIDACIÓN INTERNA ---
         const hoy = new Date();

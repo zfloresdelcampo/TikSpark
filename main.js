@@ -164,10 +164,22 @@ function createWindow() {
     mainWindow = new BrowserWindow({ width: 1250, height: 920, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, backgroundThrottling: false } });
     
     // === BARRA SUPERIOR MOLESTA ===
-    mainWindow.setMenu(null);
+    // mainWindow.setMenu(null);
     // === FIN DE LA LÍNEA AÑADIDA ===
 
     mainWindow.loadFile('index.html');
+    
+    // --- REGLA MAESTRA: ABRIR TODOS LOS LINKS EXTERNOS EN EL NAVEGADOR REAL ---
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        // Si el link empieza con http (internet), mándalo afuera de la app
+        if (url.startsWith('http')) {
+            shell.openExternal(url);
+            return { action: 'deny' }; // No permitas que Electron lo abra internamente
+        }
+        
+        // Si el link es interno de la app (archivos locales), permite abrirlo
+        return { action: 'allow' }; 
+    });
 
     mainWindow.webContents.on('did-finish-load', () => {
         // 1. Enviar versión
@@ -1174,6 +1186,11 @@ ipcMain.handle('register-global-hotkeys', (event, { config, enabled }) => {
             console.error(`Error registrando ${accelerator}:`, err);
         }
     }
+});
+
+// --- NUEVO: MANEJADOR PARA NAVEGADOR EXTERNO ---
+ipcMain.handle('open-external-url', async (event, url) => {
+    await shell.openExternal(url);
 });
 
 if (gotTheLock) {
