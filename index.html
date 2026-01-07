@@ -291,109 +291,117 @@
     </div>
 
     <div id="main-content">
-        <!-- BARRA DE PROGRESO DE ACTUALIZACIÓN (ESTILO REFERENCIA) -->
-        <div id="update-progress-container" style="display: none;">
-            <div class="update-header-row">
-                <div class="update-icon-square"><i class="fas fa-download"></i></div>
-                <span id="update-status-text">Descargando actualización...</span>
-                <span id="update-percent-text">0%</span>
+        <!-- BLOQUE FIJO SUPERIOR (Discord + Actualizador) -->
+        <div id="top-right-utilities">
+            <!-- Fila de utilidades -->
+            <div class="top-util-row">
+                
+                <!-- Botón Notificaciones -->
+                <button class="util-square-btn" id="btn-open-inbox">
+                    <i class="fas fa-bell"></i>
+                </button>
+
+                <!-- Botón Ayuda -->
+                <button class="util-square-btn" id="btn-open-help">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+
+                <!-- Tu botón de Discord que ya tenías -->
+                <a href="https://discord.gg/NRpX8d8ypF" target="_blank" class="discord-global-link">
+                    <div class="discord-text">
+                        <span>¿Necesitas ayuda?</span>
+                        <strong>Únete al Discord</strong>
+                    </div>
+                    <i class="fab fa-discord"></i>
+                </a>
             </div>
-            <div class="update-progress-track">
-                <div id="update-progress-fill"></div>
+
+            <!-- Actualizador (debajo de la fila) -->
+            <div id="update-progress-container" style="display: none;">
+                <div class="update-header-row">
+                    <div class="update-icon-square"><i class="fas fa-download"></i></div>
+                    <span id="update-status-text">Actualizando...</span>
+                    <span id="update-percent-text">0%</span>
+                </div>
+                <div class="update-progress-track"><div id="update-progress-fill"></div></div>
             </div>
-            <p class="update-footer-text">La app se cerrará y reiniciará automáticamente al finalizar.</p>
         </div>
 
         <div id="home-section" class="content-section active">
-
-            <div class="connection-header">
-                <div id="connection-mode-toggle">
-                    <button id="toggle-api-server" class="toggle-btn active" data-target="api-server-panel">API Server</button>
-                    <button id="toggle-api-tikfinity" class="toggle-btn" data-target="api-tikfinity-panel">API TikFinity</button>
-                </div>
+            <div class="section-header-text">
+                <h2>Inicio</h2>
             </div>
-            
+
             <!-- Panel para Conexión Directa (API Server) -->
             <div id="api-server-panel" class="connection-panel active">
-                <div class="panel-header">
-                    <div class="live-title-container">
-                        <i class="fab fa-tiktok" style="color: #fe2c55; font-size: 1.2em;"></i>
-                        <h3>TikTok Live</h3>
-                    </div>
-                    <p>Una vez que estés en directo, conecta la aplicación a tu canal de TikTok.</p> 
-                </div>
-                <div class="panel-content connect-panel-row">
-    
-                    <!-- COLUMNA IZQUIERDA: ETIQUETA -->
-                    <label for="username-input" class="connect-label">
-                        Tu usuario de TikTok (<span style="color: #ff4d4d;">Requerido!</span>)
-                    </label>
-                    
-                    <!-- COLUMNA DERECHA: INPUT Y BOTONES -->
-                    <div class="connect-actions-area">
-                        
-                        <!-- 1. INPUT -->
-                        <input type="text" id="username-input" placeholder="TikTok @username" style="width: 100%; box-sizing: border-box;">
-                        
-                        <!-- 2. FILA DE BOTONES -->
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            
-                            <button id="connect-button">
-                                <i class="fas fa-link"></i> Conectar
-                            </button>
-                            
-                            <button id="disconnect-button" disabled>
-                                <i class="fas fa-unlink"></i> Desconectar
-                            </button>
-                            
-                            <button id="emotes-button" disabled>
-                                <i class="fas fa-smile"></i> Emotes
-                            </button>
-
-                            <button id="update-gifts-button" class="secondary-btn" style="margin-top: 0;">
-                                <i class="fas fa-sync-alt"></i> Actualizar Regalos
-                            </button>
-                            
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="live-title-container">
+                            <i class="fab fa-tiktok" style="color: #fe2c55; font-size: 1.2em;"></i>
+                            <h3>TikTok Live</h3>
                         </div>
-
+                        <p>Una vez que inicies una transmisión, conecta la aplicación a tu canal de TikTok.</p>
+                    </div>
+                    
+                    <div id="connection-mode-toggle" style="margin-bottom: 0;">
+                        <!-- Aquí el activo es API Server -->
+                        <button id="toggle-api-server" class="toggle-btn active" data-target="api-server-panel">API Server</button>
+                        <button id="toggle-api-tikfinity" class="toggle-btn" data-target="api-tikfinity-panel">API TikFinity</button>
+                    </div>
+                </div>
+                
+                <div class="panel-content connect-panel-row">
+                    <label for="username-input" class="connect-label">Tu usuario de TikTok (<span style="color: #ff4d4d;">Requerido!</span>)</label>
+                    <div class="connect-actions-area">
+                        <input type="text" id="username-input" placeholder="TikTok @username" style="width: 100%; box-sizing: border-box;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button id="connect-button"><i class="fas fa-link"></i> Conectar</button>
+                            <button id="disconnect-button" disabled><i class="fas fa-unlink"></i> Desconectar</button>
+                            <button id="emotes-button" disabled><i class="fas fa-smile"></i> Emotes</button>
+                            <button id="update-gifts-button" class="secondary-btn" style="margin-top: 0;"><i class="fas fa-sync-alt"></i> Actualizar Regalos</button>
+                        </div>
                     </div>
                 </div>
             </div>
             
             <!-- Panel para Conexión con TikFinity -->
             <div id="api-tikfinity-panel" class="connection-panel">
-                <div class="panel-header">
-                    <h3>Event API <span class="provider-badge">TikFinity</span></h3>
-                    <p>En caso de que la conexión directa no esté disponible, usa este método...</p>
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3>Event API <span class="provider-badge">TikFinity</span></h3>
+                        <p>
+                            En caso de que la conexión directa no esté disponible, usa este método.<br>
+                            Por favor, inicia la aplicacion de escritorio de TikFinity y conéctate a una transmisión en vivo.
+                        </p>
+                    </div>
+
+                    <div id="connection-mode-toggle" style="margin-bottom: 0;">
+                        <button id="toggle-api-server" class="toggle-btn" data-target="api-server-panel">API Server</button>
+                        <!-- Aquí el activo es API TikFinity -->
+                        <button id="toggle-api-tikfinity" class="toggle-btn active" data-target="api-tikfinity-panel">API TikFinity</button>
+                    </div>
                 </div>
+                
                 <div class="panel-content">
                     <div class="status-group">
                         <label>Estado:</label>
                         <span id="tikfinity-status" class="status-indicator disconnected">Disconnected</span>
                     </div>
-                    
-                    <!-- BOTONES CON ICONOS NUEVOS -->
                     <div class="button-group" style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button id="connect-tikfinity-button">
-                            <i class="fas fa-plug"></i> Conectar
-                        </button>
-                        <button id="disconnect-tikfinity-button" disabled>
-                            <i class="fas fa-power-off"></i> Desconectar
-                        </button>
+                        <button id="connect-tikfinity-button"><i class="fas fa-plug"></i> Conectar</button>
+                        <button id="disconnect-tikfinity-button" disabled><i class="fas fa-power-off"></i> Desconectar</button>
                     </div>
                 </div>
             </div>
             
-            <!-- Contenedor de Logs (se queda abajo) -->
             <div class="log-wrapper">
                 <div id="status" class="status-bar">Desconectado.</div>
                 <div id="log-container"></div>
             </div>
-
         </div>
         
         <div id="config-section" class="content-section">
-            <div class="section-container">
+            <div class="section-header-text">
                 <h2>Configuración</h2>
                 <p>
                     Aquí puedes definir la configuración básica.
@@ -406,7 +414,7 @@
                 <div class="subscription-layout">
                     <!-- Parte Izquierda: Información -->
                     <div class="sub-info">
-                        <p>¡Lleva tus directos al siguiente nivel con la suscripción <span style="color: #57b727; font-weight: bold;">PREMIUM</span> - <span style="color: #c02727; font-weight: bold;">PREMIUM PLUS</span>!</p>
+                        <p>¡Lleva tus transmisiones al siguiente nivel con la suscripción <span style="color: #57b727; font-weight: bold;">PREMIUM</span> - <span style="color: #c02727; font-weight: bold;">PREMIUM PLUS</span>!</p>
                         <p>Obtén acceso a <span style="color: #ddaa1e; font-weight: bold;">beneficios exclusivos</span> que mejorarán tu contenido.</p>
                         
                         <ul class="sub-benefits">
@@ -571,6 +579,10 @@
         </div>
 
         <div id="subscriptions-section" class="content-section">
+            <div class="section-header-text">
+                <h2>Suscripciones</h2>
+            </div>
+
             <div class="section-container" id="sub-header-top"> <!-- ID AGREGADO -->
                 <h2>Planes</h2>
                 <p>Elige el plan que mejor se adapte a tus necesidades y potencia tu contenido.</p>
@@ -757,17 +769,15 @@
         </div>
 
         <div id="actions-events-section" class="content-section">
-            
-            <div class="section-container">
-                
+    
+            <!-- TEXTO LIBRE (ESTILO TIKFINITY) -->
+            <div class="section-header-text">
                 <h2>Acciones y Eventos</h2>
-                
                 <p>
                     Aquí puedes definir tus acciones y eventos personalizados (activadores). Por ejemplo, puedes mostrar un vídeo o una animación sobre un regalo específico.<br>
                     Para ello, primero debes definir la acción y luego el evento. Se requiere la superposición "Mis acciones" para OBS/LIVE Studio.<br>
                     Mira este vídeo para aprender cómo funciona el sistema de acciones y eventos.
                 </p>
-                
             </div>
 
             <div class="section-container" id="profiles-section">
@@ -867,10 +877,18 @@
         
         <!-- === NUEVO: SECCIÓN DE ALERTAS === -->
         <div id="alerts-section" class="content-section">
-            <div class="section-container">
+            <div class="section-header-text">
                 <h2>Alertas</h2>
-                <p>Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.</p>
+                <p>
+                    Esta es la forma más fácil de reproducir sonidos y alertas de forma general al recibir regalos, seguidores, etc.
+                </p>
+            </div>
+
+            <div class="info-box">
+                <p>Configuración global: se mantiene activo en cualquier perfil.</p>
+            </div>
             
+            <div class="section-container">
                 <div class="list-view-controls">
                     <div class="control-group">
                         <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
@@ -902,7 +920,7 @@
 
         <div id="overlay-gallery" class="content-section">
     
-            <div class="section-container" id="gallery-info-section">
+            <div class="section-header-text" id="gallery-info-section">
                 
                 <h2>Galería Overlays</h2>
                 
@@ -912,10 +930,10 @@
                     Para incluir los overlays que se enumeran a continuación en Live Studio, copie la URL y péguela en una nueva fuente de enlace.
                 </p>
                 
-                <div class="info-box">
-                    <p>Para cambiar el color o la fuente de los Ovelays, haga clic en el botón "Personalizar" del overlay respectivo.</p>
-                </div>
-                
+            </div>
+
+            <div class="info-box">
+                <p>Para cambiar el color o la fuente de los Ovelays, haga clic en el botón "Personalizar" del overlay respectivo.</p>
             </div>
             
             <div class="overlay-card-container" id="card-top-gifters">
@@ -1248,7 +1266,7 @@
         </div>
 
         <div id="goals-section" class="content-section">
-            <div class="section-container" id="goals-info-section">
+            <div class="section-header-text" id="goals-info-section">
                 
                 <h2>Metas Overlays</h2>
                 
@@ -1258,10 +1276,10 @@
                     Puedes cambiar los colores haciendo clic en el botón "Personalizar".
                 </p>
                 
-                <div class="info-box">
-                    <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
-                </div>
-                
+            </div>
+
+            <div class="info-box">
+                <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
             </div>
 
             <div class="overlay-card-container" id="card-goal-likes">
@@ -1638,7 +1656,7 @@
 
         <div id="gift-section" class="content-section">
             
-            <div class="section-container" id="gift-info-section">
+            <div class="section-header-text" id="gift-info-section">
                 
                 <h2>Gifts Overlays</h2>
                 
@@ -1647,10 +1665,10 @@
                     Usa estos overlays para enfrentar a tus espectadores y haz que el equipo más generoso se lleve la gloria en tu stream.                    Puedes cambiar los colores haciendo clic en el botón "Personalizar".
                 </p>
                 
-                <div class="info-box">
-                    <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
-                </div>
-                
+            </div>
+
+            <div class="info-box">
+                <p>Cada perfil tiene sus propias configuraciones de Overlays. Al cambiar de perfil, también cambian tus ajustes.</p>
             </div>
 
             <!-- UNA SOLA TARJETA CONTENEDORA -->
@@ -2051,12 +2069,25 @@
         </div>
 
         <div id="minigames-section" class="content-section">
-            <div class="section-container">
+            <!-- TÍTULO E INFO-BOX FUERA DEL CUADRO -->
+            <div class="section-header-text">
                 <h2>Mini-Juegos</h2>
-                <div class="info-box">
-                    <p>TikSpark no incluye ni distribuye juegos comerciales. Ofrecemos únicamente mods y plugins.</p>
-                </div>
+                <p>
+                    ¡Haz tus transmisiones mucho más divertidas usando estos Mini-Juegos!<br>
+                    Tus espectadores podrán interactuar y controlar lo que suceda.
+                </p>
+            </div>
 
+            <div class="info-box">
+                <p>
+                    TikSpark no incluye ni distribuye juegos comerciales. Ofrecemos únicamente mods y plugins, por lo que los juegos deben adquirirse por separado.<br>
+                    Solo se incluyen versiones de Plants vs Zombies de uso libre.
+                </p>
+            </div>
+
+            <!-- EL CONTENEDOR MORADO SOLO PARA LOS JUEGOS -->
+            <div class="section-container">
+                <h2>Lista de Mods y Plugins</h2>
                 <div class="games-grid">
                     <div class="game-card" onclick="openSection('section-bedrock')">
                         <div class="game-img-container">
@@ -2134,14 +2165,12 @@
         <div id="timer-section" class="content-section">
             
             <!-- CABECERA E INFORMACIÓN -->
-            <div class="section-container">
+            <div class="section-header-text">
                 <h2>Timer</h2>
-                <div class="info-box">
-                    <p>
-                        Aquí puedes crear una cuenta regresiva que tus espectadores pueden controlar.<br>
-                        Los espectadores pueden extender o acortar la cuenta regresiva mediante interacciones.
-                    </p>
-                </div>
+                <p>
+                    Aquí puedes crear una cuenta regresiva que tus espectadores pueden controlar.<br>
+                    Los espectadores pueden extender o acortar la cuenta regresiva mediante interacciones.
+                </p>
             </div>
 
             <!-- TARJETA 1: OVERLAY (PREVIEW) -->
@@ -2309,13 +2338,20 @@
         </div>
 
         <div id="hotkeys-section" class="content-section">
-            <div class="section-container">
+            <!-- TÍTULO E INFO-BOX FUERA -->
+            <div class="section-header-text">
                 <h2>Hotkeys</h2>
-                
-                <div class="info-box">
-                    <p>Establece atajos de teclado personalizados para ejecutar acciones de manera inmediata.</p>
-                </div>
+                <p>
+                    Establece atajos de teclado personalizados para ejecutar acciones de manera inmediata.
+                </p>
+            </div>
+
+            <!-- EL CONTENEDOR PARA LA CONFIGURACIÓN -->
+            <div class="section-container">
                 <h3 style="color: #8A2BE2;">Configurar Hotkeys</h3>
+                <div class="info-box">
+                    <p>Configuración global: se mantiene activo en cualquier perfil.</p>
+                </div>
                 
                 <div class="hotkeys-wrapper">
                     <!-- Cabecera con el Switch de Activación -->
@@ -2327,7 +2363,7 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-                        <div style="color: #8A2BE2; font-weight: bold; margin-right: 135px;">Acciones</div> <!-- Título Morado -->
+                        <div style="color: #8A2BE2; font-weight: bold; margin-right: 135px;">Acciones</div>
                     </div>
 
                     <!-- Aquí se generará la lista automáticamente -->
@@ -3892,6 +3928,51 @@
             </div>
         </div>
     </div>
+
+    <!-- PANEL LATERAL: NOTIFICACIONES (INBOX) -->
+    <div id="side-panel-inbox" class="side-panel">
+        <div class="side-panel-header">
+            <h3>Bandeja de entrada <i class="fas fa-bell"></i></h3>
+            <button class="close-side-panel">&times;</button>
+        </div>
+        <div class="side-panel-content">
+            <p style="color: #888; text-align: center; margin-top: 20px;">No tienes notificaciones nuevas.</p>
+            <!-- Aquí puedes agregar tus tarjetas de anuncios -->
+        </div>
+    </div>
+
+    <!-- PANEL LATERAL: AYUDA (WIKI/SOPORTE) -->
+    <div id="side-panel-help" class="side-panel">
+        <div class="side-panel-header">
+            <h3>Ayuda y Soporte <i class="fas fa-question-circle"></i></h3>
+            <button class="close-side-panel">&times;</button>
+        </div>
+        <div class="side-panel-content">
+            <div class="help-card">
+                <h4>¿Cómo configurar acciones y eventos?</h4>
+                <p>Mira nuestro video tutorial en YouTube.</p>
+                <button class="btn-help-action">Ver en YouTube</button>
+            </div>
+            <div class="help-card">
+                <h4>¿Cómo configurar alertas?</h4>
+                <p>Mira nuestro video tutorial en YouTube.</p>
+                <button class="btn-help-action">Ver en YouTube</button>
+            </div>
+            <div class="help-card">
+                <h4>¿Cómo configurar la conversión de texto a voz?</h4>
+                <p>Mira nuestro video tutorial en YouTube.</p>
+                <button class="btn-help-action">Ver en YouTube</button>
+            </div>
+            <div class="help-card">
+                <h4>¿Cómo estar al día con nuestras novedades?</h4>
+                <p>Descubra consejos, información y las actualizaciones más recientes que le ayudarán a aprovechar al máximo nuestras herramientas.</p>
+                <button class="btn-help-action">Ir al blog</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fondo oscuro para cerrar al hacer click fuera -->
+    <div id="side-panel-overlay"></div>
 
     <!-- LIBRERÍAS FIREBASE (Versión Modular Compatible 8.10.1) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>

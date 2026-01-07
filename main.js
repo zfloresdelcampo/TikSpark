@@ -164,7 +164,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({ width: 1250, height: 920, show: false, webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, backgroundThrottling: false } });
     
     // === BARRA SUPERIOR MOLESTA ===
-    // mainWindow.setMenu(null);
+    mainWindow.setMenu(null);
     // === FIN DE LA LÍNEA AÑADIDA ===
 
     mainWindow.loadFile('index.html');

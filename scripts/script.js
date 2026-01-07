@@ -2,18 +2,16 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
-    // --- GENERADOR DE ID ÚNICO CON MIGRACIÓN AUTOMÁTICA ---
+    // --- GENERADOR DE ID ÚNICO PARA ESTA PC ---
     let myMachineId = localStorage.getItem('tikspark_machine_id');
 
-    // Si no existe ID O si el ID es de los antiguos (empieza con TS-)
-    if (!myMachineId || myMachineId.startsWith('TS-')) {
-        // Generamos el nuevo UUID largo
+    if (!myMachineId) {
+        // Generamos un UUID real en minúsculas (ej: 550e8400-e29b-41d4-a716-446655440000)
         myMachineId = self.crypto.randomUUID(); 
         localStorage.setItem('tikspark_machine_id', myMachineId);
-        console.log("🔄 ID Migrado al nuevo formato UUID");
     }
 
-    // Mostrar el ID en la interfaz
+    // Mostrar el ID generado en la tarjeta de la derecha automáticamente
     const idDisplay = document.getElementById('machine-id-display');
     if (idDisplay) idDisplay.value = myMachineId;
 
@@ -1183,41 +1181,46 @@ navItems.forEach(item => {
     });
 });
 
+// --- LÓGICA DE CAMBIO DE MODO (CORREGIDA PARA SINCRONIZAR BOTONES) ---
 toggleButtons.forEach(button => {
     button.addEventListener('click', () => {
-        // 1. Gestión de clases visuales (Botones)
-        toggleButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        
-        // 2. Determinar modo
-        currentConnectionMode = button.dataset.target.includes('server') ? 'api-server' : 'api-tikfinity';
+        const targetId = button.getAttribute('data-target');
 
-        // 3. Gestión de Cabeceras (Headers) y Herencia de Foto
+        // 1. Sincronizar todos los botones (marcar como activos todos los que apunten al mismo panel)
+        toggleButtons.forEach(btn => {
+            if (btn.getAttribute('data-target') === targetId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        // 2. Determinar modo para el sidebar
+        currentConnectionMode = targetId.includes('server') ? 'api-server' : 'api-tikfinity';
+
+        // 3. Gestión de Cabeceras (Headers)
         if (currentConnectionMode === 'api-server') {
             sidebarHeaderServer.classList.remove('hidden');
             sidebarHeaderTikfinity.classList.add('hidden');
         } else {
-            // Modo TikFinity
             sidebarHeaderServer.classList.add('hidden');
             sidebarHeaderTikfinity.classList.remove('hidden');
 
-            // --- LÓGICA DE HERENCIA DE FOTO ---
+            // Herencia de foto
             const serverImg = document.getElementById('sidebar-profile-img');
             const tikfinityImg = document.getElementById('tikfinity-profile-img');
             const tikfinityIcon = document.getElementById('tikfinity-default-icon');
 
-            // Si el usuario ya tiene foto cargada en el modo Server, la copiamos
             if (serverImg && tikfinityImg && serverImg.style.display !== 'none' && serverImg.src) {
                 tikfinityImg.src = serverImg.src;
                 tikfinityImg.style.display = 'block';
                 if(tikfinityIcon) tikfinityIcon.style.display = 'none';
             }
-            // ----------------------------------
         }
         
-        // 4. Gestión de Paneles
+        // 4. Mostrar el panel correspondiente
         connectionPanels.forEach(panel => {
-            if (panel.id === button.dataset.target) {
+            if (panel.id === targetId) {
                 panel.classList.add('active');
             } else {
                 panel.classList.remove('active');
@@ -5915,6 +5918,33 @@ if (window.electronAPI) {
         rankText.style.background = selected.color;
         rankImg.src = `images/subscriptions/${selected.img}`;
     }
+
+    // Inicio de Botón de Notificaciones y Wiki
+    const btnInbox = document.getElementById('btn-open-inbox');
+    const btnHelp = document.getElementById('btn-open-help');
+    const panelInbox = document.getElementById('side-panel-inbox');
+    const panelHelp = document.getElementById('side-panel-help');
+    const panelOverlay = document.getElementById('side-panel-overlay');
+    const closeSideButtons = document.querySelectorAll('.close-side-panel');
+
+    function openSidePanel(panel) {
+        panelInbox.classList.remove('active');
+        panelHelp.classList.remove('active');
+        panel.classList.add('active');
+        panelOverlay.classList.add('active');
+    }
+
+    function closeSidePanels() {
+        panelInbox.classList.remove('active');
+        panelHelp.classList.remove('active');
+        panelOverlay.classList.remove('active');
+    }
+
+    if(btnInbox) btnInbox.addEventListener('click', () => openSidePanel(panelInbox));
+    if(btnHelp) btnHelp.addEventListener('click', () => openSidePanel(panelHelp));
+    if(panelOverlay) panelOverlay.addEventListener('click', closeSidePanels);
+    closeSideButtons.forEach(btn => btn.addEventListener('click', closeSidePanels));
+    // Fin de Botón de Notificaciones y Wiki
 
     // ==========================================================
     // INICIALIZACIÓN FINAL

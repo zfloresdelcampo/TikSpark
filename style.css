@@ -257,6 +257,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 
 /* Caja de información verde */
 .info-box {
+    width: fit-content;
+    max-width: 100%;
     background-color: rgba(72, 23, 100, 0.411);
     border-left: 4px solid #5c1d80;
     padding: 12px 15px;
@@ -267,6 +269,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     margin: 0;
     color: #ac2fff;
     font-weight: 500;
+    margin-bottom: 0 !important;
 }
 
 /* Barra de herramientas de controles */
@@ -4947,3 +4950,236 @@ input.custom-chk {
 #sub-refund-anchor {
     scroll-margin-top: 20px;
 }
+/* ======================================================= */
+/* 1. CABECERA GLOBAL Y BOTÓN DISCORD (CRISTAL)            */
+/* ======================================================= */
+#top-right-utilities {
+    position: fixed;
+    top: 25px;
+    right: 40px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    pointer-events: none;
+}
+
+/* FILA HORIZONTAL PARA BOTONES */
+.top-util-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.discord-global-link, #update-progress-container, .util-square-btn { 
+    pointer-events: auto; 
+}
+
+/* BOTONES CUADRADOS (NUEVO) */
+.util-square-btn {
+    width: 45px;
+    height: 45px;
+    background: rgba(30, 31, 34, 0.6); 
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: 10px;
+    color: #949ba4;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.util-square-btn:hover {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: #5865F2;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* BOTÓN DISCORD (TU BASE) */
+.discord-global-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    background: rgba(30, 31, 34, 0.6); 
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    height: 45px; /* Ajustado para que mida igual que los cuadrados */
+    box-sizing: border-box;
+}
+
+.discord-global-link:hover {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: #5865F2;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.discord-global-link .discord-text { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.discord-global-link .discord-text span { color: #949ba4; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.discord-global-link .discord-text strong { color: #ffffff; font-size: 14px; font-weight: 700; }
+.discord-global-link i { color: #5865F2; font-size: 28px; }
+
+#update-progress-container {
+    width: 220px; 
+    background: #111;
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 0 !important;
+}
+
+/* ======================================================= */
+/* 2. LÓGICA TIKFINITY: TEXTOS FUERA DE CONTENEDORES       */
+/* ======================================================= */
+
+.section-header-text h2 {
+    color: #8A2BE2 !important;
+    font-size: 1.8em !important;
+    padding-right: 220px; 
+    margin-top: 10px;
+    margin-bottom: 0px;   
+}
+
+.section-header-text p {
+    color: #b0b0b0 !important;
+    font-size: 0.95em !important;
+    line-height: 1.6 !important;
+    margin-top: 15px !important; 
+    margin-bottom: 25px; 
+}
+
+/* ======================================================= */
+/* 3. TÍTULOS DENTRO DE CONTENEDORES (SIN CAMBIOS)         */
+/* ======================================================= */
+.section-container h2 {
+    margin-bottom: 15px; 
+    padding-right: 0;    
+}
+
+.section-container p {
+    margin-bottom: 15px;
+}
+/* --- ESTILOS PANELES LATERALES --- */
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -400px; /* Oculto por defecto */
+    width: 350px;
+    height: 100%;
+    background: rgba(20, 20, 25, 0.95);
+    backdrop-filter: blur(15px);
+    z-index: 10000;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(138, 43, 226, 0.2);
+}
+
+.side-panel.active {
+    right: 0; /* Se muestra */
+}
+
+.side-panel-header {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.side-panel-header h3 { margin: 0; color: #fff; font-size: 18px; }
+
+.close-side-panel {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.side-panel-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Texto descriptivo superior en Ayuda */
+.side-panel-content > p {
+    font-size: 13px;
+    color: #ccc; /* Mismo color que los párrafos de las tarjetas */
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+/* Tarjetas dentro de Ayuda */
+.help-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+}
+.help-card h4 { margin: 0 0 5px 0; color: #8A2BE2; }
+.help-card p { font-size: 13px; color: #ccc; margin-bottom: 10px; }
+
+.btn-help-action {
+    width: 100%;
+    padding: 8px;
+    background: #333;
+    border: none;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px; /* Espacio corregido para que no se pegue a la tarjeta */
+}
+
+/* --- ESTILOS ESPECÍFICOS INBOX (TABS) --- */
+.inbox-tabs {
+    display: flex;
+    border-bottom: 1px solid #333;
+    padding: 0 10px;
+}
+
+.inbox-tabs .tab {
+    padding: 12px 15px;
+    font-size: 13px;
+    color: #888;
+    cursor: pointer;
+    position: relative;
+}
+
+.inbox-tabs .tab.active {
+    color: #fff;
+}
+
+.inbox-tabs .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 15px;
+    right: 15px;
+    height: 2px;
+    background: #ff2d55;
+}
+
+/* Overlay transparente para cerrar */
+#side-panel-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 9999;
+    display: none;
+}
+#side-panel-overlay.active { display: block; }
