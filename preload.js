@@ -105,5 +105,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // --- NUEVA LÍNEA PARA KEYSTROKES ---
     simulateKeystroke: (data) => ipcRenderer.invoke('simulate-keystroke', data),
-    simulateKeystrokes: (actionData) => ipcRenderer.invoke('simulate-keystrokes', actionData) // <--- AÑADE ESTA LÍNEA
+    simulateKeystrokes: (actionData) => ipcRenderer.invoke('simulate-keystrokes', actionData),
+    
+    // === IMPORTAR/EXPORTAR CONFIGURACIÓN GLOBAL ===
+    exportGlobalConfig: (data) => ipcRenderer.invoke('export-global-config', data),
+    importGlobalConfig: () => ipcRenderer.invoke('import-global-config'),
 });

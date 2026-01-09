@@ -5,6 +5,9 @@ window.topGiftersData = {
 };
 
 window.processTopGifter = function(data) {
+    // Si la sección está bloqueada, no recolectar nada
+    if (document.getElementById('card-top-gifters')?.classList.contains('locked-section')) return;
+    
     if (!window.topGiftersData.active) return;
     const { userId, nickname, profilePictureUrl, diamondCount, repeatEnd } = data;
     if (repeatEnd) return; 

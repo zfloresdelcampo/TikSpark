@@ -241,6 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let gvgQueue2 = Promise.resolve();
 
     window.updateGvGScore2 = function(giftData) {
+        // Si la sección está bloqueada, no recolectar nada
+        if (document.getElementById('card-gift-vs-gift-2')?.classList.contains('locked-section')) return;
+        
         gvgQueue2 = gvgQueue2.then(async () => {
             
             let uniqueComboId = 'no_group';

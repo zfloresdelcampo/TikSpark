@@ -119,6 +119,9 @@
                 <div class="sub-nav-item" onclick="scrollToSection('tiktok-login-config-section', 'btn-config-main')">
                     <i class="fab fa-tiktok"></i> TikTok Login
                 </div>
+                <div class="sub-nav-item" onclick="scrollToSection('import-export-section', 'btn-config-main')">
+                    <i class="fab fa-tiktok"></i> Importar/Exportar Configuración
+                </div>
                 <div class="sub-nav-item" onclick="scrollToSection('servertap-section', 'btn-config-main')">
                     <i class="fas fa-cube"></i> Conexión Minecraft
                 </div>
@@ -414,7 +417,7 @@
                 <div class="subscription-layout">
                     <!-- Parte Izquierda: Información -->
                     <div class="sub-info">
-                        <p>¡Lleva tus transmisiones al siguiente nivel con la suscripción <span style="color: #57b727; font-weight: bold;">PREMIUM</span> - <span style="color: #c02727; font-weight: bold;">PREMIUM PLUS</span>!</p>
+                        <p>¡Lleva tus transmisiones al siguiente nivel con la suscripción <span style="background: linear-gradient(90deg, #0d8a40, #10c35b); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">PREMIUM</span> - <span style="background: linear-gradient(90deg, #b02327, #ed4245); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">PREMIUM PLUS</span>!</p>
                         <p>Obtén acceso a <span style="color: #ddaa1e; font-weight: bold;">beneficios exclusivos</span> que mejorarán tu contenido.</p>
                         
                         <ul class="sub-benefits">
@@ -502,14 +505,32 @@
 
                             <div class="button-group">
                                 <button id="btn-web-login-tiktok" class="btn">
-                                    <i class="fas fa-sign-in-alt"></i> Login to TikTok
+                                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                                 </button>
                                 <button id="btn-web-logout-tiktok" class="btn btn-danger" style="display: none;">
-                                    <i class="fas fa-sign-out-alt"></i> Logout from TikTok
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                                 </button>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="section-container" id="import-export-section">
+                <h2>Importar/Exportar Configuración</h2>
+                <p>Permite exportar tu configuración personalizada de overlays, servidores (IP's - Puertos), alertas y audios, en un archivo que puedes compartir con otros usuarios o usar en otro dispositivo.</p>
+                <div class="info-box">
+                    <p>
+                        No importes tus perfiles aquí, solo debes importar tus configuraciones en esta pestaña. Recuerda que los datos anteriores se perderán una vez que importes los nuevos.
+                    </p>
+                </div>
+                <div class="button-group" style="margin-top: 25px;">
+                    <button id="btn-export-global" class="btn btn-secondary">
+                        <i class="fas fa-file-export"></i> Exportar Configuración
+                    </button>
+                    <button id="btn-import-global" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Importar Configuración
+                    </button>
                 </div>
             </div>
 
@@ -570,7 +591,7 @@
 
                         <!-- Botón a la derecha -->
                         <div class="mc-button-row">
-                            <button id="test-mc-connection-btn" class="btn">Probar Conexión</button>
+                            <button id="test-mc-connection-btn" class="btn btn-secondary">Probar Conexión</button>
                         </div>
                     </div>
                 </div>
@@ -611,7 +632,7 @@
                     
                     <!-- Plan FREE -->
                     <div class="pricing-card">
-                        <div class="plan-name">FREE</div>
+                        <div class="plan-name" style="background: linear-gradient(90deg, #0095cc, #00c3ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">FREE</div>
                         <div class="plan-price">$0<span>/mes</span></div>
                         <div class="plan-description">Acceso a lo básico</div>
                         <ul class="plan-features">
@@ -625,7 +646,7 @@
                     <!-- Plan PREMIUM PLUS (DESTACADO) -->
                     <div class="pricing-card featured">
                         <div class="popular-tag">Más Popular</div>
-                        <div class="plan-name">PREMIUM PLUS</div>
+                        <div class="plan-name" style="background: linear-gradient(90deg, #b02327, #ed4245); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">PREMIUM PLUS</div>
                         <div class="plan-price">$18<span>/mes</span></div>
                         <div class="plan-description">Acceso a TikSpark + Mini-Juegos</div>
                         <ul class="plan-features">
@@ -642,7 +663,7 @@
 
                     <!-- Plan PREMIUM -->
                     <div class="pricing-card">
-                        <div class="plan-name">PREMIUM</div>
+                        <div class="plan-name" style="background: linear-gradient(90deg, #0d8a40, #10c35b); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">PREMIUM</div>
                         <div class="plan-price">$10<span>/mes</span></div>
                         <div class="plan-description">Acceso a TikSpark</div>
                         <ul class="plan-features">
@@ -781,6 +802,11 @@
             </div>
 
             <div class="section-container" id="profiles-section">
+                <!-- Esta es la etiqueta que aparecerá cuando se bloquee -->
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+                
                 <h2>Perfiles</h2>
                 <p>Crea acciones y eventos únicos para cada perfil. Cambia entre perfiles, agrega, edita o elimínalos según tus preferencias.</p>
             
@@ -888,7 +914,10 @@
                 <p>Configuración global: se mantiene activo en cualquier perfil.</p>
             </div>
             
-            <div class="section-container">
+            <div class="section-container" id="alerts-container-main">
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
                 <div class="list-view-controls">
                     <div class="control-group">
                         <button class="action-button" id="create-alert-button">+ Crear nueva Alerta</button>
@@ -937,6 +966,10 @@
             </div>
             
             <div class="overlay-card-container" id="card-top-gifters">
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+
                 <div class="overlay-header">
                     <h3 class="overlay-title">Top Gifters</h3>
                     </div>
@@ -980,6 +1013,10 @@
             </div>
 
             <div class="overlay-card-container" id="card-top-likes">
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+
                 <div class="overlay-header">
                     <h3 class="overlay-title">Top Likes</h3>
                     </div>
@@ -1023,9 +1060,14 @@
             </div>
             
             <div class="overlay-card-container" id="card-subasta">
+                <!-- MUEVE LA ETIQUETA AQUÍ Y AGREGA LA CLASE profiles-lock-label -->
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+
                 <div class="overlay-header">
                     <h3 class="overlay-title" style="color: #38c172;">Subasta</h3>
-                    <div class="premium-tag">SOLO PREMIUM</div>
+                    <!-- AQUÍ YA NO DEBE HABER NADA -->
                 </div>
 
                 <div class="subasta-controls-panel">
@@ -1184,6 +1226,10 @@
 
             <!-- COPIA ESTE BLOQUE DEBAJO DEL PRIMERO -->
             <div class="overlay-card-container" id="card-meta-win-2">
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+
                 <div class="overlay-header">
                     <h3 class="overlay-title">Meta Win General 2</h3> <!-- Título cambiado -->
                 </div>
@@ -1235,6 +1281,10 @@
             </div>
 
             <div class="overlay-card-container" id="card-social-rotator">
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+                
                 <div class="overlay-header">
                     <h3 class="overlay-title">Social Media Rotator</h3>
                 </div>
@@ -1673,12 +1723,16 @@
 
             <!-- UNA SOLA TARJETA CONTENEDORA -->
             <div class="overlay-card-container" id="card-gifts-combined">
-                
+                <!-- Etiqueta a la derecha -->
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+                            
                 <!-- Checkbox opcional estilo TikFinity (solo visual por ahora) -->
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
                     <div class="config-item checkbox-row" style="background: transparent; padding: 0;">
                         <input type="checkbox" id="reset-stream-check">
-                        <label for="reset-stream-check" style="font-size: 13px; color: #ccc;">Reset on new stream</label>
+                        <label for="reset-stream-check" style="font-size: 13px; color: #ccc;">Reiniciar en cada transmisión</label>
                     </div>
                 </div>
 
@@ -1689,7 +1743,7 @@
                     <div class="gift-column" id="anchor-top-gift">
                         <div class="overlay-header compact">
                             <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Mejor Regalo</h3>
-                            <div class="premium-tag small">PRO</div>
+                            <!-- Etiqueta individual eliminada -->
                         </div>
                         <p class="overlay-description">El usuario que envió el regalo más grande.</p>
 
@@ -1723,7 +1777,7 @@
                     <div class="gift-column" id="anchor-top-streak">
                         <div class="overlay-header compact">
                             <h3 class="overlay-title" style="color: #ff4d4d; font-size: 1.1em;">Mejor Racha</h3>
-                            <div class="premium-tag small">PRO</div>
+                            <!-- Etiqueta individual eliminada -->
                         </div>
                         <p class="overlay-description">El usuario que ha enviado la racha más larga.</p>
 
@@ -1899,6 +1953,12 @@
 
             <!-- === NUEVA SECCIÓN: GIFT VS GIFT 2 (3 VS 3) === -->
             <div class="overlay-card-container" id="card-gift-vs-gift-2">
+
+                <!-- Etiqueta Verde -->
+                <div class="rank-tag tag-premium profiles-lock-label">
+                    <i class="fas fa-lock"></i> SOLO PREMIUM
+                </div>
+
                 <div class="overlay-header">
                     <h3 class="overlay-title">Gift VS Gift 2 <i class="fab fa-tiktok" style="font-size: 0.8em; margin-left: 5px;"></i></h3>
                 </div>
@@ -2089,72 +2149,119 @@
             <div class="section-container">
                 <h2>Lista de Mods y Plugins</h2>
                 <div class="games-grid">
-                    <div class="game-card" onclick="openSection('section-bedrock')">
+                    <!-- BEDROCK -->
+                    <div class="game-card locked" id="game-bedrock" onclick="openSection('section-bedrock')">
                         <div class="game-img-container">
                             <img src="images/minigames/minecraft-bedrock.jpg" alt="Bedrock">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">Bedrock</div>
                     </div>
-                    <div class="game-card" onclick="openSection('section-sandbox')">
+
+                    <!-- SANDBOX -->
+                    <div class="game-card locked" id="game-sandbox" onclick="openSection('section-sandbox')">
                         <div class="game-img-container">
                             <img src="images/minigames/minecraft-sandbox.jpg" alt="Sandbox">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">SANDBOX</div>
                     </div>
-                    <div class="game-card" onclick="openSection('section-parkour')">
+
+                    <!-- PARKOUR -->
+                    <div class="game-card locked" id="game-parkour" onclick="openSection('section-parkour')">
                         <div class="game-img-container">
                             <img src="images/minigames/minecraft-parkour.jpg" alt="Parkour">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">PARKOUR</div>
                     </div>
-                    <div class="game-card locked">
+
+                    <!-- GTA V -->
+                    <div class="game-card locked" id="game-gta-v" onclick="openSection('section-gta-v')">
                         <div class="game-img-container">
-                            <img src="images/minigames/gta5.jpg" alt="GTA 5">
+                            <img src="images/minigames/gta-v.jpg" alt="GTA V">
+                            <span class="version-badge">v1.0</span>
                             <div class="lock-overlay">
                                 <i class="fas fa-lock"></i>
-                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
                             </div>
                         </div>
-                        <div class="game-title">GTA 5</div>
+                        <div class="game-title">GTA V</div>
                     </div>
-                    <div class="game-card locked">
+
+                    <!-- ELDEN RING -->
+                    <div class="game-card locked" id="game-eldenring" onclick="openSection('section-eldenring')">
                         <div class="game-img-container">
                             <img src="images/minigames/eldenring.jpg" alt="Elden Ring">
+                            <span class="version-badge">v1.0</span>
                             <div class="lock-overlay">
                                 <i class="fas fa-lock"></i>
-                                <span class="premium-badge">SOLO PREMIUM PLUS</span>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
                             </div>
                         </div>
                         <div class="game-title">ELDEN RING</div>
                     </div>
-                    <div class="game-card" onclick="openSection('section-peak')">
+
+                    <!-- PEAK -->
+                    <div class="game-card locked" id="game-peak" onclick="openSection('section-peak')">
                         <div class="game-img-container">
                             <img src="images/minigames/peak.jpg" alt="PEAK">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">PEAK</div>
                     </div>
-                    <div class="game-card" onclick="openSection('section-supermarket-simulator')">
+
+                    <!-- SUPERMARKET SIMULATOR -->
+                    <div class="game-card locked" id="game-supermarket" onclick="openSection('section-supermarket-simulator')">
                         <div class="game-img-container">
                             <img src="images/minigames/supermarket-simulator.jpg" alt="Supermarket Simulator">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">SUPERMARKET SIMULATOR</div>
                     </div>
-                    <div class="game-card" onclick="openSection('section-the-forest')">
+
+                    <!-- THE FOREST -->
+                    <div class="game-card locked" id="game-theforest" onclick="openSection('section-the-forest')">
                         <div class="game-img-container">
                             <img src="images/minigames/the-forest.jpg" alt="The Forest">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">THE FOREST</div>
                     </div>
-                    <div class="game-card" onclick="openSection('section-lucky-wheel')">
+
+                    <!-- LUCKY WHEEL -->
+                    <div class="game-card locked" id="game-luckywheel" onclick="openSection('section-lucky-wheel')">
                         <div class="game-img-container">
                             <img src="images/minigames/lucky-wheel.jpg" alt="Lucky Wheel">
                             <span class="version-badge">v1.0</span>
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span class="rank-tag tag-premium-plus">SOLO PREMIUM PLUS</span>
+                            </div>
                         </div>
                         <div class="game-title">LUCKY WHEEL</div>
                     </div>

@@ -163,7 +163,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 #actions-list-container .no-items-message, #events-list-container .no-items-message { text-align: center; color: #999; padding: 20px; }
 .list-view-container.empty .list-view-header, .list-view-container.empty .list-view-pagination { display: none; }
 /* MODAL GENERAL */
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 10000; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .modal-header h3 { margin: 0; color: #ffffff; font-size: 18px; font-weight: bold; }
@@ -179,7 +179,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .accordion-content { padding: 10px 15px; background-color: #2d2d2d; border-radius: 4px; display: none; flex-direction: column; margin-top: -5px; } .accordion-content.open { display: flex; }
 .checkbox-item { display: flex; align-items: flex-start; margin-bottom: 10px; cursor: pointer; flex-direction: column; } .checkbox-item .checkbox-label-row { display: flex; align-items: center; width: 100%; } .checkbox-item:last-child { margin-bottom: 0; } .checkbox-item input[type="checkbox"] { margin-right: 10px; width: 18px; height: 18px; accent-color: #0078d4; } .checkbox-item label { margin: 0; cursor: pointer; font-size: 14px; color: #ffffff; }
 .webhook-config { background-color: #333333; border-radius: 4px; padding: 15px; margin-top: 10px; margin-left: 28px; width: calc(100% - 28px); box-sizing: border-box; display: none; } .webhook-config.open { display: block; } .webhook-config label { display: block; margin-bottom: 5px; color: #cccccc; font-size: 14px; } .webhook-config input[type="text"] { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #252526; color: white; box-sizing: border-box; font-size: 15px; margin-bottom: 15px; }
-.input-inline-group { display: flex; gap: 15px; align-items: flex-end; } .input-box { display: flex; flex-direction: column; flex: 1; } .input-box .label-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; } .input-box .input-with-label { display: flex; align-items: center; border-radius: 4px; border: 1px solid #505050; background-color: #252526; padding: 0 10px; } .input-box .input-with-label span { color: #cccccc; font-size: 15px; margin-right: 5px; font-weight: bold; } .input-box input[type="number"] { flex-grow: 1; padding: 10px 0; border: none; background: none; color: white; font-size: 15px; text-align: right; -moz-appearance: textfield; } .input-box input[type="number"]::-webkit-outer-spin-button, .input-box input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } .input-box .unit { color: #cccccc; font-size: 14px; white-space: nowrap; margin-left: 5px; }
+.input-inline-group { display: flex; gap: 15px; align-items: flex-end; } .input-box { display: flex; flex-direction: column; flex: 1; } .input-box .label-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; } .input-box .input-with-label { display: flex; align-items: center; border-radius: 4px; border: 1px solid #505050; background-color: #252526; padding: 0 10px; } .input-box .input-with-label span { color: #cccccc; font-size: 15px; margin-right: 5px; font-weight: bold; } .input-box input[type="number"] { flex-grow: 1; padding: 10px 0; border: none; background: none; color: white; font-size: 15px; text-align: right; -moz-appearance: textfield; appearance: textfield; } .input-box input[type="number"]::-webkit-outer-spin-button, .input-box input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; } .input-box .unit { color: #cccccc; font-size: 14px; white-space: nowrap; margin-left: 5px; }
 .modal-section-title { font-weight: 600; color: #ffffff; font-size: 16px; margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid #3c3c3c; padding-bottom: 8px; } .modal-sub-section { background-color: #2d2d2d; border-radius: 4px; padding: 15px; margin-bottom: 20px; }
 .input-group-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; } .input-group-row:last-child { margin-bottom: 0; } .input-group-row label { margin-bottom: 0; white-space: nowrap; color: #cccccc; font-size: 14px; flex-shrink: 0; width: 150px; text-align: right; } .input-group-row input[type="number"], .input-group-row input[type="text"], .input-group-row select { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #505050; background-color: #333333; color: white; font-size: 15px; box-sizing: border-box; }
 .input-group-row.checkbox-align { align-items: flex-start; } .input-group-row.checkbox-align .checkbox-container { flex-grow: 1; display: flex; align-items: center; justify-content: flex-start; padding-top: 10px; padding-left: 10px; } .input-group-row.checkbox-align input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; margin-top: 0; } .input-group-row.checkbox-align label { width: auto; text-align: left; }
@@ -197,7 +197,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .custom-multiselect { position: relative; width: 100%; } .multiselect-display { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 5px 10px; min-height: 28px; border: 1px solid #505050; background-color: #252526; border-radius: 4px; cursor: pointer; } .multiselect-display.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; } .multiselect-display .placeholder { color: #777; font-size: 14px; } .multiselect-tag { display: inline-flex; align-items: center; background-color: #3c3c3c; color: #e0e0e0; padding: 3px 8px; border-radius: 4px; font-size: 13px; } .multiselect-tag .remove-tag { margin-left: 8px; cursor: pointer; font-weight: bold; } .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: #333333; border: 1px solid #505050; border-top: none; z-index: 1002; max-height: 150px; overflow-y: auto; } .multiselect-option { padding: 10px 15px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; } .multiselect-option:hover { background-color: #4a4a4a; } .multiselect-option.selected { background-color: #108038; color: white; } .multiselect-option.selected::after { content: '✔'; }
 .event-modal-footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 15px; padding: 15px 20px; background-color: #252526; border-top: 1px solid #3c3c3c; } .event-modal-footer button { padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #555; background-color: #3c3c3c; color: white; }
 /* TOAST NOTIFICATION */
-#toast-notification { visibility: hidden; min-width: 250px; background-color: #5c1d80; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1001; right: 20px; bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); font-weight: 500; font-size: 15px; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
+#toast-notification { visibility: hidden; min-width: 250px; background-color: #5c1d80; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 10001; right: 20px; bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); font-weight: 500; font-size: 15px; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
 #toast-notification.show { visibility: visible; opacity: 1; }
 
 .custom-gift-selector { position: relative; width: 100%; }
@@ -313,7 +313,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     gap: 8px; /* Espacio entre icono y texto */
 }
 .btn:hover {
-    background-color: #4752c4;
+    background-color: #430e61;
 }
 
 /* Botón de peligro (Eliminar) */
@@ -567,15 +567,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 
 /* --- GENERALES DE SUBASTA --- */
 
-.premium-tag {
-    background: linear-gradient(90deg, #9b59b6, #8e44ad); /* Morado degradado */
-    color: white;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.8em;
-    font-weight: bold;
-    white-space: nowrap;
-}
 .overlay-title[style] { /* Para aplicar el color verde de la imagen */
     color: #8A2BE2 !important;
 }
@@ -903,6 +894,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     padding: 8px;
     font-size: 1.1em;
     -moz-appearance: textfield; /* Oculta flechas en Firefox */
+    appearance: textfield;
 }
 .control-group-win input[type="number"]::-webkit-outer-spin-button,
 .control-group-win input[type="number"]::-webkit-inner-spin-button {
@@ -1846,6 +1838,15 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 
 /* --- ESTILOS DEL CANDADO Y ETIQUETA PREMIUM --- */
 
+/* Bloqueo de clics añadido para que no puedan entrar a la sección */
+.game-card.locked {
+    pointer-events: none;
+    cursor: default;
+}
+/* Ocultar la versión si el juego está bloqueado */
+.game-card.locked .version-badge {
+    display: none !important;
+}
 .lock-overlay {
     display: none; /* Oculto por defecto */
     position: absolute;
@@ -1878,16 +1879,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
     color: white;
     font-size: 14px;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.premium-badge {
-    background-color: #ffc107; /* Color amarillo/dorado */
-    color: black;
-    font-weight: 800;
-    font-size: 0.75em;
-    padding: 5px 10px;
-    border-radius: 12px; /* Bordes redondeados tipo píldora */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 /* --- CABECERA DE JUEGO (Botón + Título) --- */
 .game-header-row {
@@ -2908,12 +2899,6 @@ input[type="range"].volume-slider::-moz-range-thumb {
     gap: 10px;
 }
 
-.premium-tag.small {
-    font-size: 0.7em;
-    padding: 2px 6px;
-    height: fit-content;
-}
-
 .overlay-url-actions.compact {
     margin-bottom: 15px;
     gap: 5px;
@@ -3056,15 +3041,6 @@ input[type="range"].volume-slider::-moz-range-thumb {
     padding-left: 155px;
 }
 
-#test-mc-connection-btn {
-    background-color: #444;
-    border: 1px solid #555;
-    padding: 8px 20px;
-}
-#test-mc-connection-btn:hover {
-    background-color: #5c1d80;
-    border-color: #5c1d80;
-}
 /* --- ESTILOS ESPECÍFICOS PARA EL MODAL DE SISTEMA --- */
 #system-message-modal .modal-content {
     background-color: #1e1e1e; /* Fondo oscuro sólido (arregla la transparencia) */
@@ -4947,7 +4923,9 @@ input.custom-chk {
 #sub-kick-anchor, 
 #sub-payment-anchor, 
 #sub-offers-anchor, 
-#sub-refund-anchor {
+#sub-refund-anchor,
+#anchor-top-gift,
+#anchor-top-streak {
     scroll-margin-top: 20px;
 }
 /* ======================================================= */
@@ -5183,3 +5161,91 @@ input.custom-chk {
     display: none;
 }
 #side-panel-overlay.active { display: block; }
+/* Estilo base unificado */
+.rank-tag {
+    color: white !important;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 15px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    gap: 10px;
+}
+
+/* Degradado Verde para PREMIUM */
+.tag-premium {
+    background: linear-gradient(90deg, #0d8a40, #10c35b);
+}
+
+/* Degradado Rojo para PREMIUM PLUS */
+.tag-premium-plus {
+    background: linear-gradient(90deg, #b02327, #ed4245);
+}
+
+
+/* 1. Definimos que los contenedores bloqueables tengan posición relativa */
+#profiles-section,
+#card-top-gifters,
+#card-top-likes,
+#card-subasta,
+#card-meta-win-2,
+#card-social-rotator,
+#card-gifts-combined,
+#card-gift-vs-gift-2,
+#alerts-container-main {
+    position: relative;
+}
+
+/* 2. Clase maestra de bloqueo */
+.locked-section {
+    pointer-events: none;    /* Bloquea clics */
+    user-select: none;       /* Bloquea selección de texto */
+}
+
+/* 3. Apagamos todo el contenido EXCEPTO las etiquetas de rango */
+.locked-section > *:not(.rank-tag) {
+    opacity: 0.8;
+    filter: grayscale(0.2);
+}
+
+/* 4. Aseguramos que la etiqueta SIEMPRE brille, incluso dentro de algo bloqueado */
+.locked-section .rank-tag {
+    opacity: 1 !important;
+    filter: none !important;
+    pointer-events: auto;    /* La etiqueta sí se puede tocar */
+}
+
+/* 5. Ajuste para la etiqueta de Perfiles (que no tiene cabecera propia) */
+.profiles-lock-label {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    display: none;
+    z-index: 100;
+}
+
+.locked-section .profiles-lock-label {
+    display: inline-flex;
+}
+/* La fila se ve roja sutil */
+.event-row-disabled {
+    background-color: rgba(231, 76, 60, 0.15) !important;
+    border-right: 4px solid #ed4245 !important;
+}
+
+/* Forzamos que los iconos mantengan su color morado y cursor de mano */
+.event-row-disabled .action-icon-bg {
+    background-color: #8A2BE2 !important; /* Tu color morado */
+    opacity: 1 !important;
+    cursor: pointer !important;
+}
+
+/* Aseguramos que los checkboxes también tengan cursor de mano */
+.event-row-disabled input[type="checkbox"], 
+.event-row-disabled .chk-container {
+    cursor: pointer !important;
+}

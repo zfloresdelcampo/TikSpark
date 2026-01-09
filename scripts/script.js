@@ -86,6 +86,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     };
 
+    function showUpgradePremiumModal() {
+        window.showCustomConfirm(
+            "¡Has alcanzado el límite de 5 eventos personalizados! Puedes actualizar tu cuenta a Premium para tener más eventos y muchos otros beneficios.",
+            "Actualiza a Premium"
+        ).then(res => {
+            if (res) {
+                scrollToSection('sub-header-top', 'btn-subscriptions-main');
+            }
+        });
+    }
+
     // === NUEVO: Constantes para Alertas ===
     const createAlertButton = document.getElementById('create-alert-button');
     const alertModalOverlay = document.getElementById('create-alert-modal');
@@ -144,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // SISTEMA DE LOGUEO //
     let currentAppUser = null; // Guardará el usuario logueado en la App
+    let userSubscriptionType = 'free'; // Variable para controlar el límite
 
    // === SISTEMA DE LOGIN Y REGISTRO ===
     const loginScreen = document.getElementById('login-screen');
@@ -229,6 +241,52 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 // Si no ha expirado (o es permanente), pintamos la UI normalmente
                 updateSubscriptionUI(subscription.type, subscription.expire);
+                userSubscriptionType = subscription.type; // Guardamos el rango actual
+                renderEvents(); // Refrescamos la lista para que se bloquee o desbloquee
+
+                // --- LÓGICA DE BLOQUEO DE FUNCIONES POR RANGO ---
+
+                // 1. Secciones que requieren al menos rango PREMIUM (Verde)
+                const premiumSections = [
+                    'profiles-section',
+                    'card-top-gifters',
+                    'card-top-likes',
+                    'card-subasta',
+                    'card-meta-win-2',
+                    'card-social-rotator',
+                    'card-gifts-combined',
+                    'card-gift-vs-gift-2',
+                    'alerts-container-main'
+                ];
+
+                // 2. Secciones que requieren exclusivamente rango PREMIUM PLUS (Rojo)
+                const plusGameCards = [
+                    'game-bedrock',
+                    'game-sandbox',
+                    'game-parkour',
+                    'game-gta-v', 
+                    'game-eldenring',
+                    'game-peak',
+                    'game-supermarket',
+                    'game-theforest',
+                    'game-luckywheel',
+                ];
+
+                if (subscription.type === 'free') {
+                    // USUARIO FREE: Bloqueamos todo lo Premium y todo lo Plus
+                    premiumSections.forEach(id => document.getElementById(id)?.classList.add('locked-section'));
+                    plusGameCards.forEach(id => document.getElementById(id)?.classList.add('locked'));
+
+                } else if (subscription.type === 'premium') {
+                    // USUARIO PREMIUM: Desbloqueamos lo Premium, pero mantenemos juegos PLUS bloqueados
+                    premiumSections.forEach(id => document.getElementById(id)?.classList.remove('locked-section'));
+                    plusGameCards.forEach(id => document.getElementById(id)?.classList.add('locked'));
+
+                } else if (subscription.type === 'premium-plus') {
+                    // USUARIO PREMIUM PLUS: Desbloqueamos absolutamente todo
+                    premiumSections.forEach(id => document.getElementById(id)?.classList.remove('locked-section'));
+                    plusGameCards.forEach(id => document.getElementById(id)?.classList.remove('locked'));
+                }
 
                 // Sincronizar Nickname de la nube si cambió
                 if (userData.lastNickname && sidebarName) {
@@ -2356,6 +2414,126 @@ if (window.electronAPI) {
         }
     });
 
+    // === LOGICA IMPORTAR/EXPORTAR CONFIGURACIÓN GLOBAL ===
+    const btnExportGlobal = document.getElementById('btn-export-global');
+    const btnImportGlobal = document.getElementById('btn-import-global');
+
+    if (btnExportGlobal) btnExportGlobal.addEventListener('click', exportGlobalSettings);
+    if (btnImportGlobal) btnImportGlobal.addEventListener('click', importGlobalSettings);
+
+    async function exportGlobalSettings() {
+        window.showToastNotification("⏳ Preparando archivo de configuración...");
+
+        // 1. Recolectar datos de Servidores (Minecraft)
+        const mcConfig = {
+            player: document.getElementById('mc-player-name').value,
+            ip: document.getElementById('mc-ip').value,
+            port: document.getElementById('mc-port').value,
+            key: document.getElementById('mc-key').value
+        };
+
+        // 2. Recolectar estados de Overlays (Activado/Desactivado)
+        const overlayStates = {};
+        document.querySelectorAll('input[id^="activate-widget-"], input[id$="-active-check"]').forEach(el => {
+            overlayStates[el.id] = el.checked;
+        });
+
+        // 3. Crear el paquete final
+        const backupPackage = {
+            appName: "TikSpark",
+            fileType: "GlobalConfig",
+            version: "2.2.26",
+            timestamp: Date.now(),
+            data: {
+                minecraft: mcConfig,
+                alerts: globalAlerts,
+                media: mediaLibrary,
+                hotkeys: {
+                    config: hotkeysConfig,
+                    enabled: document.getElementById('hotkeys-global-toggle')?.checked || false
+                },
+                overlayStates: overlayStates,
+                connectionMode: currentConnectionMode,
+                topGift: window.topGiftState,
+                topStreak: window.topStreakState
+            }
+        };
+
+        // 4. Llamar a Electron para guardar
+        const result = await window.electronAPI.exportGlobalConfig(backupPackage);
+        if (result.success) {
+            window.showToastNotification("✅ Configuración exportada con éxito.");
+        }
+    }
+
+    async function importGlobalSettings() {
+        const result = await window.electronAPI.importGlobalConfig();
+        if (!result.success || !result.data) return;
+
+        const imported = result.data;
+
+        if (imported.appName !== "TikSpark" || imported.fileType !== "GlobalConfig") {
+            return window.showCustomAlert("❌ El archivo no es una configuración válida de TikSpark.", "Error de archivo");
+        }
+
+        const confirmOverwrite = await window.showCustomConfirm(
+            "¿Estás seguro? Se reemplazarán tus IPs de Minecraft, Alertas globales, Medios y estados de Overlays. Esta acción no se puede deshacer.",
+            "Confirmar Importación Global"
+        );
+
+        if (confirmOverwrite) {
+            try {
+                const d = imported.data;
+
+                // Aplicar Minecraft
+                if (d.minecraft) {
+                    document.getElementById('mc-player-name').value = d.minecraft.player || "";
+                    document.getElementById('mc-ip').value = d.minecraft.ip || "127.0.0.1";
+                    document.getElementById('mc-port').value = d.minecraft.port || "4567";
+                    document.getElementById('mc-key').value = d.minecraft.key || "";
+                    if (window.electronAPI.saveMcConfig) window.electronAPI.saveMcConfig(d.minecraft);
+                }
+
+                // Aplicar Alertas y Medios
+                globalAlerts = d.alerts || [];
+                mediaLibrary = d.media || [];
+                
+                // Aplicar Hotkeys
+                if (d.hotkeys) {
+                    hotkeysConfig = d.hotkeys.config || {};
+                    const hkToggle = document.getElementById('hotkeys-global-toggle');
+                    if(hkToggle) hkToggle.checked = d.hotkeys.enabled;
+                }
+
+                // Aplicar estados visuales (Checkboxes)
+                if (d.overlayStates) {
+                    for (const [id, value] of Object.entries(d.overlayStates)) {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = value;
+                    }
+                }
+
+                // REFRESCAR INTERFAZ Y NUBE
+                renderAlerts();
+                renderHotkeysUI();
+
+                // Dentro de importGlobalSettings, después de renderHotkeysUI():
+                if (window.electronAPI.updateWidget) {
+                    window.electronAPI.updateWidget('topGift', window.topGiftState);
+                    window.electronAPI.updateWidget('topStreak', window.topStreakState);
+                }
+
+                await saveAllData(); 
+
+                window.showCustomAlert("✅ Configuración global importada y sincronizada con la nube correctamente.", "Éxito");
+
+            } catch (err) {
+                console.error(err);
+                window.showCustomAlert("❌ Hubo un error al aplicar los datos del archivo.", "Error");
+            }
+        }
+    }
+
     profileSelector.addEventListener('change', async () => {
         // 1. ANTES DE CAMBIAR: Guardamos TODO lo actual en la memoria del perfil VIEJO
         // Usamos activeProfileName (que aún tiene el nombre viejo)
@@ -3347,7 +3525,10 @@ if (window.electronAPI) {
 
         const paginatedEvents = events.slice((currentPageEvents - 1) * ITEMS_PER_PAGE, currentPageEvents * ITEMS_PER_PAGE);
 
-        paginatedEvents.forEach(event => { 
+        paginatedEvents.forEach((event, index) => { 
+            // Calculamos si este evento debe estar bloqueado
+            const globalIndex = ((currentPageEvents - 1) * ITEMS_PER_PAGE) + index;
+            const isLocked = (userSubscriptionType === 'free' && globalIndex >= 5);
             let triggerContent = '';
             
             // 1. Lógica para Regalos
@@ -3393,35 +3574,51 @@ if (window.electronAPI) {
             // --- FIN CAMBIO VISUAL ---
 
             const eventDiv = document.createElement('div'); 
-            eventDiv.className = 'list-view-row event-row'; 
+            eventDiv.className = `list-view-row event-row ${isLocked ? 'event-row-disabled' : ''}`; 
             eventDiv.innerHTML = `
                 <div class="chk-container">
-                    <input type="checkbox" class="custom-chk" ${selectedEventIds.has(event.id) ? 'checked' : ''} onchange="toggleEventSelection(${event.id})">
+                    <!-- Checkbox 1: Siempre activo y con cursor normal -->
+                    <input type="checkbox" class="custom-chk" style="cursor: pointer;" ${selectedEventIds.has(event.id) ? 'checked' : ''} onchange="toggleEventSelection(${event.id})">
                 </div>
                 <div class="row-icons">
-                    <span class="action-icon-bg edit" onclick="editEvent(${event.id})">
+                    <!-- Lápiz: Se ve normal, pero dispara el Toast si está bloqueado -->
+                    <span class="action-icon-bg edit" style="cursor: pointer;" onclick="${isLocked ? "showToastNotification('⚠️ No autenticado. Los eventos del 6º en adelante no pueden ser modificados.')" : `editEvent(${event.id})`}">
                         <i class="fas fa-pencil-alt"></i>
                     </span>
-                    <span class="action-icon-bg delete" onclick="deleteEvent(${event.id})">
+                    <!-- Basura: Se ve y funciona normal -->
+                    <span class="action-icon-bg delete" style="cursor: pointer;" onclick="deleteEvent(${event.id})">
                         <i class="fas fa-trash-alt"></i>
                     </span>
                 </div>
                 <div class="icon-center">
-                    <input type="checkbox" onchange="toggleEventStatus(${event.id})" ${event.enabled ? 'checked' : ''}>
+                    <!-- Checkbox 2: Se ve normal, pero si está bloqueado, el div de encima captura el clic para el Toast -->
+                    <div onclick="${isLocked ? "showToastNotification('⚠️ No autenticado. Los eventos del 6º en adelante no pueden ser modificados.')" : ''}" style="cursor: pointer;">
+                        <input type="checkbox" ${event.enabled ? 'checked' : ''} 
+                            ${isLocked ? 'style="pointer-events: none; cursor: pointer;"' : `onchange="toggleEventStatus(${event.id})"`}>
+                    </div>
                 </div>
                 <div class="icon-center">
                     <i class="fab fa-tiktok"></i>
                 </div>
                 <div>${whoLabels[event.who] || event.who}</div>
                 <div>${triggerContent}</div> 
-                <div>${actionsSummary}</div>`; 
+                <div>${actionsSummary}</div>`;
             eventsListContainer.appendChild(eventDiv); 
-        }); 
+        });
 
         renderPaginationControls(container, currentPageEvents, events.length, handleEventPageChange);
     }
     
-    createEventButton.addEventListener('click', () => { resetEventModal(); openEventModal(); });
+    createEventButton.addEventListener('click', () => { 
+        const currentProfile = profiles[activeProfileName];
+        // Bloqueo si es FREE y ya tiene 5
+        if (userSubscriptionType === 'free' && currentProfile.events.length >= 5) {
+            showUpgradePremiumModal();
+        } else {
+            resetEventModal(); 
+            openEventModal(); 
+        }
+    });
     closeEventButton.addEventListener('click', closeEventModal);
     discardEventButton.addEventListener('click', closeEventModal);
     eventModalOverlay.addEventListener('click', (e) => { if (e.target === eventModalOverlay) closeEventModal(); });
@@ -3576,12 +3773,12 @@ if (window.electronAPI) {
         } 
     };
 
-    function showToastNotification(message) { 
+    window.showToastNotification = function(message) { 
         const toast = document.getElementById('toast-notification'); 
         toast.textContent = message; 
         toast.classList.add('show'); 
         setTimeout(() => { toast.classList.remove('show'); }, 3000); 
-    }
+    };
 
     function renderPaginationControls(container, currentPage, totalItems, pageChangeHandler) {
         const paginationContainer = container.querySelector('.list-view-pagination');
@@ -3974,7 +4171,10 @@ if (window.electronAPI) {
 
         // 1. REVISAR ACCIONES DE PERFIL -> Enviar a 'actionQueue'
         if (currentProfile.events) {
-            currentProfile.events.forEach(eventRule => {
+            currentProfile.events.forEach((eventRule, index) => {
+                // SI ES FREE Y ES EL EVENTO 6 EN ADELANTE, NO HACER NADA
+                if (userSubscriptionType === 'free' && index >= 5) return;
+
                 if (!eventRule.enabled) return;
                 
                 let match = false;
@@ -4071,6 +4271,9 @@ if (window.electronAPI) {
 
     // --- FUNCIÓN SUBASTA CORREGIDA (CÁLCULO DIFERENCIAL) ---
     function updateAuction(giftData) {
+        // Si la sección está bloqueada, no recolectar nada
+        if (document.getElementById('card-subasta')?.classList.contains('locked-section')) return;
+
         if (checkSubastaActive && !checkSubastaActive.checked) return;
 
         auctionQueue = auctionQueue.then(async () => {
@@ -5898,24 +6101,24 @@ if (window.electronAPI) {
             'free': {
                 text: 'FREE',
                 img: 'free-subscription.jpg',
-                color: '#2d2d2d'
+                gradient: 'linear-gradient(90deg, #0095cc, #00c3ff)'
             },
             'premium': {
                 text: 'PREMIUM',
                 img: 'premium-subscription.jpg',
-                color: '#57b727' // Verde
+                gradient: 'linear-gradient(90deg, #0d8a40, #10c35b)'
             },
             'premium-plus': {
                 text: 'PREMIUM PLUS',
                 img: 'premium-plus-subscription.jpg',
-                color: '#c02727' // Rojo
+                gradient: 'linear-gradient(90deg, #b02327, #ed4245)'
             }
         };
 
         const selected = config[type] || config['free'];
 
         rankText.textContent = selected.text;
-        rankText.style.background = selected.color;
+        rankText.style.background = selected.gradient;
         rankImg.src = `images/subscriptions/${selected.img}`;
     }
 

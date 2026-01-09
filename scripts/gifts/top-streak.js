@@ -6,6 +6,9 @@ window.topStreakState = {
 };
 
 window.processTopStreakRecord = function(data) {
+    // Si la sección está bloqueada, no recolectar nada
+    if (document.getElementById('card-gifts-combined')?.classList.contains('locked-section')) return;
+
     const checkTopStreakRecord = document.getElementById('chk-enable-top-streak');
     if (!checkTopStreakRecord || !checkTopStreakRecord.checked) return;
 

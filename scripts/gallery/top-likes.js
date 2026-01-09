@@ -5,6 +5,9 @@ window.topLikesData = {
 };
 
 window.processTopLike = function(data) {
+    // Si la sección está bloqueada, no recolectar nada
+    if (document.getElementById('card-top-likes')?.classList.contains('locked-section')) return;
+
     if (!window.topLikesData.active) return;
     const { userId, nickname, profilePictureUrl, likeCount } = data;
 

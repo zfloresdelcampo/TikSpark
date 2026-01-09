@@ -444,6 +444,52 @@ function createWindow() {
     ipcMain.handle('export-profile', async (event, profileData) => { const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, { title: 'Exportar Perfil', defaultPath: `${profileData.name}.json`, filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePath) { try { const fileContent = JSON.stringify(profileData.data, null, 2); fs.writeFileSync(filePath, fileContent, 'utf-8'); return { success: true, path: filePath }; } catch (error) { return { success: false, error: error.message }; } } return { success: false, canceled: true }; });
     ipcMain.handle('import-profile', async () => { const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, { title: 'Importar Perfil', properties: ['openFile'], filters: [{ name: 'Archivos JSON', extensions: ['json'] }] }); if (!canceled && filePaths.length > 0) { const filePath = filePaths[0]; try { const fileContent = fs.readFileSync(filePath, 'utf-8'); const profileData = JSON.parse(fileContent); return { success: true, data: profileData }; } catch (error) { return { success: false, error: 'El archivo está dañado o no tiene el formato correcto.' }; } } return { success: false, canceled: true }; });
 
+    // --- EXPORTAR CONFIGURACIÓN GLOBAL ---
+    ipcMain.handle('export-global-config', async (event, configData) => {
+        // Generar fecha y hora para el nombre del archivo
+        const now = new Date();
+        const dateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
+        const fileName = `TikSpark-backup-${dateStr}_${timeStr}.json`;
+
+        const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+            title: 'Exportar Configuración Global',
+            defaultPath: fileName,
+            filters: [{ name: 'Archivos JSON', extensions: ['json'] }]
+        });
+
+        if (!canceled && filePath) {
+            try {
+                fs.writeFileSync(filePath, JSON.stringify(configData, null, 2), 'utf-8');
+                return { success: true };
+            } catch (error) {
+                console.error("Error exportando config:", error);
+                return { success: false, error: error.message };
+            }
+        }
+        return { success: false, canceled: true };
+    });
+
+    // --- IMPORTAR CONFIGURACIÓN GLOBAL ---
+    ipcMain.handle('import-global-config', async () => {
+        const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, {
+            title: 'Importar Configuración Global',
+            properties: ['openFile'],
+            filters: [{ name: 'Archivos JSON', extensions: ['json'] }]
+        });
+
+        if (!canceled && filePaths.length > 0) {
+            try {
+                const content = fs.readFileSync(filePaths[0], 'utf-8');
+                const data = JSON.parse(content);
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: 'Archivo corrupto o no válido.' };
+            }
+        }
+        return { success: false, canceled: true };
+    });
+
     // -- Conexión a TikFinity (MEJORADA CON FOTO) --
     ipcMain.handle('connect-tikfinity', async () => { // <--- Ahora es async
         if (tikfinitySocket) return;
