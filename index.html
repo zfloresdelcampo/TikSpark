@@ -294,39 +294,41 @@
     </div>
 
     <div id="main-content">
-        <!-- BLOQUE FIJO SUPERIOR (Discord + Actualizador) -->
-        <div id="top-right-utilities">
-            <!-- Fila de utilidades -->
-            <div class="top-util-row">
-                
-                <!-- Botón Notificaciones -->
-                <button class="util-square-btn" id="btn-open-inbox">
-                    <i class="fas fa-bell"></i>
-                </button>
-
-                <!-- Botón Ayuda -->
-                <button class="util-square-btn" id="btn-open-help">
-                    <i class="fas fa-question-circle"></i>
-                </button>
-
-                <!-- Tu botón de Discord que ya tenías -->
-                <a href="https://discord.gg/NRpX8d8ypF" target="_blank" class="discord-global-link">
-                    <div class="discord-text">
-                        <span>¿Necesitas ayuda?</span>
-                        <strong>Únete al Discord</strong>
-                    </div>
-                    <i class="fab fa-discord"></i>
-                </a>
-            </div>
-
-            <!-- Actualizador (debajo de la fila) -->
+        <!-- CONTENEDOR GLOBAL FIJO (BARRA + DISCORD) -->
+        <div id="global-header-fixed">
+            
+            <!-- 1. Barra de actualización (Diseño Original Restaurado) -->
             <div id="update-progress-container" style="display: none;">
                 <div class="update-header-row">
                     <div class="update-icon-square"><i class="fas fa-download"></i></div>
-                    <span id="update-status-text">Actualizando...</span>
+                    <span id="update-status-text">Descargando actualización...</span>
                     <span id="update-percent-text">0%</span>
                 </div>
-                <div class="update-progress-track"><div id="update-progress-fill"></div></div>
+                <!-- Barra de progreso interna -->
+                <div class="update-progress-track">
+                    <div id="update-progress-fill"></div>
+                </div>
+                <!-- Texto que pediste mantener -->
+                <p class="update-footer-text">La app se cerrará y reiniciará automáticamente al finalizar.</p>
+            </div>
+
+            <!-- 2. Utilidades (Discord/Ayuda) (Aparecerá debajo de la barra cuando esté activa) -->
+            <div id="top-right-utilities">
+                <div class="top-util-row">
+                    <button class="util-square-btn" id="btn-open-inbox">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="util-square-btn" id="btn-open-help">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                    <a href="https://discord.gg/NRpX8d8ypF" target="_blank" class="discord-global-link">
+                        <div class="discord-text">
+                            <span>¿Necesitas ayuda?</span>
+                            <strong>Únete al Discord</strong>
+                        </div>
+                        <i class="fab fa-discord"></i>
+                    </a>
+                </div>
             </div>
         </div>
 

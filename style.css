@@ -4390,71 +4390,7 @@ input.custom-chk {
 .pcr-interaction .pcr-type {
     display: none !important;
 }
-/* ESTRUCTURA DEL BANNER DE ACTUALIZACIÓN */
-#update-progress-container {
-    background-color: #161616;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px 40px 0 40px;
-}
 
-.update-header-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.update-icon-square {
-    background-color: #5c1d80; /* Morado Oscuro */
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 3px;
-}
-
-.update-icon-square i {
-    font-size: 14px;
-    color: white;
-}
-
-#update-status-text {
-    color: #eee;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-#update-percent-text {
-    margin-left: auto;
-    color: #d886ff; /* lila claro */
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.update-progress-track {
-    background-color: #333;
-    height: 5px;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 8px;
-}
-
-#update-progress-fill {
-    background-color: #8A2BE2; /* Morado Vibrante */
-    width: 0%;
-    height: 100%;
-    transition: width 0.3s ease;
-    box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
-}
-
-.update-footer-text {
-    font-size: 11px;
-    color: #888 !important;
-    margin: 0 !important;
-}
 /* --- FIX ESPECÍFICO PARA EL ROTADOR SOCIAL --- */
 #social-list-container input {
     width: auto !important; /* Libera el ancho forzado del 100% */
@@ -4931,17 +4867,6 @@ input.custom-chk {
 /* ======================================================= */
 /* 1. CABECERA GLOBAL Y BOTÓN DISCORD (CRISTAL)            */
 /* ======================================================= */
-#top-right-utilities {
-    position: fixed;
-    top: 25px;
-    right: 40px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
-    pointer-events: none;
-}
 
 /* FILA HORIZONTAL PARA BOTONES */
 .top-util-row {
@@ -5007,15 +4932,6 @@ input.custom-chk {
 .discord-global-link .discord-text span { color: #949ba4; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
 .discord-global-link .discord-text strong { color: #ffffff; font-size: 14px; font-weight: 700; }
 .discord-global-link i { color: #5865F2; font-size: 28px; }
-
-#update-progress-container {
-    width: 220px; 
-    background: #111;
-    border: 1px solid #333;
-    padding: 10px;
-    border-radius: 8px;
-    margin: 0 !important;
-}
 
 /* ======================================================= */
 /* 2. LÓGICA TIKFINITY: TEXTOS FUERA DE CONTENEDORES       */
@@ -5248,4 +5164,100 @@ input.custom-chk {
 .event-row-disabled input[type="checkbox"], 
 .event-row-disabled .chk-container {
     cursor: pointer !important;
+}
+/* ======================================================= */
+/* ESTRUCTURA GLOBAL FIJA (BARRA + UTILIDADES)            */
+/* ======================================================= */
+
+#global-header-fixed {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: calc(100% - 200px); /* Espacio libre tras el sidebar */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;   /* Apila barra arriba y discord abajo */
+    pointer-events: none;     /* No estorba clics al contenido de abajo */
+}
+
+/* Reactivar clics para los botones */
+#update-progress-container, 
+#top-right-utilities {
+    pointer-events: auto;
+}
+
+/* --- 1. BARRA DE ACTUALIZACIÓN (Márgenes para no tocar bordes) --- */
+#update-progress-container {
+    width: auto;
+    /* 15px de aire arriba para que no pegue al techo de la ventana */
+    margin: 15px 45px 0 25px !important; 
+    background-color: #161616;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.update-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.update-icon-square {
+    background-color: #5c1d80;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.update-icon-square i { font-size: 14px; color: white; }
+#update-status-text { color: #eee; font-size: 14px; font-weight: bold; }
+#update-percent-text { margin-left: auto; color: #d886ff; font-weight: bold; font-size: 14px; }
+
+/* El texto que pediste no borrar */
+.update-footer-text {
+    font-size: 11px;
+    color: #888 !important;
+    margin: 0 0 5px 40px !important; /* Alineado con el texto de arriba */
+}
+
+/* La línea de progreso interna original */
+.update-progress-track {
+    background-color: #333;
+    height: 5px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-left: 40px; /* Alineado con el texto */
+    margin-bottom: 8px; /* <--- Espacio para el texto de abajo */
+}
+
+#update-progress-fill {
+    background-color: #8A2BE2;
+    width: 0%;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* --- 2. UTILIDADES (DISCORD / AYUDA) --- */
+#top-right-utilities {
+    display: flex;
+    justify-content: flex-end;
+    /* AQUÍ ESTÁ EL SECRETO: */
+    /* Cuando la barra es invisible, este margin-top de 25px 
+       mantiene el Discord en su altura original exacta */
+    margin-top: 25px; 
+    padding-right: 40px; /* Tu distancia original del borde derecho */
+}
+
+.top-util-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
